@@ -1,0 +1,35 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+coverage/
+*.log
+
+# FVM: .fvmrc is committed, the SDK link is per machine
+.fvm/
+
+# Make: stamps and log
+.make/
+
+# Local environment (created from config/env/dev.json.dist)
+/config/env/dev.json
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# BMAD: personal answers and render cache
+# (_bmad/custom/.gitignore and _bmad/render/.gitignore cover the rest)
+/_bmad/config.user.toml
+
+# Claude Code: personal settings and notes
+.claude/settings.local.json
+CLAUDE.local.md
+
+# OS
+.DS_Store
+Thumbs.db

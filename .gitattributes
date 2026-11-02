@@ -1,0 +1,19 @@
+# Every text file is stored and checked out with LF, whatever core.autocrlf
+# says: bash scripts and the Makefile break on CRLF in Git Bash.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF (gradlew.bat among them).
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.jar binary
