@@ -23,8 +23,9 @@ working on the repo behaves consistently across sessions and machines.
   `lib/features/<feature>/{domain,application,infrastructure,presentation}`,
   shared kernel in `lib/core/`, composition root in `lib/app/`.
 - **Planning method:** BMAD 6.12.4 (`_bmad/`), artefacts in `_bmad-output/`.
-- **Bootstrap status:** phase 1 (foundations). The Flutter project, the
-  `Makefile` and the quality gates do not exist yet; see
+- **Bootstrap status:** phases 1–2 done (phase 2 validated on Windows; the
+  macOS run is pending). The Flutter project and the `Makefile` exist;
+  `make ci` and the quality gates arrive in phase 3. See
   `CONTRIBUTING.md` §0 before relying on a command.
 
 ---

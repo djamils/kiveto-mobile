@@ -2,7 +2,7 @@
 
 Application Flutter (Android et iOS) du **Portal Kiveto**, l'espace des propriétaires d'animaux. Elle est cliente de l'API Portal du backend Kiveto (dépôt [djamils/kiveto](https://github.com/djamils/kiveto), contrat `openapi/portal.v1.yaml`).
 
-> **Bootstrap en cours — phase 1 sur 6.** Le dépôt ne contient encore que ses fondations : conventions, BMAD, Claude Code et décisions d'architecture. Le projet Flutter, le `Makefile` et les contrôles qualité arrivent dans les phases suivantes ; l'état à jour est dans [CONTRIBUTING.md](./CONTRIBUTING.md#0-bootstrap-status).
+> **Bootstrap en cours — phase 1 terminée, phase 2 sur 6 terminée sous Windows ; validation macOS en attente.** Le dépôt contient ses fondations (conventions, BMAD, Claude Code, décisions d'architecture), le projet Flutter Android et iOS (`app.kiveto.portal`, nom affiché « Kiveto »), Flutter 3.47.9 épinglé avec FVM et le `Makefile`. Les contrôles qualité (`make ci`) arrivent en phase 3 ; l'état à jour est dans [CONTRIBUTING.md](./CONTRIBUTING.md#0-bootstrap-status).
 
 ---
 
@@ -16,7 +16,7 @@ Windows 11 (Android seulement) ou macOS (Android et iOS).
 | GNU Make ≥ 3.81 | `winget install ezwinports.make` (Git for Windows n'inclut pas `make`) | fourni (`/usr/bin/make`) |
 | FVM ≥ 4 | `choco install fvm`, ou l'archive de la release GitHub | `brew tap btwld/fvm && brew install btwld/fvm/fvm` |
 | Mode développeur | Paramètres › Système › Pour les développeurs (liens symboliques de FVM) | — |
-| Android Studio | SDK, cmdline-tools, un émulateur, licences acceptées | idem |
+| Android Studio | SDK, cmdline-tools, un émulateur, licences acceptées, et NDK (Side by side) 28.2.13676358, la version demandée par Flutter 3.47.9 : SDK Manager › SDK Tools › NDK (Side by side) avec « Show Package Details », ou `android --no-metrics sdk install ndk/28.2.13676358` depuis `cmdline-tools/latest/bin` (sous Windows avec cmdline-tools 23.0, Gradle ne peut pas l'installer seul : `sdkmanager.bat` coupe `ndk;28.2.13676358` au `;`) | idem |
 | JDK ≥ 17 | celui d'Android Studio ou un JDK installé (un JRE ne suffit pas) | idem |
 | Xcode ≥ 26 | — | App Store |
 | Node ≥ 20.12 et uv | pour BMAD uniquement | idem |
@@ -25,17 +25,19 @@ Cloner le dépôt sur un disque local, dans un chemin sans espaces.
 
 ---
 
-## 🚀 Démarrage (à partir de la phase 2)
+## 🚀 Démarrage
+
+Dans Git Bash sous Windows, dans un terminal sous macOS :
 
 ```bash
 git clone https://github.com/djamils/kiveto-mobile.git
 cd kiveto-mobile
-make install
-make start
-make ci
+make doctor     # vérifie les prérequis et affiche comment corriger chacun
+make install    # Flutter épinglé (FVM), dépendances, config/env/dev.json
+make start      # lance l'app ; démarre le premier émulateur si aucun appareil ne tourne
 ```
 
-`make install` vérifie les prérequis et explique comment installer ce qui manque, sans rien installer au niveau du système.
+`make install` vérifie les prérequis et explique comment installer ce qui manque, sans rien installer au niveau du système. Sans FVM, `make install-fvm` l'installe pour l'utilisateur courant uniquement et affiche la ligne `PATH` à ajouter. `make help` liste les autres cibles (`devices`, `clean`, `reset`) et les options (`PLATFORM=ios` sous macOS, `DEVICE=`, `EMULATOR=`, `ENV=`, `RUN_ARGS=`, `V=1`…). `make ci` arrive en phase 3.
 
 ---
 

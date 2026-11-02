@@ -19,8 +19,8 @@ the commands and checks it brings **do not exist** — do not rely on them.
 
 | Phase | Branch | Brings | Status |
 |---|---|---|---|
-| 1 | root commit, `chore/repo-foundations` | Git attributes, editor config, ignores, `CLAUDE.md`, `CONTRIBUTING.md`, BMAD 6.12.4, architecture decisions | In progress |
-| 2 | `chore/toolchain-bootstrap` | `.fvmrc`, Flutter project (Android + iOS), `Makefile`, `scripts/` (`doctor`, `install`, `start`, `devices`), environment config | To do |
+| 1 | root commit, `chore/repo-foundations` | Git attributes, editor config, ignores, `CLAUDE.md`, `CONTRIBUTING.md`, BMAD 6.12.4, architecture decisions | Done |
+| 2 | `chore/toolchain-bootstrap` | `.fvmrc`, Flutter project (Android + iOS), `Makefile`, `scripts/` (`doctor`, `install`, `install-fvm`, `start`, `devices`, `clean`), `tool/devices.dart`, environment config | Done on Windows; macOS validation pending |
 | 3 | `chore/quality-gates` | Analyzer config, architecture tests, coverage gate, git hooks, `make ci`, GitHub Actions | To do |
 | 4 | `chore/portal-api-client` | Contract copy, generator spike, generated client, `make api-*` | To do |
 | 5 | `feature/app-shell` | `lib/core/`: HTTP client, auth and refresh, token storage, errors, router, theme, French l10n | To do |
@@ -128,7 +128,7 @@ The body explains **why**; the diff already shows what.
 | GNU Make ≥ 3.81 | `winget install ezwinports.make` (Git for Windows has no `make`) | `/usr/bin/make` (3.81) | Entry point of every command |
 | FVM ≥ 4 | `choco install fvm`, or the release archive from GitHub | `brew tap btwld/fvm && brew install btwld/fvm/fvm` | Pins Flutter (`.fvmrc`) |
 | Developer Mode | Settings › System › For developers | — | FVM creates symbolic links |
-| Android Studio | With the SDK, cmdline-tools, an emulator, licences accepted | Same | Android builds and emulator |
+| Android Studio | With the SDK, cmdline-tools, an emulator, licences accepted, and NDK (Side by side) 28.2.13676358, the version Flutter 3.47.9 asks for: SDK Manager › SDK Tools › NDK (Side by side) with "Show Package Details", or `android --no-metrics sdk install ndk/28.2.13676358` from `cmdline-tools/latest/bin` (on Windows with cmdline-tools 23.0, Gradle cannot install it itself: `sdkmanager.bat` splits `ndk;28.2.13676358` at `;`) | Same | Android builds and emulator |
 | JDK ≥ 17 | Android Studio's or an installed JDK (a JRE is not enough) | Same | Gradle |
 | Xcode ≥ 26 | — | App Store | iOS builds and simulator (Xcode 26 is required for App Store uploads) |
 | Node ≥ 20.12 and uv | | | BMAD only (`bmad-build` halts without uv) |
@@ -136,20 +136,38 @@ The body explains **why**; the diff already shows what.
 Keep the clone on a local disk, in a path without spaces (not on a
 `\\wsl.localhost\…` share).
 
-### Commands (from phase 2 on)
+### Commands
+
+Run them from Git Bash on Windows, from any terminal on macOS. Every
+Flutter and Dart call goes through FVM (`fvm flutter …`, `fvm dart …`),
+pinned to the version of `.fvmrc`.
 
 ```bash
-make install   # check prerequisites, fetch the pinned Flutter, pub get, git hooks
-make start     # run the app on an emulator, simulator or device
-make ci        # the full quality gate
+make help          # targets and options (default goal)
+make doctor        # read-only: every prerequisite, with the fix of each missing one (FULL=1 adds flutter doctor -v)
+make install       # prerequisites, pinned Flutter (fvm install), pub get, config/env/dev.json
+make start         # run the app; boots the first AVD (or EMULATOR=) when no device runs
+make devices       # connected devices, AVDs and, on macOS, simulators
+make install-fvm   # opt-in: FVM 4.3.2 for the current user only, SHA-256 checked; prints the PATH line
+make clean         # fvm flutter clean + the .make/ stamps (the log is kept)
+make reset         # clean + install
 ```
 
-The contract of each target (options `PLATFORM`, `DEVICE`, `EMULATOR`,
-`SIMULATOR`, `ENV`, `V=1`, `NO_COLOR=1`, `LOG_FILE`) is in the architecture
-document, §Developer experience. Nothing installs system-wide software:
-`make doctor` explains what is missing and how to install it;
-`make install-fvm` installs FVM for the current user only, and only when
-you run it.
+Options: `PLATFORM=android|ios` (default `android`; iOS needs macOS),
+`DEVICE=<id>`, `EMULATOR=<avd>`, `SIMULATOR=<name>`, `ENV=dev` (passes
+`config/env/<ENV>.json` with `--dart-define-from-file`), `RUN_ARGS=`
+(extra `flutter run` flags, e.g. `--release`), `BOOT_WAIT=180` (seconds),
+`V=1`, `NO_COLOR=1`, `LOG_FILE=.make/make.log`. Quiet steps write their
+output, timestamped, to `LOG_FILE` and print its last 30 lines when they
+fail. `make install` and `make start` are idempotent: `pub get` runs only
+when `pubspec.yaml` or `pubspec.lock` changed (stamp in `.make/`).
+
+`make ci` arrives in phase 3; until then the rules of the next section are
+checked by hand. Nothing installs system-wide software: `make doctor`
+explains what is missing and how to install it; `make install-fvm`
+installs FVM for the current user only, and only when you run it. The
+contract of each target is in the architecture document, §7 Developer
+experience.
 
 ### Quality controls
 
