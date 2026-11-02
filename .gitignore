@@ -7,6 +7,28 @@
 build/
 coverage/
 *.log
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.widget_preview/
+migrate_working_dir/
+
+# Flutter template: symbolication, obfuscation, Android Studio build outputs
+app.*.symbols
+app.*.map.json
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Flutter template: miscellaneous
+*.class
+*.pyc
+*.swp
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
 
 # FVM: .fvmrc is committed, the SDK link is per machine
 .fvm/
@@ -20,6 +42,8 @@ coverage/
 # IDE
 .idea/
 *.iml
+*.ipr
+*.iws
 .vscode/
 
 # BMAD: personal answers and render cache
