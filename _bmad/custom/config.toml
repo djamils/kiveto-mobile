@@ -1,0 +1,14 @@
+# Team / enterprise overrides for _bmad/config.toml.
+# Committed to the repo — applies to every developer on the project.
+# Tables deep-merge over base config; keyed entries merge by key.
+# Example: override an agent descriptor, or add a new agent.
+#
+# [agents.bmad-agent-pm]
+# description = "Prefers short, bulleted PRDs over narrative drafts."
+
+# Kiveto convention, shared with the Symfony repository: agents talk to the
+# team in French, artefacts are written in English. Pinned here because the
+# installer stores the communication language as a personal answer only.
+[core]
+communication_language = "French"
+document_output_language = "English"
