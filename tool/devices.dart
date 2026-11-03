@@ -15,108 +15,15 @@
 //
 //   exit 1: invalid arguments or input, explained on stderr.
 //
-// SDK libraries only: it runs before `pub get` and must not need a package.
+// A thin entry point over package:kiveto_tool/devices.dart (tool/lib/, SDK
+// libraries only, tested by test/tool/). It runs after `pub get`, which
+// scripts/start.sh does first: the package resolves through the root
+// .dart_tool/package_config.json.
 
-import 'dart:convert';
 import 'dart:io';
 
-const _found = 0;
-const _invalid = 1;
-const _none = 2;
-const _several = 3;
-
-class _Device {
-  const _Device(this.id, this.name, this.targetPlatform);
-
-  final String id;
-  final String name;
-  final String targetPlatform;
-
-  bool runs(String platform) => platform == 'ios'
-      ? targetPlatform == 'ios'
-      : targetPlatform.startsWith('android');
-
-  String get line => '$id\t$name';
-}
+import 'package:kiveto_tool/devices.dart';
 
 Future<void> main(List<String> args) async {
-  exitCode = await _run(args);
-}
-
-Future<int> _run(List<String> args) async {
-  String? platform;
-  String? device;
-  for (var i = 0; i < args.length; i++) {
-    final value = i + 1 < args.length ? args[i + 1] : null;
-    switch (args[i]) {
-      case '--platform' when value != null:
-        platform = value;
-        i++;
-      case '--device' when value != null:
-        device = value;
-        i++;
-      default:
-        return _fail('unknown or incomplete argument "${args[i]}"');
-    }
-  }
-  if (platform != 'android' && platform != 'ios') {
-    return _fail('--platform must be android or ios');
-  }
-
-  final List<_Device> devices;
-  try {
-    devices = _parse(await stdin.transform(utf8.decoder).join());
-  } on FormatException catch (error) {
-    return _fail('cannot read `flutter devices --machine`: ${error.message}');
-  }
-
-  if (device != null) {
-    for (final candidate in devices) {
-      if (candidate.id == device || candidate.name == device) {
-        stdout.writeln(candidate.id);
-        return _found;
-      }
-    }
-    devices.map((d) => d.line).forEach(stdout.writeln);
-    return _none;
-  }
-
-  final candidates = devices.where((d) => d.runs(platform!)).toList();
-  if (candidates.isEmpty) return _none;
-  if (candidates.length == 1) {
-    stdout.writeln(candidates.single.id);
-    return _found;
-  }
-  candidates.map((d) => d.line).forEach(stdout.writeln);
-  return _several;
-}
-
-/// Decodes the device list, skipping anything Flutter prints before it
-/// (a first-run banner, for instance).
-List<_Device> _parse(String output) {
-  final start = RegExp(r'^\[', multiLine: true).firstMatch(output)?.start;
-  final end = output.lastIndexOf(']');
-  if (start == null || end < start) {
-    throw const FormatException('no JSON array found');
-  }
-  final decoded = jsonDecode(output.substring(start, end + 1));
-  if (decoded is! List<Object?>) {
-    throw const FormatException('the JSON is not an array');
-  }
-  return [
-    for (final entry in decoded)
-      if (entry case {
-        'id': final String id,
-        'name': final String name,
-        'targetPlatform': final String targetPlatform,
-      })
-        _Device(id, name, targetPlatform)
-      else
-        throw const FormatException('a device lacks id, name or platform'),
-  ];
-}
-
-int _fail(String message) {
-  stderr.writeln('tool/devices.dart: $message');
-  return _invalid;
+  exitCode = await pickDevice(args, input: stdin, out: stdout, err: stderr);
 }

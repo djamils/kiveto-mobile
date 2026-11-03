@@ -67,14 +67,26 @@ several() {
   exit 1
 }
 
+# adb_boot_completed <id>: true once Android has booted (sys.boot_completed
+# is 1) and its package manager answers (`pm path android` prints a
+# package: line). The emulator once reported boot completed with dead
+# services, and flutter run then hung for 15 minutes. pm itself can block
+# while system_server is wedged: the device's own (toybox) timeout bounds
+# it, so the BOOT_WAIT deadline is checked again.
 adb_boot_completed() {
-  local sdk value
+  local sdk adb value
   sdk=$(android_sdk) || return 1
-  value=$("$sdk/platform-tools/adb$KV_EXE" -s "$1" shell getprop sys.boot_completed 2>/dev/null) || return 1
-  [ "${value%"$CR"}" = 1 ]
+  adb=$sdk/platform-tools/adb$KV_EXE
+  value=$("$adb" -s "$1" shell getprop sys.boot_completed 2>/dev/null) || return 1
+  [ "${value%"$CR"}" = 1 ] || return 1
+  value=$("$adb" -s "$1" shell timeout 10 pm path android 2>/dev/null) || return 1
+  case "$NL$value" in
+    *"${NL}package:"*) return 0 ;;
+  esac
+  return 1
 }
 
-# wait_for_device: polls the picker (and, on Android, sys.boot_completed)
+# wait_for_device: polls the picker (and, on Android, adb_boot_completed)
 # until the booted device shows up or BOOT_WAIT seconds have passed.
 wait_for_device() {
   local deadline=$((SECONDS + BOOT_WAIT)) rc

@@ -156,6 +156,32 @@ if sdk=$(android_sdk); then
   else
     blocker "Android SDK licence not accepted" "accept the licence in Android Studio's SDK Manager"
   fi
+
+  # NDK: the version the app builds with, a literal ndkVersion of the app's
+  # Gradle file, else the default of the pinned Flutter. Gradle installs it
+  # on demand, except on Windows: cmdline-tools 23's sdkmanager.bat splits
+  # ndk;<version> at the ';', so the first build fails without it.
+  ndk=$(sed -n 's/^[[:space:]]*ndkVersion[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' android/app/build.gradle.kts 2>/dev/null) || ndk=''
+  ndk=${ndk%%"$NL"*}
+  if [ -z "$ndk" ] && [ "$flutter_ok" = 1 ] && flutter_dir=$(flutter_sdk_dir); then
+    ndk=$(sed -n 's/.*val ndkVersion: String = "\([^"]*\)".*/\1/p' \
+      "$flutter_dir/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt" 2>/dev/null) || ndk=''
+    ndk=${ndk%%"$NL"*}
+  fi
+  ndk_fix="\"$sdk/cmdline-tools/latest/bin/android$KV_EXE\" --no-metrics sdk install ndk/$ndk, or SDK Manager › SDK Tools › NDK (Side by side) with \"Show Package Details\""
+  if [ -n "$ndk" ] && [ -f "$sdk/ndk/$ndk/source.properties" ]; then
+    pass "NDK $ndk (the version Flutter $FLUTTER_VERSION builds with)"
+  elif [ -n "$ndk" ] && [ "$KV_OS" = windows ]; then
+    blocker "NDK $ndk missing (the version Flutter $FLUTTER_VERSION builds with; Gradle cannot install it on Windows)" "$ndk_fix"
+  elif [ -n "$ndk" ]; then
+    warning "NDK $ndk missing (the version Flutter $FLUTTER_VERSION builds with; the first Android build installs it)" "or install it now: $ndk_fix"
+  elif [ "$flutter_ok" = 0 ]; then
+    if [ "${KV_CALLER:-}" != install ]; then
+      warning "NDK not checked until Flutter $FLUTTER_VERSION is installed" "make install"
+    fi
+  else
+    warning "NDK version not found in Flutter $FLUTTER_VERSION (FlutterExtension.kt)" "check the NDK the first Android build asks for"
+  fi
 else
   blocker "Android SDK not found (ANDROID_HOME=${ANDROID_HOME:-unset})" "install Android Studio, then SDK Manager"
   sdk=''

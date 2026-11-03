@@ -40,6 +40,7 @@ Options: `PLATFORM=android|ios` (default `android`), `DEVICE=<id>`, `EMULATOR=<a
 | SDK cmdline-tools | blocker | SDK Manager › SDK Tools › Command-line Tools |
 | SDK platform `android-36` | warning | SDK Manager › SDK Platforms › Android 16.0 (API 36) |
 | `android-sdk-license` accepted | blocker | accept the licence in Android Studio's SDK Manager |
+| NDK of the version Flutter asks for (a literal `ndkVersion = "x"` in `android/app/build.gradle.kts`, else `val ndkVersion: String = "x"` in the pinned SDK's `packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt`; the SDK directory is the version's `"directory"` in `fvm api list`), present when `$ANDROID_HOME/ndk/<v>/source.properties` exists | blocker on Windows (Gradle cannot install it: `sdkmanager.bat` of cmdline-tools 23 splits `ndk;<v>`), warning elsewhere; warning "NDK not checked until Flutter <v> is installed" while Flutter is not cached | `"$ANDROID_HOME/cmdline-tools/latest/bin/android" --no-metrics sdk install ndk/<v>`, or SDK Manager › SDK Tools › NDK (Side by side) with "Show Package Details" |
 | JDK ≥ 17 (Android Studio's `jbr`, else `JAVA_HOME`, else `java` on `PATH` with `javac`) | blocker | install Android Studio |
 | At least one AVD | warning | Android Studio › Device Manager |
 | Emulator acceleration (`emulator -accel-check`) | warning | enable Windows Hypervisor Platform / check virtualisation in firmware |
@@ -48,4 +49,4 @@ Options: `PLATFORM=android|ios` (default `android`), `DEVICE=<id>`, `EMULATOR=<a
 | macOS: an iOS simulator runtime | warning | Xcode › Settings › Components |
 | Node ≥ 20.12 and uv | warning | needed by BMAD only |
 
-Platform detection: `uname -s` → `MINGW*` / `MSYS*` = Windows (Git Bash), `Darwin` = macOS, anything else is refused with a message.
+Platform detection: `uname -s` → `MINGW*` / `MSYS*` (and the `CLANG*` / `UCRT64*` prefixes) = Windows (Git Bash), `Darwin` = macOS, `Linux*` = Linux, where only `make ci` is supported and checked (GitHub Actions): the other targets are not refused but untested there, and `make install-fvm` refuses it. Anything else is refused with a message.

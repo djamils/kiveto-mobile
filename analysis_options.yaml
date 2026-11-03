@@ -1,34 +1,37 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
+# Analyzer configuration of Kiveto Mobile (architecture §8).
 #
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# `make analyze` runs `dart analyze --fatal-infos --fatal-warnings`: every
+# diagnostic below fails the build, infos included. When a rule conflicts
+# with what you want to write, the rule wins (CLAUDE.md §6); a justified
+# exception is a `// ignore: <rule>` with the reason on the line above.
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
-include: package:flutter_lints/flutter.yaml
+# The strictest maintained rule set (very_good_analysis 11.0.0, pinned in
+# pubspec.yaml).
+include: package:very_good_analysis/analysis_options.yaml
 
 analyzer:
   exclude:
+    # Build outputs and the native projects: not Dart sources of ours.
     - build/**
     - android/**
     - ios/**
+    # The generated Portal API client (phase 4): generated, committed, never
+    # edited by hand (CLAUDE.md §5).
+    - packages/**
+    # gen-l10n output (the ARB files are the source); any other Dart file
+    # of lib/l10n/ is analyzed.
+    - lib/l10n/app_localizations*.dart
+  errors:
+    # A deprecated API is removed by a later Flutter release: fix it now.
+    deprecated_member_use: error
 
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # An app, not a published API: documenting every public member adds
+    # noise. Very Good Ventures' own app template turns it off too.
+    public_member_api_docs: false
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+# riverpod_lint 3.1.9 on the analyzer plugin system: `dart analyze` fetches
+# it from pub and reports its diagnostics like any lint (no pubspec entry).
+plugins:
+  riverpod_lint: 3.1.9

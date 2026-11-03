@@ -1,0 +1,9 @@
+[
+  {
+    "name": "sdk gphone64 x86 64",
+    "id": "emulator-5554",
+    "isSupported": true,
+    "emulator": true,
+    "sdk": "Android 17 (API 37)"
+  }
+]

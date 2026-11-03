@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 void main() {
+  // Template app until phase 5 wraps it in a ProviderScope: no provider
+  // exists yet.
+  // ignore: riverpod_lint/missing_provider_scope
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const new({super.key});
 
   // This widget is the root of your application.
   @override
@@ -36,7 +39,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const new({required this.title, super.key});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect

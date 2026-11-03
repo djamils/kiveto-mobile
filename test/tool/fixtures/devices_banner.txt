@@ -1,0 +1,18 @@
+
+  ╔════════════════════════════════════════════════════════════════════════════╗
+  ║                 Welcome to Flutter! - https://flutter.dev                  ║
+  ║                                                                            ║
+  ║ The Flutter tool uses Google Analytics to anonymously report feature usage ║
+  ║ statistics and basic crash reports. [opt out: flutter config --no-analytics]║
+  ╚════════════════════════════════════════════════════════════════════════════╝
+
+[
+  {
+    "name": "sdk gphone64 x86 64",
+    "id": "emulator-5554",
+    "isSupported": true,
+    "targetPlatform": "android-x64",
+    "emulator": true,
+    "sdk": "Android 17 (API 37)"
+  }
+]

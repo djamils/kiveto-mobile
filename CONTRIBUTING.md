@@ -21,9 +21,9 @@ the commands and checks it brings **do not exist** — do not rely on them.
 |---|---|---|---|
 | 1 | root commit, `chore/repo-foundations` | Git attributes, editor config, ignores, `CLAUDE.md`, `CONTRIBUTING.md`, BMAD 6.12.4, architecture decisions | Done |
 | 2 | `chore/toolchain-bootstrap` | `.fvmrc`, Flutter project (Android + iOS), `Makefile`, `scripts/` (`doctor`, `install`, `install-fvm`, `start`, `devices`, `clean`), `tool/devices.dart`, environment config | Done (validated on Windows and macOS) |
-| 3 | `chore/quality-gates` | Analyzer config, architecture tests, coverage gate, git hooks, `make ci`, GitHub Actions | To do |
+| 3 | `chore/quality-gates` | very_good_analysis + riverpod_lint, architecture tests of the D15 rules, coverage gate, `tool/` as the `kiveto_tool` package, `make ci` and its steps, plain-bash checks of the scripts, git hooks, GitHub Actions, doctor NDK check | Done (validated on Windows; macOS run and first GitHub Actions run pending) |
 | 4 | `chore/portal-api-client` | Contract copy, generator spike, generated client, `make api-*` | To do |
-| 5 | `feature/app-shell` | `lib/core/`: HTTP client, auth and refresh, token storage, errors, router, theme, French l10n | To do |
+| 5 | `feature/app-shell` | `lib/core/{network,security,errors,di}`: HTTP client, auth and refresh, token storage, errors; `lib/shared/`: `Clock`, value objects, UI kit; `lib/app/{bootstrap,routing,theme}`: `ProviderScope`, router, theme; French l10n | To do |
 | 6+ | `feature/<feature>` | The Portal slices, in the backend contract's order | To do |
 
 Update this table in the PR that completes a phase.
@@ -52,7 +52,7 @@ Pattern: `<type>/<short-slug>`, kebab-case, English.
 
 | Type       | When to use it                                                  | Example                        |
 |------------|-----------------------------------------------------------------|--------------------------------|
-| `feature/` | A new user-visible capability                                   | `feature/session-otp-sign-in`  |
+| `feature/` | A new user-visible capability                                   | `feature/otp-sign-in`          |
 | `fix/`     | A bug fix scoped to existing behaviour                          | `fix/refresh-token-race`       |
 | `hotfix/`  | An urgent production fix                                        | `hotfix/crash-on-launch`       |
 | `chore/`   | Tooling, dependencies, refactoring, docs — no user-visible change | `chore/quality-gates`        |
@@ -84,17 +84,21 @@ split it.
 | `perf`     | A performance improvement                           |
 | `build`    | Build system, Gradle, Xcode, packaging              |
 | `ci`       | CI configuration only                               |
+| `revert`   | Reverting an earlier commit (git's own `Revert "…"` also passes) |
 
-Scope: a feature (`session`, `home`, `pets`, `appointments`, `documents`,
-`account`, `directory`) or `core`, `app`, `api`, `tooling`, `bmad`.
+Scope: a feature (`identity_access`, `client`, `patient`, `consultation`,
+`scheduling`, `document`, `clinic_listing`, `home`) or `core`, `shared`,
+`app`, `api`, `tooling`, `ci`, `bmad`.
 
 ```
-feat(appointments): book a slot for a known pet
+feat(scheduling): book a slot for a known pet
 fix(core): serialise concurrent token refreshes
 chore(api): sync portal contract 1a2b3c4
 ```
 
-The body explains **why**; the diff already shows what.
+The body explains **why**; the diff already shows what. The `commit-msg`
+hook refuses any other subject; git's own messages (`Merge …`,
+`Revert "…"`, `fixup! …`, `squash! …`) pass.
 
 ---
 
@@ -103,7 +107,7 @@ The body explains **why**; the diff already shows what.
 ```
 <type>/* ──► PR → master
                  │
-             make ci green locally, then GitHub Actions re-runs it (phase 3)
+             make ci green locally, then GitHub Actions re-runs it
                  │
              Review (human or AI)
                  │
@@ -145,12 +149,22 @@ pinned to the version of `.fvmrc`.
 ```bash
 make help          # targets and options (default goal)
 make doctor        # read-only: every prerequisite, with the fix of each missing one (FULL=1 adds flutter doctor -v)
-make install       # prerequisites, pinned Flutter (fvm install), pub get, config/env/dev.json
+make install       # prerequisites, pinned Flutter (fvm install), pub get, git hooks, config/env/dev.json
 make start         # run the app; boots the first AVD (or EMULATOR=) when no device runs
 make devices       # connected devices, AVDs and, on macOS, simulators
 make install-fvm   # opt-in: FVM 4.3.2 for the current user only, SHA-256 checked; prints the PATH line
 make clean         # fvm flutter clean + the .make/ stamps (the log is kept)
 make reset         # clean + install
+
+make ci                 # the quality gate: every step below, in this order, stops at the first failure
+make format-check       # 1. fvm dart format check of lib/, test/, tool/ (make format rewrites them)
+make analyze            # 2. fvm dart analyze --fatal-infos --fatal-warnings
+make test-architecture  # 3. the layer and feature rules (test/architecture/)
+make test-coverage      # 4. unit, widget, integration and tool suites with coverage (coverage/lcov.info)
+make coverage-gate      # 5. 100% of the gated layers, every file of lib/ and tool/ counted
+make test-scripts       # 6. plain-bash checks of scripts/ and .githooks/ (test/scripts/)
+make test               # every Flutter suite, without coverage
+make test-unit          # one suite: also test-widget, test-integration, test-tool
 ```
 
 Options: `PLATFORM=android|ios` (default `android`; iOS needs macOS),
@@ -159,29 +173,36 @@ Options: `PLATFORM=android|ios` (default `android`; iOS needs macOS),
 (extra `flutter run` flags, e.g. `--release`), `BOOT_WAIT=180` (seconds),
 `V=1`, `NO_COLOR=1`, `LOG_FILE=.make/make.log`. Quiet steps write their
 output, timestamped, to `LOG_FILE` and print its last 30 lines when they
-fail. `make install` and `make start` are idempotent: `pub get` runs only
-when `pubspec.yaml` or `pubspec.lock` changed (stamp in `.make/`).
+fail; `V=1` runs them live and shows every command (`make ci V=1`).
+`make install` and `make start` are idempotent: `pub get` runs only when
+`pubspec.yaml`, `pubspec.lock` or `tool/pubspec.yaml` changed (stamp in
+`.make/`). A test suite without `*_test.dart` has nothing to run, which is
+not a failure. `make ci` prints the duration of each step and the total
+(about a minute on a warm machine).
 
-`make ci` arrives in phase 3; until then the rules of the next section are
-checked by hand. Nothing installs system-wide software: `make doctor`
-explains what is missing and how to install it; `make install-fvm`
-installs FVM for the current user only, and only when you run it. The
-contract of each target is in the architecture document, §7 Developer
-experience.
+Nothing installs system-wide software: `make doctor` explains what is
+missing and how to install it; `make install-fvm` installs FVM for the
+current user only, and only when you run it. `make install` activates the
+git hooks for this clone only (`core.hooksPath=.githooks`). The contract of
+each target is in the architecture document, §7 Developer experience.
+`make ci` also runs on Linux (GitHub Actions); the other targets are for
+Windows and macOS.
 
 ### Quality controls
 
 | Rule | Enforced by | Available from |
 |---|---|---|
-| Formatting (`dart format`) | `make ci`, pre-commit hook | Phase 3 |
-| Static analysis (very_good_analysis, riverpod_lint, infos and warnings fatal) | `make ci` | Phase 3 |
-| Layer and feature boundaries | `test/architecture/` in `make ci` | Phase 3 |
-| Tests green (unit, widget, integration without device) | `make ci` | Phase 3 |
-| 100% coverage of `domain/`, `application/`, `infrastructure/` | Coverage gate in `make ci` | Phase 3 |
+| Formatting (`dart format`) | `make ci`, pre-commit hook (staged content) | Now |
+| Static analysis (very_good_analysis, riverpod_lint, infos and warnings fatal) | `make ci` | Now |
+| Layer and feature boundaries (§6 rules 1–8) | `test/architecture/` in `make ci` | Now |
+| Tests green (unit, widget, integration without device, tooling) | `make ci` | Now |
+| 100% coverage of the gated layers (§7) | Coverage gate in `make ci` | Now |
+| Scripts and hooks behave, stay bash 3.2 and LF | `test/scripts/` in `make ci` | Now |
+| Conventional Commits | `commit-msg` hook | Now |
+| `make ci` green on every PR | GitHub Actions (`.github/workflows/ci.yml`) | Written, not run yet; make the check required on `master` (branch protection) |
 | Generated client matches the contract copy | `make api-check` in `make ci` | Phase 4 |
-| Conventional Commits | `commit-msg` hook | Phase 3 |
-| `make ci` green on every PR | GitHub Actions | Phase 3 |
 | End-to-end tests on a device | `make test-e2e`, run by hand | Phase 5 |
+| No commit before `make ci` passed on the staged tree | Claude Code hook (D14) | Deferred |
 
 Until a control is available, the rule still applies and the author checks
 it by hand.
@@ -190,43 +211,64 @@ it by hand.
 
 ## 6. Architecture
 
-Feature-first DDD and Clean Architecture. Each feature is a bounded context
-of the mobile app, cut from the screens and operations of the Portal API —
-not a copy of the backend's contexts.
+Feature-first DDD and Clean Architecture (architecture §2–§3, D15). Each
+feature is a bounded context of the mobile app, named after the Symfony
+bounded context it reads and cut from the screens and flows of the Portal
+API.
 
 ```
 lib/
 ├── main.dart
-├── app/                 # composition root: bootstrap, router, theme, ProviderScope
-├── core/                # shared kernel: {domain,application,infrastructure,presentation}
-├── l10n/                # app_fr.arb
-└── features/<feature>/
+├── app/{bootstrap,routing,theme}/   # composition root: env, ProviderScope, runApp / go_router, shell / ThemeData, tokens
+├── core/                            # technical core, no business rule
+│   ├── network/   security/   errors/   di/   # Dio + interceptors + problem+json / tokens, session, device id / ApiFailure / core providers
+├── shared/{domain,presentation}/    # shared kernel: pure Dart value objects, Clock, common failures / UI kit, formatters
+├── l10n/                            # app_fr.arb + gen-l10n output
+└── features/<bounded_context>/
     ├── domain/          # models, value objects, sealed failures, repository contracts — pure Dart
     ├── application/     # use cases with real orchestration, state machines — pure Dart
     ├── infrastructure/  # repositories on the generated client, DTO → domain mapping
     ├── presentation/    # pages, widgets, Riverpod notifiers, routes
     ├── di.dart          # binds the domain contracts to their implementations
-    └── <feature>.dart   # the feature's public API
+    └── <bounded_context>.dart   # the feature's public API
 ```
 
-Features: `session`, `home`, `pets`, `appointments`, `documents`,
-`account`, `directory`.
+Features: `identity_access` (sign-in, invitation, refresh, logout, e-mail
+change and deletion), `client` (profile, clinics, consents, export, active
+clinic, link suggestions), `patient` (pet sheet, change requests),
+`consultation` (visit history), `scheduling` (appointments, booking,
+questionnaire, `.ics`), `document` (documents, prescriptions),
+`clinic_listing` (directory), `home` (composes the others through their
+public APIs). The screen numbers are in the architecture document, §2.
 
-Dependency rules (checked by `test/architecture/` from phase 3):
+Dependency rules, checked by `test/architecture/` in `make ci`:
 
-1. `domain/` imports no package: only `dart:core/async/collection/math`,
-   its own domain and `core/domain`.
-2. `application/` adds its domain and `core/application`; no Flutter,
-   Riverpod, Dio or generated client.
-3. `presentation/` never imports `infrastructure/`, Dio or the generated
-   client.
-4. Only `di.dart` and tests import `infrastructure/`.
-5. A feature imports another one only through `<feature>.dart`; the
-   feature graph has no cycle.
-6. `core/` imports no feature.
-7. The generated client is imported only under `infrastructure/`.
-8. `DateTime.now(`, `print(` and `coverage:ignore` are forbidden in
-   `domain/` and `application/`.
+1. `features/*/domain/` and `shared/domain/` import no package: only
+   `dart:core/async/collection/math`, their own domain and `shared/domain/`.
+2. `features/*/application/` adds its own domain and application and
+   `shared/domain/`; no Flutter, Riverpod, Dio, generated client or `core/`.
+3. `features/*/presentation/` and `shared/presentation/` never import an
+   `infrastructure/`, Dio, the generated client, `core/network/` or
+   `core/security/`.
+4. Only `features/*/di.dart`, `core/di/`, `app/bootstrap/` and tests
+   import a feature's `infrastructure/` (its own `infrastructure/` files
+   may import each other). The `core/di/` exception never applies: rule 6
+   forbids `core/` to import any feature, so the feature wiring lives in
+   `features/*/di.dart` and `app/bootstrap/`.
+5. A feature imports another one only through
+   `features/<other>/<other>.dart`; the feature graph has no cycle.
+6. `core/` and `shared/` import no feature; `shared/` imports nothing from
+   `core/` or `app/`.
+7. The generated client (`kiveto_portal_api`) is imported only under
+   `features/*/infrastructure/`, `core/network/` and `core/di/`.
+8. `DateTime.now` / `DateTime.timestamp` (inject the `Clock`), `print(` and
+   `coverage:ignore` are forbidden in `features/*/domain/`,
+   `features/*/application/` and `shared/domain/`.
+
+An offence reads `[rule N] lib/<path>:<line> imports <uri> — <what the rule
+allows> (architecture §3, D15)`. The self-tests of
+`test/architecture/architecture_self_test.dart` inject a violation of each
+rule into a temporary tree.
 
 The backend owns the business rules. The app types what the API returns,
 maps its error codes to sealed failures, and owns only the client-side
@@ -239,22 +281,42 @@ policies: session lifecycle, one token refresh at a time, a stable
 
 | Suite | Directory | Covers | In `make ci` |
 |---|---|---|---|
-| Unit | `test/unit/` (mirrors `lib/`) | domain, application, infrastructure | Yes |
-| Widget | `test/widget/` (mirrors `lib/**/presentation`) | pages and widgets: empty / short / long lists, states, errors | Yes |
-| Integration | `test/integration/` | complete flows without a device: real wiring, real generated client, fake HTTP adapter fed with contract JSON | Yes |
-| Architecture | `test/architecture/` | the rules of §6, with self-tests that inject violations | Yes |
-| End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`) |
+| Unit | `test/unit/` (mirrors `lib/`) | domain, application, infrastructure | Yes (`make test-unit`) |
+| Widget | `test/widget/` (mirrors `lib/**/presentation`) | pages and widgets: empty / short / long lists, states, errors | Yes (`make test-widget`) |
+| Integration | `test/integration/` | complete flows without a device: real wiring, real generated client, fake HTTP adapter fed with contract JSON | Yes (`make test-integration`) |
+| Tooling | `test/tool/` (fixtures in `test/tool/fixtures/`) | `tool/lib/`: the device picker, the Dart scanner, the coverage gate | Yes (`make test-tool`) |
+| Architecture | `test/architecture/` | the rules of §6, with self-tests that inject violations | Yes (`make test-architecture`) |
+| Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh`, doctor and install, install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`, `analyze.sh`, the git hooks, the entry points `tool/devices.dart` and `tool/coverage_gate.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
+| End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`, phase 5) |
 
 Coverage policy:
 
-- `domain/`, `application/` and `infrastructure/` stay at **100% line
-  coverage** per feature; `presentation/` and `app/` are measured and
-  reported without a threshold.
-- `flutter test --coverage` leaves out the files no test imports. The
-  coverage gate (`tool/coverage_gate.dart`) lists every file of `lib/` and
-  counts the missing ones as 0%. Its exclusions (`lib/main.dart`, gen-l10n
-  output) are declared and printed. The generated client is a separate
-  package, outside the measured scope.
+- **Gated at 100% line coverage**, file by file:
+  `features/*/{domain,application,infrastructure}`, `shared/domain`,
+  `core/{network,security,errors}` and `tool/lib`. **Measured**, without
+  threshold: `features/*/presentation`, `shared/presentation`, `app/`,
+  `core/di`, `features/*/di.dart` and `<feature>.dart`.
+- `flutter test --coverage` leaves out of `lcov.info` the libraries no test
+  loads and those without any executable line. The coverage gate
+  (`tool/coverage_gate.dart`, `make coverage-gate`) lists every Dart file
+  of `lib/` and `tool/` itself: a file absent from `lcov.info` but reached
+  from a `*_test.dart` through its imports, exports or parts has "no
+  executable lines" and passes (an abstract interface, an enum); one that
+  no test reaches is "not loaded by any test" and counts as 0%.
+- The gate fails on a gated file below 100% (its uncovered lines are
+  listed), a gated file no test loads, `coverage:ignore` in a gated file,
+  a file outside the D15 layout (e.g. `lib/core/foo.dart`,
+  `lib/features/x/util.dart`, `lib/app/widgets/x.dart`,
+  `lib/l10n/plurals.dart`), and a package (`lib/`, `tool/lib/`) whose
+  gated files tests load but which has no record in `lcov.info` (its
+  `--coverage-package` dropped from `scripts/test.sh`).
+- Declared exclusions, printed by the gate: `lib/main.dart` (entry point),
+  `lib/l10n/app_localizations*.dart` (gen-l10n output; also excluded from
+  analysis), `tool/*.dart` (thin entry points over
+  `tool/lib/`, run by the make targets and `test/scripts/`). The generated
+  client is a separate package, outside the measured scope. `tool/` is the
+  path package `kiveto_tool` so that `flutter test --coverage` measures
+  `tool/lib/`.
 - Golden tests are not part of `make ci`: font rendering differs between
   Windows, macOS and Linux.
 
@@ -313,13 +375,13 @@ BMAD 6.2.0 (`bmad-quick-spec` / `bmad-quick-dev` there).
 
 ## 10. Definition of Done
 
-- [ ] `make ci` is 100% green locally (once phase 3 is done)
+- [ ] `make ci` is 100% green locally
 - [ ] Tests cover the change; the coverage gate passes
 - [ ] Commit messages follow Conventional Commits
 - [ ] Branch name follows §2
 - [ ] PR opened against `master` with a descriptive title and body
 - [ ] PR links the BMAD spec, and the backend slice or contract commit when relevant
 - [ ] Checked on an Android emulator, and on an iOS simulator when the change touches iOS
-- [ ] GitHub Actions green on the PR (once phase 3 is done)
+- [ ] GitHub Actions green on the PR
 - [ ] Code review approved
 - [ ] Branch deleted after merge

@@ -30,6 +30,10 @@ app.*.map.json
 .svn/
 .swiftpm/
 
+# tool/ is a path package of the root pubspec: a pub get run inside it (IDEs
+# do it for nested pubspecs) writes a lock file nobody uses.
+/tool/pubspec.lock
+
 # FVM: .fvmrc is committed, the SDK link is per machine
 .fvm/
 

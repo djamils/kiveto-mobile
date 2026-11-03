@@ -10,11 +10,22 @@ KV_CALLER=install bash scripts/doctor.sh --quiet
 ok "Prerequisites ok"
 
 step "Installing Flutter $FLUTTER_VERSION (fvm install)..."
+was_cached=1
 if ! flutter_cached; then
+  was_cached=0
   info "Not in the FVM cache yet: FVM downloads it once, this takes a while (output in $LOG_FILE)."
 fi
 run fvm install --skip-pub-get
 ok "Flutter $FLUTTER_VERSION ready"
+
+# The first doctor run could not check what needs Flutter (the NDK version
+# it asks for): check again now, so that such a blocker stops the install
+# instead of the first Android build.
+if [ "$was_cached" = 0 ]; then
+  step "Checking the prerequisites that need Flutter..."
+  KV_CALLER=install bash scripts/doctor.sh --quiet
+  ok "Prerequisites ok"
+fi
 
 pub_get_if_needed
 
