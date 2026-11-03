@@ -2,12 +2,14 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
-import 'dart:convert' as _i6;
+import 'dart:convert' as _i7;
 import 'dart:core' as _i3;
 
-import 'package:collection/collection.dart' as _i5;
-import 'package:kiveto_portal_api/src/model/clinic_link_view_link_status_model.dart'
+import 'package:collection/collection.dart' as _i6;
+import 'package:kiveto_portal_api/src/model/clinic_link_view_address_any_of_model.dart'
     as _i4;
+import 'package:kiveto_portal_api/src/model/clinic_link_view_link_status_model.dart'
+    as _i5;
 import 'package:meta/meta.dart' as _i2;
 import 'package:tonik_util/tonik_util.dart' as _i1;
 
@@ -18,6 +20,8 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
     required this.clinicId,
     required this.name,
     required this.city,
+    required this.phone,
+    required this.address,
     required this.timezone,
     required this.linkStatus,
     required this.linkedAt,
@@ -31,56 +35,8 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
     required _i3.bool explode,
     _i3.bool isHeader = false,
   }) {
-    final _$values = value.decodeObject(
-      explode: explode,
-      explodeSeparator: ',',
-      expectedKeys: {
-        r'clinicId',
-        r'name',
-        r'city',
-        r'timezone',
-        r'linkStatus',
-        r'linkedAt',
-        r'petNames',
-        r'tags',
-        r'unreadDocuments',
-      },
-      listKeys: {r'petNames', r'tags'},
-      context: r'ClinicLinkView',
-      isHeader: isHeader,
-      percentDecodeKeys: false,
-    );
-    return ClinicLinkView(
-      clinicId: _$values[r'clinicId'].decodeSimpleString(
-        context: r'ClinicLinkView.clinicId',
-      ),
-      name: _$values[r'name'].decodeSimpleString(
-        context: r'ClinicLinkView.name',
-      ),
-      city: _$values[r'city'].decodeSimpleNullableString(
-        context: r'ClinicLinkView.city',
-      ),
-      timezone: _$values[r'timezone'].decodeSimpleString(
-        context: r'ClinicLinkView.timezone',
-      ),
-      linkStatus: _i4.ClinicLinkViewLinkStatusModel.fromSimple(
-        _$values[r'linkStatus'],
-        explode: explode,
-      ),
-      linkedAt: _$values[r'linkedAt'].decodeSimpleNullableDateTime(
-        context: r'ClinicLinkView.linkedAt',
-      ),
-      petNames: _$values[r'petNames'].decodeSimpleStringList(
-        context: r'ClinicLinkView.petNames',
-        isHeader: isHeader,
-      ),
-      tags: _$values[r'tags'].decodeSimpleStringList(
-        context: r'ClinicLinkView.tags',
-        isHeader: isHeader,
-      ),
-      unreadDocuments: _$values[r'unreadDocuments'].decodeSimpleInt(
-        context: r'ClinicLinkView.unreadDocuments',
-      ),
+    throw _i1.SimpleDecodingException(
+      r'Simple encoding not supported for ClinicLinkView: contains complex types',
     );
   }
 
@@ -94,10 +50,16 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
       city: _$map[r'city'].decodeJsonNullableString(
         context: r'ClinicLinkView.city',
       ),
+      phone: _$map[r'phone'].decodeJsonNullableString(
+        context: r'ClinicLinkView.phone',
+      ),
+      address: _$map[r'address'] == null
+          ? null
+          : _i4.ClinicLinkViewAddressAnyOfModel.fromJson(_$map[r'address']),
       timezone: _$map[r'timezone'].decodeJsonString(
         context: r'ClinicLinkView.timezone',
       ),
-      linkStatus: _i4.ClinicLinkViewLinkStatusModel.fromJson(
+      linkStatus: _i5.ClinicLinkViewLinkStatusModel.fromJson(
         _$map[r'linkStatus'],
       ),
       linkedAt: _$map[r'linkedAt'].decodeJsonNullableDateTime(
@@ -119,50 +81,8 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
     _i3.String? value, {
     required _i3.bool explode,
   }) {
-    final _$values = value.decodeObject(
-      explode: explode,
-      explodeSeparator: '&',
-      expectedKeys: {
-        r'clinicId',
-        r'name',
-        r'city',
-        r'timezone',
-        r'linkStatus',
-        r'linkedAt',
-        r'petNames',
-        r'tags',
-        r'unreadDocuments',
-      },
-      listKeys: {r'petNames', r'tags'},
-      context: r'ClinicLinkView',
-    );
-    return ClinicLinkView(
-      clinicId: _$values[r'clinicId'].decodeFormString(
-        context: r'ClinicLinkView.clinicId',
-      ),
-      name: _$values[r'name'].decodeFormString(context: r'ClinicLinkView.name'),
-      city: _$values[r'city'].decodeFormNullableString(
-        context: r'ClinicLinkView.city',
-      ),
-      timezone: _$values[r'timezone'].decodeFormString(
-        context: r'ClinicLinkView.timezone',
-      ),
-      linkStatus: _i4.ClinicLinkViewLinkStatusModel.fromForm(
-        _$values[r'linkStatus'],
-        explode: explode,
-      ),
-      linkedAt: _$values[r'linkedAt'].decodeFormNullableDateTime(
-        context: r'ClinicLinkView.linkedAt',
-      ),
-      petNames: _$values[r'petNames'].decodeFormStringList(
-        context: r'ClinicLinkView.petNames',
-      ),
-      tags: _$values[r'tags'].decodeFormStringList(
-        context: r'ClinicLinkView.tags',
-      ),
-      unreadDocuments: _$values[r'unreadDocuments'].decodeFormInt(
-        context: r'ClinicLinkView.unreadDocuments',
-      ),
+    throw _i1.FormDecodingException(
+      r'Form encoding not supported for ClinicLinkView: contains complex types',
     );
   }
 
@@ -172,9 +92,15 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
 
   final _i3.String? city;
 
+  /// The clinic's phone as its letterhead records it; null when it has none.
+  final _i3.String? phone;
+
+  /// The clinic's letterhead address; null when the letterhead has no street line or no city.
+  final _i4.ClinicLinkViewAddressAnyOfModel address;
+
   final _i3.String timezone;
 
-  final _i4.ClinicLinkViewLinkStatusModel linkStatus;
+  final _i5.ClinicLinkViewLinkStatusModel linkStatus;
 
   final _i3.DateTime? linkedAt;
 
@@ -189,6 +115,8 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
     r'clinicId': this.clinicId,
     r'name': this.name,
     r'city': this.city,
+    r'phone': this.phone,
+    r'address': this.address?.toJson(),
     r'timezone': this.timezone,
     r'linkStatus': this.linkStatus.toJson(),
     r'linkedAt': this.linkedAt?.toTimeZonedIso8601String(),
@@ -201,8 +129,10 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
     _i3.String? clinicId,
     _i3.String? name,
     _i3.String? city,
+    _i3.String? phone,
+    _i4.ClinicLinkViewAddressAnyOfModel? address,
     _i3.String? timezone,
-    _i4.ClinicLinkViewLinkStatusModel? linkStatus,
+    _i5.ClinicLinkViewLinkStatusModel? linkStatus,
     _i3.DateTime? linkedAt,
     _i3.List<_i3.String>? petNames,
     _i3.List<_i3.String>? tags,
@@ -214,8 +144,10 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
       _i3.String? clinicId,
       _i3.String? name,
       _i3.Object? city = _sentinel,
+      _i3.Object? phone = _sentinel,
+      _i3.Object? address = _sentinel,
       _i3.String? timezone,
-      _i4.ClinicLinkViewLinkStatusModel? linkStatus,
+      _i5.ClinicLinkViewLinkStatusModel? linkStatus,
       _i3.Object? linkedAt = _sentinel,
       _i3.List<_i3.String>? petNames,
       _i3.List<_i3.String>? tags,
@@ -224,6 +156,12 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
       clinicId: clinicId ?? this.clinicId,
       name: name ?? this.name,
       city: _i3.identical(city, _sentinel) ? this.city : (city as _i3.String?),
+      phone: _i3.identical(phone, _sentinel)
+          ? this.phone
+          : (phone as _i3.String?),
+      address: _i3.identical(address, _sentinel)
+          ? this.address
+          : (address as _i4.ClinicLinkViewAddressAnyOfModel),
       timezone: timezone ?? this.timezone,
       linkStatus: linkStatus ?? this.linkStatus,
       linkedAt: _i3.identical(linkedAt, _sentinel)
@@ -238,11 +176,13 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
   @_i3.override
   _i3.bool operator ==(_i3.Object other) {
     if (_i3.identical(this, other)) return true;
-    const _$deepEquals = _i5.DeepCollectionEquality();
+    const _$deepEquals = _i6.DeepCollectionEquality();
     return other is ClinicLinkView &&
         other.clinicId == this.clinicId &&
         other.name == this.name &&
         other.city == this.city &&
+        other.phone == this.phone &&
+        other.address == this.address &&
         other.timezone == this.timezone &&
         other.linkStatus == this.linkStatus &&
         other.linkedAt == this.linkedAt &&
@@ -253,11 +193,13 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
 
   @_i3.override
   _i3.int get hashCode {
-    const deepEquals = _i5.DeepCollectionEquality();
+    const deepEquals = _i6.DeepCollectionEquality();
     return _i3.Object.hashAll([
       this.clinicId,
       this.name,
       this.city,
+      this.phone,
+      this.address,
       this.timezone,
       this.linkStatus,
       this.linkedAt,
@@ -279,6 +221,15 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
     if (this.city != null) {
       _$result[r'city'] = _i1.PropertyValue.scalar(this.city!);
     }
+    if (this.phone != null) {
+      _$result[r'phone'] = _i1.PropertyValue.scalar(this.phone!);
+    }
+    if (this.address != null) {
+      _$result[r'address'] = _i1.encodeAnyValueToPropertyValue(
+        this.address!.toJson(),
+        allowEmpty: allowEmpty,
+      );
+    }
     _$result[r'timezone'] = _i1.PropertyValue.scalar(this.timezone);
     _$result[r'linkStatus'] = _i1.PropertyValue.scalar(
       this.linkStatus.toJson(),
@@ -299,7 +250,7 @@ class ClinicLinkView extends _i1.ObjectParameterEncodable
   @_i3.override
   _i3.String uriEncode({
     required _i3.bool allowEmpty,
-    required _i6.Encoding textEncoding,
+    required _i7.Encoding textEncoding,
     _i3.bool useQueryComponent = false,
     _i3.bool allowReserved = false,
   }) {
