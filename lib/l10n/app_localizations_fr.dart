@@ -48,12 +48,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get screenClinicsTitle => 'Trouver une clinique';
 
   @override
-  String get screenPetsTitle => 'Mes animaux';
-
-  @override
-  String get screenPetTitle => 'Fiche animal';
-
-  @override
   String get screenAppointmentsTitle => 'Rendez-vous';
 
   @override
@@ -534,6 +528,248 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeGreetingNoName => 'Bonjour';
 
   @override
+  String homeClinicSwitcherLabel(String name) {
+    return 'Changer de clinique, actuellement $name';
+  }
+
+  @override
+  String get homeNextAppointmentTitle => 'Prochain rendez-vous';
+
+  @override
+  String get homeAppointmentConfirmed => 'Confirmé';
+
+  @override
+  String get homeAppointmentPending => 'En attente';
+
+  @override
+  String homeAppointmentPetMotif(String pet, String motif) {
+    return '$pet — $motif';
+  }
+
+  @override
+  String get homeFillQuestionnaire => 'Remplir le questionnaire';
+
+  @override
+  String get homeManageAppointments => 'Gérer';
+
+  @override
+  String get homePetsTitle => 'Mes animaux';
+
+  @override
+  String get homeCareTitle => 'À prévoir';
+
+  @override
+  String get homeCareCaption => 'Échéances de soins';
+
+  @override
+  String homeCareItemTitle(String pet, String label) {
+    return '$pet — $label';
+  }
+
+  @override
+  String homeCareDue(String date) {
+    return 'Avant le $date';
+  }
+
+  @override
+  String get homeBook => 'Prendre rendez-vous';
+
+  @override
+  String get homeDocumentsTitle => 'Derniers documents';
+
+  @override
+  String get homeDocumentsSeeAll => 'Tout voir';
+
+  @override
+  String get homeClinicGoneTitle => 'Clinique indisponible';
+
+  @override
+  String get homeClinicGoneBody =>
+      'Votre accès à cette clinique n\'est plus actif.';
+
+  @override
+  String get clientClinicSwitcherTitle => 'Changer de clinique';
+
+  @override
+  String get clientClinicActive => 'Active';
+
+  @override
+  String get petSwitcherLabel => 'Animal';
+
+  @override
+  String get petSpeciesDog => 'Chien';
+
+  @override
+  String get petSpeciesCat => 'Chat';
+
+  @override
+  String get petSpeciesNac => 'NAC';
+
+  @override
+  String get petSpeciesOther => 'Autre';
+
+  @override
+  String get petSexMale => 'Mâle';
+
+  @override
+  String get petSexFemale => 'Femelle';
+
+  @override
+  String get petSexMaleNeutered => 'Mâle castré';
+
+  @override
+  String get petSexFemaleNeutered => 'Femelle stérilisée';
+
+  @override
+  String get petSexUnknownNeutered => 'Stérilisé';
+
+  @override
+  String get petDeceasedMale => 'Décédé';
+
+  @override
+  String get petDeceasedFemale => 'Décédée';
+
+  @override
+  String get petMissingMale => 'Disparu';
+
+  @override
+  String get petMissingFemale => 'Disparue';
+
+  @override
+  String petAgeYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ans',
+      one: '1 an',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String petAgeMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mois',
+      one: '1 mois',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get petAgeUnderOneMonth => 'Moins d\'un mois';
+
+  @override
+  String get petBornMale => 'Né le';
+
+  @override
+  String get petBornFemale => 'Née le';
+
+  @override
+  String get petWeight => 'Poids';
+
+  @override
+  String petWeightValue(String value) {
+    return '$value kg';
+  }
+
+  @override
+  String get petChip => 'Puce';
+
+  @override
+  String get petReferentVet => 'Suivi par';
+
+  @override
+  String get petNone => '—';
+
+  @override
+  String get petReportChange => 'Signaler une modification';
+
+  @override
+  String get petReportChangeCaption =>
+      'Vérifiée par la clinique avant mise à jour de la fiche.';
+
+  @override
+  String get petCareTitle => 'Vaccins et préventions';
+
+  @override
+  String get petBooklet => 'Carnet PDF';
+
+  @override
+  String petBookletTitle(String name) {
+    return 'Carnet de vaccination · $name';
+  }
+
+  @override
+  String get petCareEmpty => 'Aucun soin préventif à suivre.';
+
+  @override
+  String get petEmptyTitle => 'Aucun animal';
+
+  @override
+  String petEmptyBody(String clinic) {
+    return 'Les animaux suivis par $clinic apparaîtront ici.';
+  }
+
+  @override
+  String get careBooked => 'RDV pris';
+
+  @override
+  String get careOverdue => 'En retard';
+
+  @override
+  String get careUpToDate => 'À jour';
+
+  @override
+  String get careToday => 'Aujourd\'hui';
+
+  @override
+  String get careTomorrow => 'Demain';
+
+  @override
+  String careInDays(int count) {
+    return 'Dans $count j';
+  }
+
+  @override
+  String careInWeeks(int count) {
+    return 'Dans $count sem.';
+  }
+
+  @override
+  String careDoneAndDue(String done, String due) {
+    return 'Fait le $done · prochain avant le $due';
+  }
+
+  @override
+  String careOverdueSince(String due) {
+    return 'À faire depuis le $due';
+  }
+
+  @override
+  String careDueBefore(String due) {
+    return 'Prochain avant le $due';
+  }
+
+  @override
+  String careValidUntil(String due) {
+    return 'Valide jusqu\'au $due';
+  }
+
+  @override
+  String get timelineTitle => 'Historique';
+
+  @override
+  String get timelineNoDocument => 'Aucun document partagé';
+
+  @override
+  String get timelineEmpty => 'Aucune consultation partagée pour le moment.';
+
+  @override
+  String get timelineMoreError => 'Impossible de charger la suite.';
+
+  @override
   String documentsSubtitle(String clinic) {
     return 'Partagés par $clinic';
   }
@@ -664,6 +900,24 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get documentsPrescriptionGoneBody =>
       'Cette ordonnance n\'est plus disponible.';
+
+  @override
+  String get documentsKindReport => 'Compte-rendu';
+
+  @override
+  String get documentsKindPrescription => 'Ordonnance';
+
+  @override
+  String get documentsKindInvoice => 'Facture';
+
+  @override
+  String get documentsKindLabResult => 'Résultats';
+
+  @override
+  String get documentsKindCertificate => 'Certificat';
+
+  @override
+  String get documentsKindUnknown => 'Document';
 
   @override
   String documentsNamesAnd(String head, String last) {

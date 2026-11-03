@@ -13,6 +13,7 @@ import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
+import 'package:kiveto_mobile/features/patient/patient.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -150,7 +151,7 @@ void main() {
       initialLocation: AppRoutes.pet('a/b'),
     );
 
-    expect(find.text('Fiche animal'), findsOneWidget);
+    expect(tester.widget<PetPage>(find.byType(PetPage)).petId, 'a/b');
     final match = container
         .read(routerProvider)
         .routerDelegate
@@ -330,7 +331,7 @@ void main() {
         session: await memorySession(pair('A')),
         initialLocation: AppRoutes.pet('moka'),
       );
-      expect(find.text('Fiche animal'), findsOneWidget);
+      expect(tester.widget<PetPage>(find.byType(PetPage)).petId, 'moka');
 
       await tester.tap(find.text('Accueil'));
       await tester.pumpAndSettle();
@@ -339,15 +340,17 @@ void main() {
       await tester.tap(find.text('Animaux'));
       await tester.pumpAndSettle();
       expect(_location(container), AppRoutes.pet('moka'));
-      expect(find.text('Fiche animal'), findsOneWidget);
+      expect(tester.widget<PetPage>(find.byType(PetPage)).petId, 'moka');
 
       await tester.tap(find.text('Animaux'));
       await tester.pumpAndSettle();
       expect(_location(container), AppRoutes.pets);
-      expect(find.text('Mes animaux'), findsOneWidget);
+      expect(tester.widget<PetPage>(find.byType(PetPage)).petId, isNull);
     });
 
-    testWidgets('the back button of a pushed page pops it', (tester) async {
+    testWidgets('the back button of a page pushed in a tab pops it', (
+      tester,
+    ) async {
       final container = await pumpKivetoApp(
         tester,
         session: await memorySession(pair('A')),

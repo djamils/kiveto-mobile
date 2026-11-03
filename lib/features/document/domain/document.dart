@@ -1,22 +1,14 @@
 import 'package:kiveto_mobile/shared/domain/clinic_instant.dart';
+import 'package:kiveto_mobile/shared/domain/document_kind.dart';
 import 'package:kiveto_mobile/shared/domain/local_date.dart';
 import 'package:kiveto_mobile/shared/domain/money.dart';
+import 'package:kiveto_mobile/shared/domain/payment_status.dart';
 
 /// The id of a published document, as the Portal API sends it.
 extension type const DocumentId(String value);
 
 /// The id of a prescription (not the id of its document).
 extension type const PrescriptionId(String value);
-
-/// What a document is; [unknown] for a type this app does not know yet.
-enum DocumentKind {
-  report,
-  prescription,
-  invoice,
-  labResult,
-  certificate,
-  unknown,
-}
 
 /// A document the clinic published for the owner (`GET …/documents`).
 final class Document {
@@ -66,10 +58,6 @@ final class Document {
   @override
   String toString() => 'Document(${id.value}, ${kind.name})';
 }
-
-/// How far an invoice is paid; [unknown] for a status this app does not
-/// know yet.
-enum PaymentStatus { unpaid, partiallyPaid, paid, credited, unknown }
 
 /// The invoice part of a document.
 final class InvoiceSummary {

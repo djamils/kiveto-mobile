@@ -63,15 +63,16 @@ class KivetoCard extends StatelessWidget {
 /// C-11a/b/c: a row of a card: a title, an optional meta line, an optional
 /// leading tile and trailing widget.
 class KivetoListRow extends StatelessWidget {
-  /// C-11a: two lines and a trailing widget (a pill), padding 14.
+  /// C-11a: two lines and a trailing widget (a pill), padding 14 (13 14 on
+  /// the pet sheet: [padding]).
   const new({
     required this.title,
     super.key,
     this.meta,
     this.trailing,
     this.onTap,
+    this.padding = const EdgeInsets.all(14),
   }) : leading = null,
-       _padding = const EdgeInsets.all(14),
        _minHeight = 0,
        _metaGap = 2;
 
@@ -87,7 +88,7 @@ class KivetoListRow extends StatelessWidget {
          size: 18,
          color: KivetoColors.inkMuted,
        ),
-       _padding = const EdgeInsets.symmetric(horizontal: 14),
+       padding = const EdgeInsets.symmetric(horizontal: 14),
        _minHeight = 52,
        _metaGap = 1;
 
@@ -99,7 +100,7 @@ class KivetoListRow extends StatelessWidget {
     this.meta,
     this.trailing,
     this.onTap,
-  }) : _padding = const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+  }) : padding = const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
        _minHeight = 0,
        _metaGap = 2;
 
@@ -108,7 +109,9 @@ class KivetoListRow extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
   final VoidCallback? onTap;
-  final EdgeInsets _padding;
+
+  /// Around the row (C-11a: 14; C-11b: 0 14; C-11c: 12 14).
+  final EdgeInsets padding;
   final double _minHeight;
   final double _metaGap;
 
@@ -120,7 +123,7 @@ class KivetoListRow extends StatelessWidget {
     final row = ConstrainedBox(
       constraints: BoxConstraints(minHeight: _minHeight),
       child: Padding(
-        padding: _padding,
+        padding: padding,
         child: Row(
           children: [
             if (leading != null) ...[leading, const SizedBox(width: 12)],

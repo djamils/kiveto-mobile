@@ -24,6 +24,19 @@ void main() {
     expect(KivetoFormat.dayMonth(LocalDate(2026, 11, 4)), '4 nov.');
     expect(KivetoFormat.dayMonthYear(LocalDate(2026, 10, 14)), '14 oct. 2026');
     expect(KivetoFormat.numericDate(LocalDate(2026, 11, 4)), '04/11/2026');
+    // The long form of the history, on the clinic's clock too.
+    expect(
+      KivetoFormat.dayMonthYearLong(
+        ClinicInstant.parse('2026-08-18T17:45:00+02:00'),
+      ),
+      '18 août 2026',
+    );
+    expect(
+      KivetoFormat.dayMonthYearLong(
+        ClinicInstant.parse('2026-10-14T23:30:00-05:00'),
+      ),
+      '14 octobre 2026',
+    );
   });
 
   test('money with the currency decimals and French separators', () {

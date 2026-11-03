@@ -30,6 +30,10 @@ abstract final class KivetoFormat {
   static String dayMonthYear(LocalDate date) =>
       DateFormat('d MMM y', _locale).format(_utc(date));
 
+  /// `14 octobre 2026`, the day of [instant] on the clinic's wall clock.
+  static String dayMonthYearLong(ClinicInstant instant) =>
+      DateFormat('d MMMM y', _locale).format(_wallClock(instant));
+
   /// `04/11/2026`
   static String numericDate(LocalDate date) =>
       DateFormat('dd/MM/y', _locale).format(_utc(date));

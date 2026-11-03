@@ -5,13 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kiveto_mobile/app/routing/app_routes.dart';
 import 'package:kiveto_mobile/app/routing/app_shell.dart';
-import 'package:kiveto_mobile/app/routing/home_placeholder_page.dart';
 import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
 import 'package:kiveto_mobile/app/routing/placeholder_page.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/features/document/document.dart';
+import 'package:kiveto_mobile/features/home/home.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
+import 'package:kiveto_mobile/features/patient/patient.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -69,6 +70,33 @@ GoRoute _page(
 // import app/).
 void _goWelcome(BuildContext context) => context.go(AppRoutes.welcome);
 void _goHome(BuildContext context) => context.go(AppRoutes.home);
+
+/// A new navigation to a pet's sheet, the same pet included: a fresh
+/// `extra` drops the choice the sheet's switcher kept.
+void _goPet(BuildContext context, String petId) =>
+    context.go(AppRoutes.pet(petId), extra: Object());
+void _goAppointments(BuildContext context) =>
+    context.go(AppRoutes.appointments);
+void _goDocuments(BuildContext context) => context.go(AppRoutes.documents);
+void _pushQuestionnaire(BuildContext context, String appointmentId) =>
+    unawaited(context.push(AppRoutes.questionnaire(appointmentId)));
+void _pushBooking(BuildContext context) =>
+    unawaited(context.push(AppRoutes.bookingPet));
+
+/// Back from a page of a tab: pops what was pushed on it, else the home.
+void _backOrHome(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(AppRoutes.home);
+  }
+}
+
+/// The change request of a pet is slice 6's: a placeholder sheet until
+/// then.
+void _reportPetChange(BuildContext context, String petId) => unawaited(
+  showPlaceholderSheet(context, AppLocalizations.of(context).petReportChange),
+);
 
 List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
   GoRoute fullScreen(String path, String Function(AppLocalizations) title) =>
@@ -134,23 +162,36 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
           routes: [
             GoRoute(
               path: AppRoutes.home,
-              builder: (context, state) => const HomePlaceholderPage(),
+              builder: (context, state) => const HomePage(
+                onOpenPet: _goPet,
+                onManageAppointments: _goAppointments,
+                onFillQuestionnaire: _pushQuestionnaire,
+                onBook: _pushBooking,
+                onSeeAllDocuments: _goDocuments,
+              ),
             ),
             _page(AppRoutes.clinics, (l10n) => l10n.screenClinicsTitle),
           ],
         ),
         StatefulShellBranch(
+          // Two siblings, not a sub-route: a `go` from the home to a pet
+          // does not stack the first pet's sheet under it.
           routes: [
-            _page(
-              AppRoutes.pets,
-              (l10n) => l10n.screenPetsTitle,
-              routes: [
-                _page(
-                  ':petId',
-                  (l10n) => l10n.screenPetTitle,
-                  kind: PlaceholderKind.pushed,
-                ),
-              ],
+            GoRoute(
+              path: AppRoutes.pets,
+              builder: (context, state) => const PetPage(
+                onBack: _backOrHome,
+                onReportChange: _reportPetChange,
+              ),
+            ),
+            GoRoute(
+              path: '${AppRoutes.pets}/:petId',
+              builder: (context, state) => PetPage(
+                petId: state.pathParameters['petId'],
+                request: state.extra,
+                onBack: _backOrHome,
+                onReportChange: _reportPetChange,
+              ),
             ),
           ],
         ),
