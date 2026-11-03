@@ -214,7 +214,9 @@ int _check(String root, StringSink out, StringSink err) {
 
   final digest = state.contract;
   final recorded = state.source?['sha256'];
-  if (digest != null && state.source != null && recorded != digest) {
+  if (state.source != null && recorded == null) {
+    problems.add('$_source names no sha256 - fix: $_syncFix');
+  } else if (digest != null && state.source != null && recorded != digest) {
     problems.add(
       '$_contract was edited by hand: its sha256 is $digest, $_source says '
       '$recorded - restore it (git checkout -- $_contract) or $_syncFix',
@@ -301,8 +303,8 @@ _State _current(String root, List<String> problems) {
       : null;
   if (generator == null) {
     problems.add(
-      '$_generatorLock does not pin tonik - fix: run `fvm dart pub get` in '
-      'tool/api_generator',
+      '$_generatorLock does not pin tonik - restore the committed lock '
+      '(git checkout -- $_generatorLock)',
     );
   }
 

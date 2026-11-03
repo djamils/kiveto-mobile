@@ -33,21 +33,23 @@ esac
 KV_RESTORE=packages/kiveto_portal_api
 
 generate_failed() {
-  die "make $KV_TARGET failed - fix the cause shown above (e.g. add the missing names to tool/api_generator/tonik.yaml), then make api-generate; or go back with git checkout -- $KV_RESTORE"
+  die "make $KV_TARGET failed - fix the cause shown above (e.g. add the missing names to tool/api_generator/tonik.yaml), then make api-generate; or go back with git checkout -- $KV_RESTORE && git clean -fdq -- packages/kiveto_portal_api"
 }
 
 generate() {
-  # The normaliser writes build/ only: the committed client stays in place
-  # until the contract is accepted (e.g. no name missing from tonik.yaml).
+  # The normaliser writes build/ only, and the generator is resolved before
+  # anything is removed: the committed client stays in place until the
+  # contract is accepted (no name missing from tonik.yaml) and tonik is
+  # installed (pub.dev reachable or the pub cache warm).
   step "Normalising contracts/portal.v1.yaml (build/kiveto_portal_api/portal.v1.yaml)..."
   rm -rf build/kiveto_portal_api
   run fvm dart tool/normalize_contract.dart contracts/portal.v1.yaml \
     tool/api_generator/tonik.yaml build/kiveto_portal_api/portal.v1.yaml || generate_failed
 
   step "Generating packages/kiveto_portal_api (tonik, tool/api_generator)..."
-  rm -rf packages/kiveto_portal_api
   cd tool/api_generator
   run fvm dart pub get --enforce-lockfile || generate_failed
+  rm -rf "$KV_ROOT/packages/kiveto_portal_api" || generate_failed
   run fvm dart run tonik --config tonik.yaml || generate_failed
   cd "$KV_ROOT"
   run fvm dart tool/portal_api.dart stamp || generate_failed
@@ -65,6 +67,12 @@ case ${1:-} in
     case $REF in
       -* | *[!0-9A-Za-z._/-]*)
         die "REF '$REF' may only hold letters, digits and . _ / - (not first): a commit SHA, branch or tag of the backend"
+        ;;
+    esac
+    # It reaches fvm too, hence cmd.exe on Windows.
+    case $KIVETO_BACKEND_DIR in
+      *[\|\^\&\<\>%\"]*)
+        die "KIVETO_BACKEND_DIR '$KIVETO_BACKEND_DIR' may not hold | ^ & < > % or \" (fvm passes it through cmd.exe on Windows): use a path without them"
         ;;
     esac
     if [ ! -d "$KIVETO_BACKEND_DIR" ]; then

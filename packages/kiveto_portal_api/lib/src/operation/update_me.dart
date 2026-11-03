@@ -7,7 +7,7 @@ import 'dart:core' as _i3;
 
 import 'package:dio/dio.dart' as _i5;
 import 'package:kiveto_portal_api/src/model/constraint_violation.dart' as _i11;
-import 'package:kiveto_portal_api/src/model/error.dart' as _i9;
+import 'package:kiveto_portal_api/src/model/problem_details.dart' as _i9;
 import 'package:kiveto_portal_api/src/model/updated_account_view.dart' as _i8;
 import 'package:kiveto_portal_api/src/operation/dio_operation.dart' as _i1;
 import 'package:kiveto_portal_api/src/request_body/api_portal_v1_me_patch_body_request_body.dart'
@@ -93,13 +93,13 @@ final class UpdateMe extends _i1.DioOperation<_i2.UpdateMeResponse> {
         );
       case (400, r'application/problem+json'):
         final _$json = _i4.decodeResponseJson<_i3.Object?>(response.data);
-        final _$body = _i9.Error.fromJson(_$json);
+        final _$body = _i9.ProblemDetails.fromJson(_$json);
         return _i2.UpdateMeResponse400(
           body: _i10.ApiPortalV1MePatch400ResponseProblemJson(body: _$body),
         );
       case (400, r'application/json'):
         final _$json = _i4.decodeResponseJson<_i3.Object?>(response.data);
-        final _$body = _i9.Error.fromJson(_$json);
+        final _$body = _i9.ProblemDetails.fromJson(_$json);
         return _i2.UpdateMeResponse400(
           body: _i10.ApiPortalV1MePatch400ResponseJson(body: _$body),
         );

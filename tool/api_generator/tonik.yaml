@@ -86,6 +86,9 @@ nameOverrides:
     Registration.AcceptedInvitationView: RegistrationResultView
     RenewalRequestCreation.RenewalRequestCreatedView: RenewalRequestCreatedView
     SessionRefresh.SessionTokensView: SessionTokens
+    # The problem+json body: `Error` would hide dart:core's Error in every
+    # file importing the client.
+    Error: ProblemDetails
 
   # "<Schema>.<property>" (the contract's schema name): a property named
   # `type` would be generated as `$type`.

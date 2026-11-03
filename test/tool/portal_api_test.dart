@@ -62,8 +62,8 @@ const Map<String, String> _package = {
 
 const _syncFix = 'make api-sync REF=<sha>';
 const _noTonik =
-    'tool/api_generator/pubspec.lock does not pin tonik - fix: run '
-    '`fvm dart pub get` in tool/api_generator';
+    'tool/api_generator/pubspec.lock does not pin tonik - restore the '
+    'committed lock (git checkout -- tool/api_generator/pubspec.lock)';
 
 /// SHA-256 of `<path>\n<sha256>\n` over [files] in sorted path order: the
 /// documented `inputs` / `files` digests, computed independently.
@@ -660,6 +660,18 @@ void main() {
 
         expect(await repo.problems(), [
           '$_source names no commit - fix: $_syncFix',
+        ]);
+      });
+
+      test('a SOURCE without sha256: SOURCE is named, not the copy', () async {
+        final repo = await _Repo.generated();
+        repo.write(
+          _source,
+          'commit: 840dbead0202f55a4e8aacf2858a579d2b828f45\n',
+        );
+
+        expect(await repo.problems(), [
+          '$_source names no sha256 - fix: $_syncFix',
         ]);
       });
 

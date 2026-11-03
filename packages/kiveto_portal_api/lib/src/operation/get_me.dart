@@ -5,8 +5,8 @@
 import 'dart:core' as _i3;
 
 import 'package:dio/dio.dart' as _i5;
-import 'package:kiveto_portal_api/src/model/error.dart' as _i7;
 import 'package:kiveto_portal_api/src/model/me.dart' as _i6;
+import 'package:kiveto_portal_api/src/model/problem_details.dart' as _i7;
 import 'package:kiveto_portal_api/src/operation/dio_operation.dart' as _i1;
 import 'package:kiveto_portal_api/src/response/api_portal_v1_me_get404_response.dart'
     as _i8;
@@ -71,13 +71,13 @@ final class GetMe extends _i1.DioOperation<_i2.GetMeResponse> {
         return _i2.GetMeResponse401();
       case (404, r'application/problem+json'):
         final _$json = _i4.decodeResponseJson<_i3.Object?>(response.data);
-        final _$body = _i7.Error.fromJson(_$json);
+        final _$body = _i7.ProblemDetails.fromJson(_$json);
         return _i2.GetMeResponse404(
           body: _i8.ApiPortalV1MeGet404ResponseProblemJson(body: _$body),
         );
       case (404, r'application/json'):
         final _$json = _i4.decodeResponseJson<_i3.Object?>(response.data);
-        final _$body = _i7.Error.fromJson(_$json);
+        final _$body = _i7.ProblemDetails.fromJson(_$json);
         return _i2.GetMeResponse404(
           body: _i8.ApiPortalV1MeGet404ResponseJson(body: _$body),
         );

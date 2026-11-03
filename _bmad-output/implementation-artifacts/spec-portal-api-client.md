@@ -124,6 +124,41 @@ Facts established while planning (scratch copies, 2026-11-03):
 - Given `packages/kiveto_portal_api`, when `grep` looks for the default names (`apiMe`, `api_`, `ApiPortalV1ClinicsClinicIdHome…` method names, `AppointmentAppointmentView`, `$type`), then API classes are `AccountApi, AuthApi, ClinicListingApi, ConsentsApi, DocumentsApi, FilesApi, InvitationsApi, PetsApi, RequestsApi, SchedulingApi, TermsApi`, the 60 methods carry the names of `tonik.yaml`, the 34 dotted schemas their readable names, and only the path-derived inline types listed in the implementation notes keep a generated name.
 - Given the local backend running, when the live run signs in +33612345678 with one OTP, then `GET /me` and the four clinic routes of both clinics decode with the generated client and no decoding failure (recorded below).
 
+### Review Findings
+
+Code review (bmad-code-review, 2026-11-03, branch diff `master...HEAD` without the generated / copied files; 4 layers: blind-hunter, edge-case-hunter, verification-gap, acceptance-auditor; 39 findings): 14 patch entries, 1 defer, 16 rejected rows. All patches applied.
+
+- [x] [Review][Patch] `scripts/api.sh` generate / sync paths had no script test (order, restore hint, `KV_RESTORE`, relative `LOG_FILE`) — new `test/scripts/api_generate_sh_test.sh` (stub fvm, 13 cases) [scripts/api.sh:39]
+- [x] [Review][Patch] `generate` removed the client before resolving the generator (offline `pub get` left the app without its client); an `rm -rf` failure exited without the hint — `pub get --enforce-lockfile` first, `rm -rf … || generate_failed` [scripts/api.sh:48]
+- [x] [Review][Patch] the restore hint left untracked partial tonik output (api-check then fails) — hint adds `git clean -fdq -- packages/kiveto_portal_api` [scripts/api.sh:35]
+- [x] [Review][Patch] architecture §7 described the old generate order and an automatic restore — row rewritten (advice, nothing restored by the script) [_bmad-output/planning-artifacts/architecture.md:368]
+- [x] [Review][Patch] the generated `Error` class hid `dart:core`'s `Error` in every file importing the client — `nameOverrides.schemas: Error: ProblemDetails`, client regenerated [tool/api_generator/tonik.yaml]
+- [x] [Review][Patch] no step to refresh the fixtures after a contract update — added to CONTRIBUTING §8 [CONTRIBUTING.md]
+- [x] [Review][Patch] the wire was barely tested: the `kind` → `?type=` rename and `bookAppointment`'s body / `Idempotency-Key` — two integration tests [test/integration/portal_api_contract_test.dart]
+- [x] [Review][Patch] a SOURCE without `sha256` blamed the copy ("says null") — own message "names no sha256" and test [tool/lib/portal_api.dart:216]
+- [x] [Review][Patch] the docs overstated `api-check` (a manual re-stamp after a hand edit passes) — the limit and the real proof (`make api-generate` + clean `git status`) stated in CONTRIBUTING §8 and architecture §4 [CONTRIBUTING.md]
+- [x] [Review][Patch] the root pubspec comment on Dio contradicted itself — reworded [pubspec.yaml:44]
+- [x] [Review][Patch] two contradictory fixes for a lock without tonik (one re-resolves the pinned lock) — `git checkout -- tool/api_generator/pubspec.lock` only [tool/lib/portal_api.dart:304]
+- [x] [Review][Patch] `KIVETO_BACKEND_DIR` reached fvm (cmd.exe) unchecked, against the "Always" constraint — refuses `| ^ & < > % "`, test case [scripts/api.sh:72]
+- [x] [Review][Patch] the typed-`Error` test serves a body captured on another route without saying so — test renamed (`ProblemDetails`) and commented [test/integration/portal_api_contract_test.dart:115]
+- [x] [Review][Patch] `.gitignore` comment claimed the nested lock breaks `api-check` (the digest skips it) — reworded [.gitignore:37]
+- [x] [Review][Defer] POST responses (OTP verify branches, refresh, booking 201) are never decoded from captured data although the normaliser makes them all-required — deferred: maybe-false (live `verifyOtp` `authenticated` decoded); settled by capturing the other branches (slices 1 and 4)
+
+Rejected (16 rows; grouped where two layers raised the same point):
+- `low` fixture-coverage enforcement (verification-gap other, blind-hunter): all 18 fixtures are decoded today; a recorder + listing test is new machinery for an unlikely slip.
+- `low` names guard ignores new `type` properties and stale overrides (blind-hunter, edge-case-hunter): cosmetic (`$type`, dead entries), two new checks.
+- (the rejected half of the patched `api-check` docs finding) a CI regeneration job (blind-hunter): needs a deliberate manual re-stamp; a CI job means installing the generator in CI; the limit is now documented.
+- `low` `SOURCE` repository / pushed commit never checked (blind-hunter, edge-case-hunter): documented flow syncs a merged commit; remote checks add git calls for a mistake visible in the `SOURCE` diff.
+- `low` `safe.directory=*` (blind-hunter, edge-case-hunter): read-only `rev-parse` / `show` in the developer's own backend checkout; a per-directory value needs the path in git's canonical form on Windows/UNC/relative paths, unverified across platforms.
+- `low` the `files` digest skips more than the spec's Design Notes (acceptance-auditor): deliberate (first review pass), documented in the code; the only fix is a spec edit.
+- `low` runtime dependencies with no `lib/` user (acceptance-auditor): the intent requires them in phase 4.
+- `low` Matrix exit codes are the script's, `make` returns 2 (acceptance-auditor): spec wording only.
+- `low` package missing + a due root `pub get` stops `api-generate` (edge-case-hunter): with the new order the package is only removed once tonik runs; guard branch for a rare sequence.
+- `low` `GIT_DIR` / `GIT_WORK_TREE` exported in the caller's environment (edge-case-hunter): only inside git hooks or wrappers, not how `make api-sync` runs; environment scrubbing adds code.
+- `low` CRLF in generator inputs changes the digests (edge-case-hunter): `.editorconfig` and `eol=lf` keep them LF; folding CRLF in the digest changes its semantics for an unlikely editor setup.
+- `low` OAS 3.2 `additionalOperations`, path-item `$ref`, `webhooks` not walked (edge-case-hunter): the contract uses none (spike keyword inventory).
+- `low` nested inline objects keep their partial `required` (edge-case-hunter): only component schemas are normalised; a few more nullable fields, never a decoding failure; recorded in the hand-over.
+
 ## Spec Change Log
 
 ## Review Triage Log
@@ -260,6 +295,8 @@ Filled by the implementation: what was verified and how (V3 a/b/c with numbers),
 - Final run, after the docs: `make ci V=1` exit 0 in 1 min 59 (format-check 2 s, analyze 10 s, test-architecture 4 s, test-coverage 9 s, coverage-gate 2 s, test-scripts 1 min 30, api-check 2 s), every command printed (`+ fvm dart analyze …`, `+ fvm flutter test …`, `+ fvm dart tool/portal_api.dart check`, `+ bash test/scripts/…`). Also checked by hand: an inherited `REF` is ignored by make (`REF=abc make api-sync` → "REF is required"), an inherited `KIVETO_BACKEND_DIR` is honoured.
 - After the review (2026-11-03): the `files` digest leaves out every path with a segment starting with `.`, `*.iml` files and a top-level `build/` (tonik writes none: the committed digest did not change); `make api-generate` removes the client only after the normaliser accepted the contract (checked by hand: a name removed from `tonik.yaml` → refused, client kept, `api-check` still green once restored), and its failure message points to the cause, then `make api-generate`, or `git checkout -- contracts packages/kiveto_portal_api` (api-sync) / `git checkout -- packages/kiveto_portal_api` (api-generate); a Windows absolute `LOG_FILE` is kept; the help and messages use a `//wsl.localhost/<distro>/<path>/kiveto` placeholder; the normaliser keeps CRLF line endings; a typed `Error` (404 without `detail` / `instance`) is decoded in the integration test; new `test/scripts/api_check_sh_test.sh` (100755, staged) runs `scripts/api.sh check` with the real fvm, passing then failing on a drift; the docs say the problem+json bodies omit some nullable keys and the fixtures' dev `trace` was replaced by `[stripped]`.
 - Left open: CLAUDE.md §5 and status (deferred, needs the user's go-ahead), the `api-sync` remote fallback, the macOS run, the backend proposals §7.2–7.10 (all in `deferred-work.md`); GitHub Actions has still never run (no push).
+
+- After the bmad-code-review pass (2026-11-03, 39 findings, see Review Findings): the contract `Error` schema is generated as `ProblemDetails` (it hid `dart:core`'s `Error`); `make api-generate` resolves the generator before removing the client and its hint adds `git clean -fdq -- packages/kiveto_portal_api`; `KIVETO_BACKEND_DIR` refuses `| ^ & < > % "`; `check` names a SOURCE without sha256 and restores a lock without tonik by `git checkout`; new `test/scripts/api_generate_sh_test.sh` (generate / sync failure paths with a stub fvm); integration tests for the `kind` → `?type=` filter and the `bookAppointment` body and `Idempotency-Key` (15 tests); docs: the limit of `api-check`, the fixture refresh step, the corrected `api-generate` row. `make ci` green in 2 min 14 (test-scripts 1 min 44); `make api-generate` again byte-identical; `make api-check` green.
 
 ## Auto Run Result
 

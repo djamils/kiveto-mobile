@@ -47,6 +47,11 @@ expect_status 1 "$RC" 'api-sync without KIVETO_BACKEND_DIR: exit 1' "$OUT"
 expect_contains "$OUT" '../kiveto is not a git checkout of djamils/kiveto' \
   'api-sync without KIVETO_BACKEND_DIR: the default ../kiveto, named'
 
+api sync REF=840dbead 'KIVETO_BACKEND_DIR=a&b'
+expect_status 1 "$RC" 'api-sync with KIVETO_BACKEND_DIR=a&b: exit 1' "$OUT"
+expect_contains "$OUT" "KIVETO_BACKEND_DIR 'a&b' may not hold | ^ & < > % or" \
+  'api-sync with KIVETO_BACKEND_DIR=a&b: refused (cmd.exe)'
+
 api publish
 expect_status 1 "$RC" 'an unknown command: exit 1' "$OUT"
 expect_contains "$OUT" "Unknown command 'publish'" 'an unknown command: says so'

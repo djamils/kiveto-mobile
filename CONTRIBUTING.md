@@ -364,7 +364,10 @@ that fixes it — a hand-edited copy (`git checkout -- contracts/portal.v1.yaml`
 or `make api-sync REF=<sha>`), a client generated from another contract or
 commit, a generated file changed, added or removed, a changed
 `tonik.yaml`, generator lock or normaliser, another tonik pinned
-(`make api-generate`), a missing file (the target that writes it).
+(`make api-generate`), a missing file (the target that writes it). It
+compares the tree with the `CONTRACT` stamp: a hand edit followed by a
+manual `tool/portal_api.dart stamp` would pass, so only `make api-generate`
+leaving `git status` clean proves the client is the generator's output.
 
 **The generator: tonik 0.11.1** (decision D3, spike of 2026-11-03 on the
 real contract). Pure Dart, it reads OpenAPI 3.2 natively (no rewrite of the
@@ -383,7 +386,9 @@ output (~415 files).
 ServerConfig<Dio>.client(dio)))`; each call returns a `TonikResult`
 (`TonikSuccess(value: GetMeResponse200(:final body))`). Every documented
 status is a typed value, errors included (`GetMeResponse401`,
-`UpdateMeResponse422` with its `ConstraintViolation`), unless an
+`UpdateMeResponse422` with its `ConstraintViolation`; the contract's
+`Error` schema is generated as `ProblemDetails`, so that it does not hide
+`dart:core`'s `Error`), unless an
 interceptor narrows `validateStatus` to 2xx: then a non-2xx response is a
 `TonikError` carrying the `DioException(badResponse)` and the problem+json
 bytes. A booking `startAt` must be the slot value received (no fractional
@@ -401,13 +406,17 @@ make api-check      # the copy, SOURCE and the client agree (part of make ci)
 ```
 
 `KIVETO_BACKEND_DIR` defaults to `../kiveto` (a sibling checkout); a WSL
-checkout seen from Windows works as above (git is run with
+checkout seen from Windows works as above (`KIVETO_BACKEND_DIR` may not
+hold `| ^ & < > % "`: fvm passes it through cmd.exe; git is run with
 `-c safe.directory=*` for these read-only commands). `REF` must exist in
 that checkout (`git fetch` there first) and may only hold letters,
 digits and `. _ / -`. Copying from the remote repository is not built
 (deferred). Updating the contract, step by step: merge the backend PR;
 `make api-sync REF=<sha>`; read the diff of `contracts/` and
-`packages/kiveto_portal_api/`; fix the mappers of the features; `make ci`;
+`packages/kiveto_portal_api/`; refresh the fixtures of
+`test/support/fixtures/portal_api/` whose route changed (capture the real
+response from the local backend, exact bytes); fix the mappers of the
+features; `make ci`;
 commit `chore(api): sync portal contract <short sha>`.
 
 **The normalisation** (`tool/normalize_contract.dart`, run by

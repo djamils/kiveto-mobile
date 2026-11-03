@@ -11,7 +11,7 @@ import 'package:kiveto_portal_api/src/model/appointment_booking_with_new_pet.dar
 import 'package:kiveto_portal_api/src/model/booked_with_new_pet_appointment_view.dart'
     as _i8;
 import 'package:kiveto_portal_api/src/model/constraint_violation.dart' as _i11;
-import 'package:kiveto_portal_api/src/model/error.dart' as _i9;
+import 'package:kiveto_portal_api/src/model/problem_details.dart' as _i9;
 import 'package:kiveto_portal_api/src/operation/dio_operation.dart' as _i1;
 import 'package:kiveto_portal_api/src/response/api_portal_v1_clinics_clinic_id_appointments_with_new_pet_post400_response.dart'
     as _i10;
@@ -103,7 +103,7 @@ final class BookAppointmentWithNewPet
         );
       case (400, r'application/problem+json'):
         final _$json = _i4.decodeResponseJson<_i3.Object?>(response.data);
-        final _$body = _i9.Error.fromJson(_$json);
+        final _$body = _i9.ProblemDetails.fromJson(_$json);
         return _i2.BookAppointmentWithNewPetResponse400(
           body:
               _i10.ApiPortalV1ClinicsClinicIdAppointmentsWithNewPetPost400ResponseProblemJson(
@@ -112,7 +112,7 @@ final class BookAppointmentWithNewPet
         );
       case (400, r'application/json'):
         final _$json = _i4.decodeResponseJson<_i3.Object?>(response.data);
-        final _$body = _i9.Error.fromJson(_$json);
+        final _$body = _i9.ProblemDetails.fromJson(_$json);
         return _i2.BookAppointmentWithNewPetResponse400(
           body:
               _i10.ApiPortalV1ClinicsClinicIdAppointmentsWithNewPetPost400ResponseJson(

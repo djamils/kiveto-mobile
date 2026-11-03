@@ -7,7 +7,7 @@ import 'dart:core' as _i3;
 
 import 'package:dio/dio.dart' as _i5;
 import 'package:kiveto_portal_api/src/model/booking_requests.dart' as _i7;
-import 'package:kiveto_portal_api/src/model/error.dart' as _i8;
+import 'package:kiveto_portal_api/src/model/problem_details.dart' as _i8;
 import 'package:kiveto_portal_api/src/operation/dio_operation.dart' as _i1;
 import 'package:kiveto_portal_api/src/response/api_portal_v1_me_booking_requests_get404_response.dart'
     as _i9;
@@ -113,7 +113,7 @@ final class ListBookingRequests
         return _i2.ListBookingRequestsResponse401();
       case (404, r'application/problem+json'):
         final _$json = _i4.decodeResponseJson<_i3.Object?>(response.data);
-        final _$body = _i8.Error.fromJson(_$json);
+        final _$body = _i8.ProblemDetails.fromJson(_$json);
         return _i2.ListBookingRequestsResponse404(
           body: _i9.ApiPortalV1MeBookingRequestsGet404ResponseProblemJson(
             body: _$body,
@@ -121,7 +121,7 @@ final class ListBookingRequests
         );
       case (404, r'application/json'):
         final _$json = _i4.decodeResponseJson<_i3.Object?>(response.data);
-        final _$body = _i8.Error.fromJson(_$json);
+        final _$body = _i8.ProblemDetails.fromJson(_$json);
         return _i2.ListBookingRequestsResponse404(
           body: _i9.ApiPortalV1MeBookingRequestsGet404ResponseJson(
             body: _$body,

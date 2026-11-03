@@ -112,9 +112,11 @@ void main() {
       );
     });
 
-    test('404 problem+json decodes as a typed Error, missing nullable keys '
-        'read as null', () async {
-      // The real 404 body of an unknown clinic: no `detail`, no `instance`.
+    test('404 problem+json decodes as a typed ProblemDetails (the contract '
+        'Error), missing nullable keys read as null', () async {
+      // The real 404 body of an unknown clinic (no `detail`, no `instance`),
+      // served on GET /me: the home 404 has no schema, the /me 404 is typed
+      // with the same problem+json shape (the backend's error normaliser).
       backend.on(
         'GET',
         '$_api/me',
@@ -512,6 +514,56 @@ void main() {
       final json = booking.toJson()! as Map<String, Object?>;
 
       expect(json['startAt'], '2026-11-04T13:30:00+01:00');
+    });
+
+    test(
+      'the documents filter is named kind in Dart, sent as ?type=',
+      () async {
+        backend.on(
+          'GET',
+          '$_api/clinics/$_paris/documents?type=invoice',
+          PortalReply.fixture('clinics.paris.documents.get.200.json'),
+        );
+
+        final result = await DocumentsApi(server).listDocuments(
+          clinicId: _paris,
+          kind: ApiPortalV1ClinicsClinicIdDocumentsParametersModel.invoice,
+        );
+
+        expect(_value(result), isA<ListDocumentsResponse200>());
+        expect(
+          backend.requests.single.pathWithQuery,
+          '$_api/clinics/$_paris/documents?type=invoice',
+        );
+      },
+    );
+
+    test('bookAppointment sends the slot startAt as received and the '
+        'Idempotency-Key header', () async {
+      backend.on(
+        'POST',
+        '$_api/clinics/$_paris/appointments',
+        PortalReply.fixture('me.patch.422.json', status: 422),
+      );
+
+      await SchedulingApi(server).bookAppointment(
+        clinicId: _paris,
+        idempotencyKey: 'booking-intent-1',
+        body: AppointmentBooking(
+          petId: _oslo,
+          motifId: '01a19a10-d467-7bc2-9344-790c64b6ab03',
+          practitionerId: '01a19a0e-1afe-7116-ad21-672cf69c5366',
+          startAt: OffsetDateTime.parse('2026-11-04T13:30:00+01:00'),
+        ),
+      );
+
+      final request = backend.requests.single;
+      expect(request.headers['Idempotency-Key'], 'booking-intent-1');
+      expect(request.contentType, startsWith('application/json'));
+      final body =
+          jsonDecode(utf8.decode(request.body)) as Map<String, Object?>;
+      expect(body['startAt'], '2026-11-04T13:30:00+01:00');
+      expect(body['petId'], _oslo);
     });
 
     test(

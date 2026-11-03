@@ -10,8 +10,9 @@ import 'package:tonik_util/tonik_util.dart' as _i1;
 
 /// A representation of common errors.
 @_i2.immutable
-class Error extends _i1.ObjectParameterEncodable implements _i1.UriEncodable {
-  const Error({
+class ProblemDetails extends _i1.ObjectParameterEncodable
+    implements _i1.UriEncodable {
+  const ProblemDetails({
     this.title,
     this.detail,
     this.status = statusDefault,
@@ -19,7 +20,7 @@ class Error extends _i1.ObjectParameterEncodable implements _i1.UriEncodable {
     this.problemType,
   });
 
-  factory Error.fromSimple(
+  factory ProblemDetails.fromSimple(
     _i3.String? value, {
     required _i3.bool explode,
     _i3.bool isHeader = false,
@@ -29,68 +30,83 @@ class Error extends _i1.ObjectParameterEncodable implements _i1.UriEncodable {
       explodeSeparator: ',',
       expectedKeys: {r'title', r'detail', r'status', r'instance', r'type'},
       listKeys: {},
-      context: r'Error',
+      context: r'ProblemDetails',
       isHeader: isHeader,
       percentDecodeKeys: false,
     );
-    return Error(
+    return ProblemDetails(
       title: _$values[r'title'].decodeSimpleNullableString(
-        context: r'Error.title',
+        context: r'ProblemDetails.title',
       ),
       detail: _$values[r'detail'].decodeSimpleNullableString(
-        context: r'Error.detail',
+        context: r'ProblemDetails.detail',
       ),
       status: _$values.containsKey(r'status')
           ? _$values[r'status'].decodeSimpleNullableInt(
-              context: r'Error.status',
+              context: r'ProblemDetails.status',
             )
           : statusDefault,
       instance: _$values[r'instance'].decodeSimpleNullableString(
-        context: r'Error.instance',
+        context: r'ProblemDetails.instance',
       ),
-      problemType: _$values[r'type'].decodeSimpleString(context: r'Error.type'),
+      problemType: _$values[r'type'].decodeSimpleString(
+        context: r'ProblemDetails.type',
+      ),
     );
   }
 
-  factory Error.fromJson(_i3.Object? json) {
-    final _$map = json.decodeMap(context: r'Error');
-    return Error(
-      title: _$map[r'title'].decodeJsonNullableString(context: r'Error.title'),
+  factory ProblemDetails.fromJson(_i3.Object? json) {
+    final _$map = json.decodeMap(context: r'ProblemDetails');
+    return ProblemDetails(
+      title: _$map[r'title'].decodeJsonNullableString(
+        context: r'ProblemDetails.title',
+      ),
       detail: _$map[r'detail'].decodeJsonNullableString(
-        context: r'Error.detail',
+        context: r'ProblemDetails.detail',
       ),
       status: _$map.containsKey(r'status')
-          ? _$map[r'status'].decodeJsonNullableInt(context: r'Error.status')
+          ? _$map[r'status'].decodeJsonNullableInt(
+              context: r'ProblemDetails.status',
+            )
           : statusDefault,
       instance: _$map[r'instance'].decodeJsonNullableString(
-        context: r'Error.instance',
+        context: r'ProblemDetails.instance',
       ),
-      problemType: _$map[r'type'].decodeJsonString(context: r'Error.type'),
+      problemType: _$map[r'type'].decodeJsonString(
+        context: r'ProblemDetails.type',
+      ),
     );
   }
 
-  factory Error.fromForm(_i3.String? value, {required _i3.bool explode}) {
+  factory ProblemDetails.fromForm(
+    _i3.String? value, {
+    required _i3.bool explode,
+  }) {
     final _$values = value.decodeObject(
       explode: explode,
       explodeSeparator: '&',
       expectedKeys: {r'title', r'detail', r'status', r'instance', r'type'},
       listKeys: {},
-      context: r'Error',
+      context: r'ProblemDetails',
     );
-    return Error(
+    return ProblemDetails(
       title: _$values[r'title'].decodeFormNullableString(
-        context: r'Error.title',
+        context: r'ProblemDetails.title',
       ),
       detail: _$values[r'detail'].decodeFormNullableString(
-        context: r'Error.detail',
+        context: r'ProblemDetails.detail',
       ),
       status: _$values.containsKey(r'status')
-          ? _$values[r'status'].decodeFormNullableInt(context: r'Error.status')
+          ? _$values[r'status'].decodeFormNullableInt(
+              context: r'ProblemDetails.status',
+            )
           : statusDefault,
       instance: _$values[r'instance'].decodeFormNullableString(
-        context: r'Error.instance',
+        context: r'ProblemDetails.instance',
       ),
-      problemType: _$values[r'type'].decodeFormString(context: r'Error.type'),
+      problemType: _$values[r'type'].decodeFormString(
+        context: r'ProblemDetails.type',
+      ),
     );
   }
 
@@ -117,7 +133,7 @@ class Error extends _i1.ObjectParameterEncodable implements _i1.UriEncodable {
   @_i3.override
   _i3.Object? toJson() => {r'status': this.status};
 
-  Error Function({
+  ProblemDetails Function({
     _i3.String? title,
     _i3.String? detail,
     _i3.int? status,
@@ -132,7 +148,7 @@ class Error extends _i1.ObjectParameterEncodable implements _i1.UriEncodable {
       _i3.Object? status = _sentinel,
       _i3.Object? instance = _sentinel,
       _i3.Object? problemType = _sentinel,
-    }) => Error(
+    }) => ProblemDetails(
       title: _i3.identical(title, _sentinel)
           ? this.title
           : (title as _i3.String?),
@@ -154,7 +170,7 @@ class Error extends _i1.ObjectParameterEncodable implements _i1.UriEncodable {
   @_i3.override
   _i3.bool operator ==(_i3.Object other) {
     if (_i3.identical(this, other)) return true;
-    return other is Error &&
+    return other is ProblemDetails &&
         other.title == this.title &&
         other.detail == this.detail &&
         other.status == this.status &&
@@ -194,7 +210,7 @@ class Error extends _i1.ObjectParameterEncodable implements _i1.UriEncodable {
     _i3.bool allowReserved = false,
   }) {
     throw _i1.EncodingException(
-      r'Cannot uriEncode Error: complex types cannot be URI-encoded',
+      r'Cannot uriEncode ProblemDetails: complex types cannot be URI-encoded',
     );
   }
 }

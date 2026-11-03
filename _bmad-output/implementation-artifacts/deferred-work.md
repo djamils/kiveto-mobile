@@ -85,3 +85,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-portal-api-client.md`
   summary: Test the Makefile's handling of inherited variables: `REF`, `PLATFORM` and `ENV` set only in the environment are ignored (`REF=x make api-sync` must stop with "REF is required"), `KIVETO_BACKEND_DIR` is honoured.
   evidence: Verification-gap finding: the `ifeq ($(origin REF),environment)` block of the Makefile is untested (so are the `PLATFORM` and `ENV` ones); `test/scripts/api_sh_test.sh` runs `scripts/api.sh` directly, never through make.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-portal-api-client.md`
+  summary: Capture contract fixtures of the POST responses the normaliser also makes all-required (`POST /auth/otp/verify` for `authenticated`, `invitation_pending` and `registration_required`, `/auth/refresh`, `/auth/otp/request`, a booking 201) and decode them in an integration test — slice 1 (`identity_access`) and slice 4 (`scheduling`) at the latest.
+  evidence: Code review (blind-hunter), maybe-false, if true medium: the 18 fixtures are GET responses plus the 401/404/422; the live V3(b) run decoded `requestOtp` 202 and `verifyOtp` 200 `authenticated`, but a branch-dependent body that omits a non-nullable key (e.g. an `invitation_pending` verification without tokens) would only fail at runtime as a decoding `TonikError`. Settled by capturing those responses from the local backend.

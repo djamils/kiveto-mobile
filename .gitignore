@@ -34,7 +34,7 @@ app.*.map.json
 # do it for nested pubspecs) writes a lock file nobody uses.
 /tool/pubspec.lock
 # Same for the generated Portal API client (a path package of the app); its
-# pubspec.lock would also break the CONTRACT check of make api-check.
+# pubspec.lock is unused too (the CONTRACT check of make api-check skips it).
 /packages/kiveto_portal_api/pubspec.lock
 
 # FVM: .fvmrc is committed, the SDK link is per machine

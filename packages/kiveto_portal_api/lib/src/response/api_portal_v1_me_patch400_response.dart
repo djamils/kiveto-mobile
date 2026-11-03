@@ -4,7 +4,7 @@
 
 import 'dart:core' as _i3;
 
-import 'package:kiveto_portal_api/src/model/error.dart' as _i2;
+import 'package:kiveto_portal_api/src/model/problem_details.dart' as _i2;
 import 'package:meta/meta.dart' as _i1;
 
 @_i1.immutable
@@ -17,7 +17,7 @@ class ApiPortalV1MePatch400ResponseProblemJson
     extends ApiPortalV1MePatch400Response {
   const ApiPortalV1MePatch400ResponseProblemJson({required this.body});
 
-  final _i2.Error body;
+  final _i2.ProblemDetails body;
 
   @_i3.override
   _i3.bool operator ==(_i3.Object other) {
@@ -34,7 +34,7 @@ class ApiPortalV1MePatch400ResponseProblemJson
 class ApiPortalV1MePatch400ResponseJson extends ApiPortalV1MePatch400Response {
   const ApiPortalV1MePatch400ResponseJson({required this.body});
 
-  final _i2.Error body;
+  final _i2.ProblemDetails body;
 
   @_i3.override
   _i3.bool operator ==(_i3.Object other) {

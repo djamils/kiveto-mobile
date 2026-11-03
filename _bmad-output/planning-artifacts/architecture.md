@@ -184,8 +184,12 @@ the state holder and the dependency injection; tests override providers.
   fails on any difference: a hand-edited copy, a client generated from
   another contract or commit, a generated file changed, added or removed,
   changed generator inputs, another tonik pinned, a missing piece; each
-  message ends with the command that fixes it. Regeneration is
-  byte-identical.
+  message ends with the command that fixes it. It compares the tree with
+  the stamp, so a hand edit followed by a manual `stamp` would pass: the
+  proof that the client is the generator's output is `make api-generate`
+  leaving `git status` clean (regeneration is byte-identical; checked by
+  hand on Windows, not in CI). The contract's `Error` schema is generated
+  as `ProblemDetails` (it would hide `dart:core`'s `Error`).
 - Only `features/*/infrastructure/**`, `core/network/` and `core/di/`
   import it and its runtime `tonik_util` (rule 7).
 - An API change is a backend PR (DTOs + YAML), then a mobile PR
@@ -365,7 +369,7 @@ Portability rules:
 | `make coverage-gate` | `tool/coverage_gate.dart` (§8), its report shown live |
 | `make test-scripts` | the plain-bash checks of `test/scripts/` (scripts, hooks, thin Dart entry points), one line per case |
 | `make test-e2e` | phase 5 |
-| `make api-sync REF=`, `api-generate`, `api-check` | Contract (§4), `scripts/api.sh` over `tool/portal_api.dart` and `tool/normalize_contract.dart`. `api-sync`: `REF` required and checked, `KIVETO_BACKEND_DIR` (default `../kiveto`) must exist, both before any `fvm` call; copy and `SOURCE`, then the generate steps. `api-generate`: removes the package and `build/kiveto_portal_api`, normalises, `pub get --enforce-lockfile` and tonik in `tool/api_generator/`, stamps, `pub get` of the app; on failure, `git checkout -- packages/kiveto_portal_api` restores the committed client. `api-check`: its report shown live. Options `REF` (an inherited one is ignored, like `PLATFORM`) and `KIVETO_BACKEND_DIR` (honoured from the environment). |
+| `make api-sync REF=`, `api-generate`, `api-check` | Contract (§4), `scripts/api.sh` over `tool/portal_api.dart` and `tool/normalize_contract.dart`. `api-sync`: `REF` required and checked, `KIVETO_BACKEND_DIR` (default `../kiveto`) must exist, both before any `fvm` call; copy and `SOURCE`, then the generate steps. `api-generate`: normalises into `build/kiveto_portal_api`, resolves the generator (`pub get --enforce-lockfile` in `tool/api_generator/`), only then removes the package, runs tonik, stamps, `pub get` of the app; a failure leaves the committed client in place until tonik runs, and its message says how to go back (`git checkout -- packages/kiveto_portal_api && git clean -fdq -- packages/kiveto_portal_api`, with `contracts` too after `api-sync`) — it restores nothing itself. `api-check`: its report shown live. Options `REF` (an inherited one is ignored, like `PLATFORM`) and `KIVETO_BACKEND_DIR` (honoured from the environment). |
 | `make install-fvm` | Opt-in, current user only, from the official source; prints the `PATH` line instead of editing it (D10) |
 | `make clean`, `make reset` | `flutter clean` + stamps; reset = clean + install |
 | Options | `V=1`, `NO_COLOR=1`, `LOG_FILE=.make/make.log` — same as the Symfony Makefile |
