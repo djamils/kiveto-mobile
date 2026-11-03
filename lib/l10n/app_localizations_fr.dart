@@ -586,7 +586,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get documentsPaymentPartiallyPaid => 'Partiellement payée';
 
   @override
-  String get documentsPaymentCredited => 'Avoir';
+  String get documentsPaymentCredited => 'Avoir émis';
 
   @override
   String documentsOpen(String title) {

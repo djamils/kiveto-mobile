@@ -173,3 +173,17 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
   summary: Design question: invoices show « 68,00 € · Payée · 14 oct. » without the year (mockup 05), so an owner with several years of invoices (Garnier's go back to 2023) cannot tell 2025's from 2026's; show the year when it is not the current one, or always.
   evidence: Code review (blind-hunter, edge-case hunter), verified; kept as the mockup draws it (the intent asks `dayMonth` for invoices).
+
+## Deferred from: code review of spec-document.md (2026-11-03, bmad-code-review)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Register the PDFium notices (BSD-3 and its third-party licences: FreeType, libjpeg-turbo, OpenJPEG, lcms, zlib…) on the app's licence page before the first store build: pdfrx ships the native PDFium library in the app, and only the Dart wrappers' MIT licences reach `LicenseRegistry` (`app/bootstrap/asset_licenses.dart` registers DM Sans and Lucide only).
+  evidence: Code review (blind-hunter), verified, medium: the pdfium-binaries archive (`bblanchon/pdfium-binaries`, `chromium/8125`) carries `LICENSE` and a `licenses/` folder; the native-assets hook only extracts the library.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Make `make doctor` (`scripts/doctor.sh`) check the C toolchain pdfrx's native-assets hook needs (MSVC on Windows, Xcode Command Line Tools on macOS, gcc/clang on Linux), so a fresh clone gets a clear blocker instead of a failure inside the hook on the first `make ci`.
+  evidence: Code review (blind-hunter), verified, low: CONTRIBUTING §5 lists the prerequisite; the doctor checks the NDK and Xcode only.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Check screen 5, the prescription sheet and the PDF viewer with large text (accessibility font scale ≥ 1.3) and on a ~360-dp phone: the C-30 card holds a 40-px tile, a wrapping title, a 44-px button and a full-width renewal button; the viewer title is one line.
+  evidence: Code review (blind-hunter); slice 2 was checked on the 411-dp emulator and the 390 × 844 test frame only (the same gap as slice 1's entry).

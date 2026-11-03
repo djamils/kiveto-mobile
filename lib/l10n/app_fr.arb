@@ -787,9 +787,9 @@
   "@documentsPaymentPartiallyPaid": {
     "description": "Documents screen (5): an invoice's payment status, partially paid."
   },
-  "documentsPaymentCredited": "Avoir",
+  "documentsPaymentCredited": "Avoir émis",
   "@documentsPaymentCredited": {
-    "description": "Documents screen (5): an invoice's payment status, credited (a credit note)."
+    "description": "Documents screen (5): an invoice's payment status, credited: the clinic issued a credit note against it (the invoice itself is not the credit note)."
   },
   "documentsOpen": "Ouvrir {title}",
   "@documentsOpen": {

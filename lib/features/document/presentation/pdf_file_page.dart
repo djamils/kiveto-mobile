@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/document/di.dart';
 import 'package:kiveto_mobile/features/document/domain/document.dart';
+import 'package:kiveto_mobile/features/document/presentation/documents_providers.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
@@ -36,6 +37,8 @@ Widget _pdfrxView(BuildContext context, Uint8List bytes, String sourceName) {
     sourceName: sourceName,
     params: PdfViewerParams(
       backgroundColor: KivetoColors.canvas,
+      // The kit's soft shadow, not pdfrx's heavy default.
+      pageDropShadow: KivetoShadows.bottomNav,
       errorBannerBuilder: (context, error, stackTrace, documentRef) =>
           EmptyState(
             glyph: LucideGlyph.circleAlert,
@@ -46,15 +49,15 @@ Widget _pdfrxView(BuildContext context, Uint8List bytes, String sourceName) {
 }
 
 /// Opens the file of a document in the app, over the bottom navigation
-/// (the root navigator). Once it shows, `GET /me` is read again (the
-/// server counted the read: the Documents badge follows) and [onRead]
-/// runs.
+/// (the root navigator), from any page (the documents screen, the home).
+/// Once it shows, the server has counted the read: `GET /me` is read again
+/// (the Documents badge follows) and the document loses its dot in every
+/// documents list loaded.
 Future<void> openDocumentFile(
   BuildContext context, {
   required ClinicId clinicId,
   required DocumentId documentId,
   required String title,
-  VoidCallback? onRead,
 }) => _push(
   context,
   PdfFilePage(
@@ -63,7 +66,11 @@ Future<void> openDocumentFile(
         ref.read(documentRepositoryProvider).file(clinicId, documentId),
     onLoaded: (ref) {
       ref.invalidate(meProvider);
-      onRead?.call();
+      for (final kind in <DocumentKind?>[null, ...DocumentKind.values]) {
+        if (ref.exists(documentListProvider(kind))) {
+          ref.read(documentListProvider(kind).notifier).markRead(documentId);
+        }
+      }
     },
   ),
 );

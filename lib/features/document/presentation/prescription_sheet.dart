@@ -18,10 +18,9 @@ import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Shows the prescription of [document] in a sheet over the navigation:
-/// its date, vet, pet and lines, "Voir l'ordonnance" (the PDF; [onRead]
-/// once it shows) and the renewal control. "Demander un renouvellement"
-/// closes the sheet, then calls [onRequestRenewal] with the page's
-/// [context].
+/// its date, vet, pet and lines, "Voir l'ordonnance" (the PDF) and the
+/// renewal control. "Demander un renouvellement" closes the sheet, then
+/// calls [onRequestRenewal] with the page's [context].
 Future<void> showPrescriptionSheet(
   BuildContext context, {
   required ClinicId clinicId,
@@ -29,14 +28,12 @@ Future<void> showPrescriptionSheet(
   required PrescriptionSummary prescription,
   required void Function(BuildContext context, String prescriptionId)
   onRequestRenewal,
-  VoidCallback? onRead,
 }) => showKivetoSheet<void>(
   context: context,
   builder: (sheetContext) => PrescriptionSheet(
     clinicId: clinicId,
     document: document,
     prescription: prescription,
-    onRead: onRead,
     onRequestRenewal: () {
       Navigator.of(sheetContext).pop();
       if (context.mounted) onRequestRenewal(context, prescription.id.value);
@@ -54,14 +51,12 @@ class PrescriptionSheet extends ConsumerWidget {
     required this.prescription,
     required this.onRequestRenewal,
     super.key,
-    this.onRead,
   });
 
   final ClinicId clinicId;
   final Document document;
   final PrescriptionSummary prescription;
   final VoidCallback onRequestRenewal;
-  final VoidCallback? onRead;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -128,7 +123,6 @@ class PrescriptionSheet extends ConsumerWidget {
               clinicId: clinicId,
               documentId: document.id,
               title: document.title,
-              onRead: onRead,
             ),
           ),
         ),

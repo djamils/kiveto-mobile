@@ -21,6 +21,7 @@ import 'package:kiveto_mobile/features/document/presentation/documents_providers
 import 'package:kiveto_mobile/features/document/presentation/pdf_file_page.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -50,6 +51,26 @@ PortalReply _meWith(int unread) {
   ((body['clinics']! as List<Object?>).first!
           as Map<String, Object?>)['unreadDocuments'] =
       unread;
+  return PortalReply.json(jsonEncode(body));
+}
+
+/// Julien's Paris capture with a newer (read) invoice first, « Facture
+/// PAR-2026-000068 »: a document published after the first load.
+PortalReply _withNewInvoice() {
+  final body = jsonDecode(
+    File('$portalFixtures/clinics.paris.documents.get.200.json')
+        .readAsStringSync(),
+  ) as Map<String, Object?>;
+  final items = body['items']! as List<Object?>;
+  body['items'] = [
+    {
+      ...items.first! as Map<String, Object?>,
+      'id': '01a19a12-ffff-7000-8000-000000000068',
+      'title': 'Facture PAR-2026-000068',
+      'unread': false,
+    },
+    ...items,
+  ];
   return PortalReply.json(jsonEncode(body));
 }
 
@@ -105,8 +126,11 @@ void _serveFile(FakePortalBackend backend, String documentId) {
     );
 }
 
-Finder _card(String title) =>
-    find.ancestor(of: find.text(title), matching: find.byType(DocumentCard));
+Finder _card(String title) => find.ancestor(
+  // textContaining: an unread title ends with its dot (a WidgetSpan).
+  of: find.textContaining(title),
+  matching: find.byType(DocumentCard),
+);
 
 Finder _dotOf(String title) =>
     find.descendant(of: _card(title), matching: find.byType(UnreadDot));
@@ -175,7 +199,7 @@ void main() {
       isTrue,
     );
     expect(find.byType(DocumentCard), findsNWidgets(2));
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
     expect(find.text('52,00 € · Payée · 24 oct.'), findsOneWidget);
     expect(find.text('Facture PAR-2026-000066'), findsOneWidget);
     expect(find.text('78,00 € · Payée · 5 sept.'), findsOneWidget);
@@ -363,14 +387,14 @@ void main() {
 
     expect(backend.requestsTo('$_documents?type=prescription'), hasLength(1));
     expect(_items(container, DocumentKind.prescription), 5);
-    expect(find.text('Ordonnance ORD-2026-000036'), findsOneWidget);
-    expect(find.text('Compte rendu du 31/08/2026'), findsNothing);
+    expect(find.textContaining('Ordonnance ORD-2026-000036'), findsOneWidget);
+    expect(find.textContaining('Compte rendu du 31/08/2026'), findsNothing);
     expect(find.text('Rx'), findsWidgets);
 
     await tester.tap(find.text('Tous'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Compte rendu du 31/08/2026'), findsOneWidget);
+    expect(find.textContaining('Compte rendu du 31/08/2026'), findsOneWidget);
     expect(backend.requestsTo(_documents), hasLength(1));
 
     await tester.tap(find.text('Résultats'));
@@ -514,7 +538,7 @@ void main() {
     await tester.tap(find.text('Factures'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Facture PAR-2026-000067'));
+    await tester.tap(find.textContaining('Facture PAR-2026-000067'));
     await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('Retour'));
     await tester.pumpAndSettle();
@@ -551,7 +575,7 @@ void main() {
 
     expect(backend.requestsTo(_me), hasLength(2));
     expect(backend.requestsTo(_documents), hasLength(2));
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
   });
 
   testWidgets('another failure: the generic error and a retry of the list', (
@@ -573,7 +597,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(backend.requestsTo(_me), hasLength(1));
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
   });
 
   testWidgets('/me failed: the retry reads /me again, then the list', (
@@ -589,7 +613,7 @@ void main() {
     await tester.tap(find.text('Réessayer'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
   });
 
   testWidgets('the active clinic switches to Lyon: its list, its empty state', (
@@ -607,7 +631,7 @@ void main() {
         PortalReply.fixture('clinics.lyon.pets.get.200.json'),
       );
     final container = await pump(tester, backend);
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
 
     unawaited(
       container
@@ -617,7 +641,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(backend.requestsTo('$api/clinics/$_lyon/documents'), hasLength(1));
-    expect(find.text('Facture PAR-2026-000067'), findsNothing);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsNothing);
     expect(
       find.text('Partagés par Clinique Vétérinaire de Lyon'),
       findsOneWidget,
@@ -651,7 +675,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(DocumentsPage), findsOneWidget);
 
-    await tester.tap(find.text('Facture PAR-2026-000067'));
+    await tester.tap(find.textContaining('Facture PAR-2026-000067'));
     await tester.pumpAndSettle();
 
     expect(find.byType(PdfFilePage), findsOneWidget);
@@ -685,27 +709,14 @@ void main() {
     await pump(tester, backend);
     expect(find.text('Facture PAR-2026-000068'), findsNothing);
 
-    final body = jsonDecode(
-      File('$portalFixtures/clinics.paris.documents.get.200.json')
-          .readAsStringSync(),
-    ) as Map<String, Object?>;
-    final items = body['items']! as List<Object?>;
-    body['items'] = [
-      {
-        ...items.first! as Map<String, Object?>,
-        'id': '01a19a12-ffff-7000-8000-000000000068',
-        'title': 'Facture PAR-2026-000068',
-      },
-      ...items,
-    ];
-    backend.on('GET', _documents, PortalReply.json(jsonEncode(body)));
+    backend.on('GET', _documents, _withNewInvoice());
 
     await pull(tester);
 
     expect(backend.requestsTo(_documents), hasLength(2));
     expect(backend.requestsTo(_me), hasLength(2));
     expect(find.text('Facture PAR-2026-000068'), findsOneWidget);
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
   });
 
   testWidgets('the pet names failed: the lines go without them; a refresh '
@@ -742,7 +753,7 @@ void main() {
     await pump(tester, backend);
 
     expect(find.text('Aucun document'), findsNothing);
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
     expect(backend.requestsTo('$_documents?cursor=c1'), hasLength(1));
   });
 
@@ -759,12 +770,12 @@ void main() {
             : PortalReply.fixture('clinics.lyon.documents.get.200.json'),
       );
     await pump(tester, backend, session: session);
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
 
     await session.open(pair('B'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Facture PAR-2026-000067'), findsNothing);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsNothing);
     expect(bearerOf(backend.requestsTo(_documents).last), 'Bearer B');
   });
 
@@ -832,6 +843,154 @@ void main() {
 
     held.complete();
     await tester.pumpAndSettle();
-    expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
+    expect(find.textContaining('Facture PAR-2026-000067'), findsOneWidget);
+  });
+
+  testWidgets('a document opened from another page (the home) loses its dot '
+      'in the documents list too', (tester) async {
+    final backend = _julienBackend();
+    _serveFile(backend, _invoice67);
+    await pumpPage(
+      tester,
+      Scaffold(
+        body: Column(
+          children: [
+            Expanded(child: DocumentsPage(onRequestRenewal: (context, id) {})),
+            Builder(
+              builder: (context) => KivetoButton.primary(
+                label: 'home',
+                onPressed: () => unawaited(
+                  openDocumentFile(
+                    context,
+                    clinicId: const ClinicId(_paris),
+                    documentId: const DocumentId(_invoice67),
+                    title: 'Facture PAR-2026-000067',
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      session: await memorySession(pair('A')),
+      backend: backend,
+      overrides: [
+        activeClinicStoreProvider.overrideWithValue(
+          InMemoryActiveClinicStore(),
+        ),
+        pdfViewBuilderProvider.overrideWithValue(_fakePdfView),
+      ],
+    );
+    expect(_dotOf('Facture PAR-2026-000067'), findsOneWidget);
+
+    await tester.tap(find.text('home'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PdfFilePage), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Retour'));
+    await tester.pumpAndSettle();
+
+    expect(_dotOf('Facture PAR-2026-000067'), findsNothing);
+    expect(backend.requestsTo(_documents), hasLength(1));
+  });
+
+  testWidgets('another session: the pet names are read again with its '
+      'tokens', (tester) async {
+    final session = await memorySession(pair('A'));
+    final renamed = File(
+      '$portalFixtures/clinics.paris.pets.garnier.get.200.json',
+    ).readAsStringSync().replaceAll('Pepito', 'Pipo');
+    final backend = _garnierBackend()
+      ..onRequest(
+        'GET',
+        _pets,
+        (request) => bearerOf(request) == 'Bearer A'
+            ? PortalReply.fixture('clinics.paris.pets.garnier.get.200.json')
+            : PortalReply.json(renamed),
+      );
+    await pump(tester, backend, session: session);
+    expect(find.text('Pepito · 31 août 2026'), findsOneWidget);
+
+    await session.open(pair('B'));
+    await tester.pumpAndSettle();
+
+    expect(bearerOf(backend.requestsTo(_pets).last), 'Bearer B');
+    expect(find.text('Pipo · 31 août 2026'), findsOneWidget);
+  });
+
+  testWidgets('the retry reads the pet names again', (tester) async {
+    final backend = _garnierBackend()
+      ..on('GET', _documents, problem('service_unavailable', 503))
+      ..on('GET', _pets, problem('service_unavailable', 503));
+    await pump(tester, backend);
+    expect(find.text('Réessayer'), findsOneWidget);
+
+    backend
+      ..on(
+        'GET',
+        _documents,
+        PortalReply.fixture('clinics.paris.documents.garnier.get.200.json'),
+      )
+      ..on(
+        'GET',
+        _pets,
+        PortalReply.fixture('clinics.paris.pets.garnier.get.200.json'),
+      );
+    await tester.tap(find.text('Réessayer'));
+    await tester.pumpAndSettle();
+
+    expect(backend.requestsTo(_pets), hasLength(2));
+    expect(find.text('Pepito · 31 août 2026'), findsOneWidget);
+  });
+
+  testWidgets('a document read keeps the pages to come', (tester) async {
+    final cursor1 = _cursorOf('clinics.paris.documents.garnier.get.200.json');
+    final backend = _garnierBackend()
+      ..on(
+        'GET',
+        '$_documents?cursor=$cursor1',
+        PortalReply.fixture(
+          'clinics.paris.documents.garnier-page2.get.200.json',
+        ),
+      );
+    _serveFile(backend, '01a19a12-5e9c-79ba-b135-8b49222892b6');
+    final container = await pump(tester, backend);
+    expect(_dotOf('Facture PAR-2026-000025'), findsOneWidget);
+
+    await tester.tap(find.textContaining('Facture PAR-2026-000025'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PdfFilePage), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Retour'));
+    await tester.pumpAndSettle();
+    expect(_dotOf('Facture PAR-2026-000025'), findsNothing);
+
+    await scrollToEnd(tester);
+
+    expect(_items(container), 40);
+    expect(backend.requestsTo('$_documents?cursor=$cursor1'), hasLength(1));
+  });
+
+  testWidgets('pull to refresh reloads every filter, the hidden ones too', (
+    tester,
+  ) async {
+    final backend = _julienBackend()
+      ..on(
+        'GET',
+        '$_documents?type=invoice',
+        PortalReply.fixture('clinics.paris.documents.get.200.json'),
+      );
+    await pump(tester, backend);
+    await tester.tap(find.text('Factures'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tous'));
+    await tester.pumpAndSettle();
+    expect(backend.requestsTo('$_documents?type=invoice'), hasLength(1));
+
+    backend.on('GET', '$_documents?type=invoice', _withNewInvoice());
+    await pull(tester);
+    await tester.tap(find.text('Factures'));
+    await tester.pumpAndSettle();
+
+    expect(backend.requestsTo('$_documents?type=invoice'), hasLength(2));
+    expect(find.text('Facture PAR-2026-000068'), findsOneWidget);
   });
 }

@@ -14,6 +14,7 @@ import 'package:kiveto_mobile/features/document/presentation/pdf_file_page.dart'
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/domain/portal_file.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
+import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:pdfrx/pdfrx.dart';
 
@@ -74,11 +75,10 @@ void main() {
     return container;
   }
 
-  testWidgets('a document: loading, then its PDF; /me read again, onRead', (
+  testWidgets('a document: loading, then its PDF; /me read again', (
     tester,
   ) async {
     final gate = Completer<void>();
-    var read = 0;
     final backend = FakePortalBackend()
       ..on('GET', _me, PortalReply.fixture('me.get.200.json'))
       ..onRequest('GET', _file, (request) async {
@@ -94,7 +94,6 @@ void main() {
           clinicId: const ClinicId(_paris),
           documentId: const DocumentId('d'),
           title: 'Facture PAR-2026-000067',
-          onRead: () => read++,
         ),
       ),
     );
@@ -105,14 +104,12 @@ void main() {
 
     expect(find.text('Facture PAR-2026-000067'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(read, 0);
 
     gate.complete();
     await tester.pumpAndSettle();
 
     expect(find.text('pdf:3'), findsOneWidget);
     expect(_shown.single.$1, [1, 2, 3]);
-    expect(read, 1);
     expect(backend.requestsTo(_me), hasLength(meCalls + 1));
 
     await tester.tap(find.bySemanticsLabel('Retour'));
@@ -209,7 +206,6 @@ void main() {
     tester,
   ) async {
     final gate = Completer<void>();
-    var read = 0;
     final backend = FakePortalBackend()
       ..on('GET', _me, PortalReply.fixture('me.get.200.json'))
       ..onRequest('GET', _file, (request) async {
@@ -225,7 +221,6 @@ void main() {
           clinicId: const ClinicId(_paris),
           documentId: const DocumentId('d'),
           title: 'Document',
-          onRead: () => read++,
         ),
       ),
     );
@@ -236,7 +231,6 @@ void main() {
     gate.complete();
     await tester.pumpAndSettle();
 
-    expect(read, 0);
     expect(backend.requestsTo(_me), isEmpty);
     expect(_shown, isEmpty);
   });
@@ -293,6 +287,8 @@ void main() {
     );
 
     expect(viewer, isA<PdfViewer>());
+    // The kit's soft shadow under each page, not pdfrx's heavy default.
+    expect(viewer!.params.pageDropShadow, KivetoShadows.bottomNav);
     expect(viewer!.documentRef.key.toString(), contains('source'));
     expect(find.text("Impossible d'afficher ce document."), findsOneWidget);
   });

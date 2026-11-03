@@ -1078,10 +1078,10 @@ abstract class AppLocalizations {
   /// **'Partiellement payée'**
   String get documentsPaymentPartiallyPaid;
 
-  /// Documents screen (5): an invoice's payment status, credited (a credit note).
+  /// Documents screen (5): an invoice's payment status, credited: the clinic issued a credit note against it (the invoice itself is not the credit note).
   ///
   /// In fr, this message translates to:
-  /// **'Avoir'**
+  /// **'Avoir émis'**
   String get documentsPaymentCredited;
 
   /// Documents screen (5): screen reader label of a document's download button, which opens it in the app, with the document's title.

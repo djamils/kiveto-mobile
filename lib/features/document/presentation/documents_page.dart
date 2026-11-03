@@ -41,28 +41,12 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   /// Null: every document.
   DocumentKind? _filter;
 
-  /// The lists that hold [document]: its dot goes from each once it is
-  /// read (the lists not loaded yet will read it from the server).
-  VoidCallback _onRead(Document document) {
-    final lists = [
-      for (final kind in <DocumentKind?>{null, document.kind})
-        if (ref.exists(documentListProvider(kind)))
-          ref.read(documentListProvider(kind).notifier),
-    ];
-    return () {
-      for (final list in lists) {
-        list.markRead(document.id);
-      }
-    };
-  }
-
   void _open(ClinicId clinicId, Document document) => unawaited(
     openDocumentFile(
       context,
       clinicId: clinicId,
       documentId: document.id,
       title: document.title,
-      onRead: _onRead(document),
     ),
   );
 
@@ -76,7 +60,6 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
         document: document,
         prescription: prescription,
         onRequestRenewal: widget.onRequestRenewal,
-        onRead: _onRead(document),
       ),
     );
   }

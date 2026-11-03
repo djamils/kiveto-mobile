@@ -111,7 +111,7 @@ void main() {
       meta(PaymentStatus.partiallyPaid),
       '1 234,56 € · Partiellement payée · 31 août',
     );
-    expect(meta(PaymentStatus.credited), '1 234,56 € · Avoir · 31 août');
+    expect(meta(PaymentStatus.credited), '1 234,56 € · Avoir émis · 31 août');
     expect(meta(PaymentStatus.unknown), '1 234,56 € · 31 août');
   });
 

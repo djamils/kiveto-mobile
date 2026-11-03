@@ -59,19 +59,23 @@ class DocumentCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                document.title,
-                                style: KivetoText.labelStrong,
-                              ),
-                            ),
-                            if (document.unread) ...[
-                              const SizedBox(width: 6),
-                              const UnreadDot(),
+                        // The dot follows the last word, also when the
+                        // title wraps.
+                        Text.rich(
+                          TextSpan(
+                            text: document.title,
+                            children: [
+                              if (document.unread)
+                                const WidgetSpan(
+                                  alignment: PlaceholderAlignment.middle,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(left: 6),
+                                    child: UnreadDot(),
+                                  ),
+                                ),
                             ],
-                          ],
+                          ),
+                          style: KivetoText.labelStrong,
                         ),
                         const SizedBox(height: 2),
                         Text(meta, style: KivetoText.caption),

@@ -72,14 +72,14 @@ void main() {
 
   Future<void> showCard(WidgetTester tester, String title) =>
       tester.scrollUntilVisible(
-        find.text(title),
+        find.textContaining(title),
         300,
         scrollable: find.byType(Scrollable).first,
       );
 
   Future<void> openCard(WidgetTester tester, String title) async {
     await showCard(tester, title);
-    await tester.tap(find.text(title));
+    await tester.tap(find.textContaining(title));
     await tester.pumpAndSettle();
   }
 
@@ -282,7 +282,7 @@ void main() {
     await pump(tester, backend);
     Finder dot() => find.descendant(
       of: find.ancestor(
-        of: find.text('Ordonnance ORD-2026-000036'),
+        of: find.textContaining('Ordonnance ORD-2026-000036'),
         matching: find.byType(DocumentCard),
       ),
       matching: find.byType(UnreadDot),

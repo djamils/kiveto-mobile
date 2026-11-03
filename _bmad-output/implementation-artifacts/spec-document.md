@@ -165,6 +165,42 @@ deferred:
   - `[low]` `[patch]` (intent) The « Nouveau » label of the dot is not asserted — semantics assertion added.
   - `[maybe-false]` `[reject]` (intent) An invoice-type document without its invoice summary, and the list waiting for the names, untested — the backend always sends the summary of its type (README "Le détail par type"); if true low (the meta shows the date only).
 
+### 2026-11-03 — Code review pass (bmad-code-review, branch diff vs master)
+- verdicts: 28 findings — high 0, medium 8, low 15, false 1, maybe-false 4
+- findings:
+  - `[medium]` `[patch]` (verification-gap) The pet-names provider's session / clinic scoping is never observed — test: session B re-reads the pets with `Bearer B` and shows B's name (« Pipo »).
+  - `[low]` `[patch]` (verification-gap) `_retry` re-reading the pet names is unverified — test: list and pets 503, both fixed, « Réessayer » → names back.
+  - `[medium]` `[patch]` (verification-gap) `markRead` keeping the pagination state is untested on a multi-page list — test on Garnier: open PAR-2026-000025, back, scroll → 40 items, one `?cursor=`.
+  - `[low]` `[patch]` (verification-gap) Pull-to-refresh reloading the hidden filters is unverified — test: « Factures » loaded, pull on « Tous », « Factures » re-requested with the new invoice.
+  - `[medium]` `[reject]` (blind) A failed pull replaces the loaded list by the error view — the explicit error with « Réessayer » is the shared async pattern; keeping the stale items needs refresh-vs-reload tracking so that another session's reload never shows the previous account's documents (during the pull itself the list stays: `AsyncData` with `isRefreshing`).
+  - `[medium]` `[patch]` (blind) Only the caller cleared a document's dot: slice 3's home opening an unread document would leave « Nouveau » on the Documents tab — `openDocumentFile` marks the document read in every loaded list itself; `onRead` removed; test from another widget.
+  - `[low]` `[reject]` (blind) Raw `String` ids (`requestId`, `resultingPrescriptionId`, pet ids, the renewal callback) — no caller diverges; `PetId` is slice 3's (`patient`) to create or move to shared/domain.
+  - `[low]` `[reject]` (blind) Closing the viewer does not cancel the download; no progress — demo and real documents are small PDFs; cancellation plumbing through the downloader is more than a direct correction.
+  - `[medium]` `[defer]` (blind) The PDFium notices are not on the licence page — deferred-work (before the first store build).
+  - `[low]` `[defer]` (blind) `make doctor` does not check the C toolchain — deferred-work.
+  - `[low]` `[reject]` (blind) The spec's context points to the notes folder on this machine — the same as every earlier spec of this effort; the mockup lives there.
+  - `[low]` `[reject]` (blind) The spec text lags the diff (fixtures "already on the branch", the `.gitattributes` task, status) — the fix is editing the spec under review.
+  - `[low]` `[defer]` (blind) Large text and narrow phones not checked — deferred-work, like slice 1's entry.
+  - `[low]` `[reject]` (blind) The names request holds up the list — both requests run in parallel; « names first » avoids meta lines changing under the eye; `/pets` is a small call.
+  - `[low]` `[reject]` (blind) A download icon for an in-app viewer — the mockup's C-9e glyph; the label says « Ouvrir {title} ».
+  - `[low]` `[patch]` (blind) « Avoir » reads as if the invoice were a credit note — « Avoir émis ».
+  - `[low]` `[reject]` (blind) `markedRead` copies the fields by hand — no field is lost today (tested); a `copyWith` adds surface for a hypothetical field.
+  - `[low]` `[reject]` (edge) A fast double tap stacks two viewers — unlikely; a guard adds state.
+  - `[maybe-false]` `[reject]` (edge) A read during a pull is dropped by `markRead` (`isLoading`) — the refreshed page carries the server's read flag when the read happened before it; if true low.
+  - `[false]` `[reject]` (edge) `onLoaded` throwing replaces the PDF — it only invalidates `/me` and marks lists read, neither throws.
+  - `[low]` `[reject]` (edge) Closing the viewer does not cancel the download — same as the blind row.
+  - `[low]` `[reject]` (edge) `done` + `renewable` shows the pill, no button — the orchestrator's FLAG decision (open or done → pill).
+  - `[low]` `[reject]` (edge) The badge hides while `/me` reloads after a pull — the badge is hidden on the Documents tab anyway; it comes back with `/me`.
+  - `[maybe-false]` `[reject]` (edge) An empty vet or pet name gives « · Oscar » — the backend always names both; if true low.
+  - `[maybe-false]` `[reject]` (edge) Duplicate pet ids give « Moka et Moka » — the backend stores distinct ids; if true low.
+  - `[maybe-false]` `[reject]` (edge, claim) The commit message says « the button while renewable » but `done` shows a pill — the same FLAG decision; the message summarises it.
+  - `[low]` `[reject]` (acceptance) The Tasks line says pet-name failures fall back to an empty map in the provider (now in the page) — the fix edits the spec under review; the behaviour is the same.
+  - `[medium]` `[patch]` (acceptance) The shared opener does not clear the dot by itself — same as the blind `onRead` row.
+- Slice agent's emulator walk, patched with it: the unread dot now follows the last word of a wrapped title (inline `WidgetSpan`); pdfrx's heavy page shadow replaced by the kit's `KivetoShadows.bottomNav`.
+
+### Emulator walk (slice agent, 2026-11-03, after the bmad-build-auto review)
+Debug build on `Medium_Phone_API_37.0` against the local backend (screenshots `shots-document/` in the notes folder): Julien Paris badge 1 → both invoices with the dot → the real invoice PDF through pdfrx over the nav → back: no dot, badge gone on the home; Lyon (switched with a temporary, uncommitted long-press hack: the switcher is slice 3's) → « Aucun document » naming Lyon. Garnier (signed in by OTP): badge 5, 51 documents through three pages to « Compte rendu du 18/11/2023 », every renewal state (button for none and rejected, « Renouvellement traité », « Renouvellement demandé »), ORD-05's sheet (« Ordonnance du 22 déc. 2025 », « Dr Rousseau · Oscar », « Qté 2 · … ») and its PDF, the renewal button → screen 17 placeholder, « Factures » with « Non payée », « Résultats » empty, pull-to-refresh, Lyon « Aucune facture ». Julien signed in again, Paris active; his invoice set back to unread.
+
 ## Design Notes
 
 - **Viewer navigation:** a page route on the root navigator, not a go_router route: the viewer is internal to the feature, slice 3 reuses it from the home and for the booklet (another API path) without new routes; go_router keeps pageless routes above the page that pushed them and drops them with it (sign-out).
