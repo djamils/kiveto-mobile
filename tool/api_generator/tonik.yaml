@@ -1,0 +1,166 @@
+# tonik 0.11.1 configuration of the Portal API client (decision D3, phase-4
+# spike of 2026-11-03). `make api-generate` runs, from this folder:
+#
+#   fvm dart run tonik --config tonik.yaml
+#
+# after removing packages/kiveto_portal_api (never use tonik's --overwrite:
+# it keeps the files of removed schemas). Paths are relative to this folder.
+#
+# The spec is not contracts/portal.v1.yaml itself but its normalised build
+# copy (tool/normalize_contract.dart): `required` added to every
+# response-only schema, so that the fields the backend always sends are not
+# nullable. Changing this file changes the client: `make api-generate`, and
+# `make api-check` fails until then (its sha256 is in the CONTRACT stamp).
+#
+# nameOverrides gives every operationId, tag and dotted schema of the
+# contract a readable name; the normaliser refuses a contract item missing
+# here (add it, then make api-generate).
+spec: ../../build/kiveto_portal_api/portal.v1.yaml
+outputDir: ../../packages
+packageName: kiveto_portal_api
+logLevel: warn
+
+transport:
+  backend: dio
+
+enums:
+  # The contract may add enum values (adding is compatible): never fail.
+  generateUnknownCase: true
+  unknownCaseName: unknown
+
+# Without these, tonik warns and falls back to bytes.
+contentTypes:
+  "application/problem+json": json
+  "application/pdf": bytes
+  "application/zip": bytes
+  "text/calendar": text
+
+nameOverrides:
+  # The French tags of the contract name the API classes (<Tag>Api).
+  tags:
+    Animaux: Pets
+    Annuaire: ClinicListing
+    Authentification: Auth
+    CGU: Terms
+    Compte: Account
+    Consentements: Consents
+    Demandes: Requests
+    Documents: Documents
+    Fichiers: Files
+    Invitation: Invitations
+    Rendez-vous: Scheduling
+
+  # API Platform names the output class of an operation <Input>.<Output>.
+  schemas:
+    Appointment.AppointmentView: AppointmentDetailView
+    AppointmentBooking.AppointmentView: BookedAppointmentView
+    AppointmentBookingWithNewPet.AppointmentView: BookedWithNewPetAppointmentView
+    AppointmentCancellation.AppointmentView: CancelledAppointmentView
+    AppointmentReschedule.AppointmentView: RescheduledAppointmentView
+    BookingMotifs.BookingMotifView: BookingMotifView
+    BookingPractitioners.PractitionerView: BookingPractitionerView
+    ConsentUpdate.Consents: UpdatedConsents
+    DataExportList.DataExportView: DataExportView
+    DataExportRequest.DataExportRequestView: DataExportRequestView
+    DeletionOtp.OtpChallengeView: DeletionOtpChallengeView
+    EmailChange.EmailVerificationChallengeView: EmailVerificationChallengeView
+    EmailChangeOtp.OtpChallengeView: EmailChangeOtpChallengeView
+    EmailChangeVerification.AccountView: VerifiedEmailAccountView
+    InvitationAcceptance.AcceptedInvitationView: AcceptedInvitationView
+    InvitationGrantAcceptance.AcceptedInvitationView: AcceptedInvitationGrantView
+    InvitationLookup.InvitationLookupView: InvitationLookupView
+    InvitationOtpRequest.OtpChallengeView: InvitationOtpChallengeView
+    LinkSuggestionAcceptance.LinkSuggestionAcceptedView: LinkSuggestionAcceptedView
+    LinkSuggestions.LinkSuggestionView: LinkSuggestionView
+    ListingBooking.BookingRequestView: ListingBookingRequestView
+    ListingMotifs.BookingMotifView: ListingMotifView
+    ListingPractitioners.PractitionerView: ListingPractitionerView
+    MeUpdate.AccountView: UpdatedAccountView
+    MeUpdate.jsonMergePatch: MeUpdate
+    OtpRequest.OtpChallengeView: OtpChallengeView
+    OtpResend.OtpChallengeView: ResentOtpChallengeView
+    OtpVerification.OtpVerificationView: OtpVerificationResult
+    PetChangeRequestCreation.PortalRequestCreatedView: PortalRequestCreatedView
+    Questionnaire.QuestionnaireView: QuestionnaireView
+    QuestionnaireUpdate.QuestionnaireView: SavedQuestionnaireView
+    Registration.AcceptedInvitationView: RegistrationResultView
+    RenewalRequestCreation.RenewalRequestCreatedView: RenewalRequestCreatedView
+    SessionRefresh.SessionTokensView: SessionTokens
+    # The problem+json body: `Error` would hide dart:core's Error in every
+    # file importing the client.
+    Error: ProblemDetails
+
+  # "<Schema>.<property>" (the contract's schema name): a property named
+  # `type` would be generated as `$type`.
+  properties:
+    ConstraintViolation.type: problemType
+    DocumentView.type: kind
+    Error.type: problemType
+    TimelineDocumentView.type: kind
+
+  # "<operationId>.<parameter>": the `type` filter of the documents too.
+  parameters:
+    api_clinics_clinicIddocuments_get.type: kind
+
+  # The operationIds of the contract are derived from the routes.
+  operations:
+    api_clinics_clinicIdhome_get: getHome
+    api_clinics_clinicIdpets_get_collection: listPets
+    api_clinics_clinicIdpets_petId_get: getPet
+    api_clinics_clinicIdpets_petIdcare-items_get_collection: listPetCareItems
+    api_clinics_clinicIdpets_petIdtimeline_get: getPetTimeline
+    api_portal_vaccination_booklet: getVaccinationBooklet
+    api_clinic-listings_get: listClinicListings
+    api_clinic-listings_listingId_get: getClinicListing
+    api_clinic-listings_listingIdbookingappointments_post: requestListingAppointment
+    api_clinic-listings_listingIdbookingavailability_get: getListingAvailability
+    api_clinic-listings_listingIdbookingmotifs_get_collection: listListingMotifs
+    api_clinic-listings_listingIdbookingpractitioners_get_collection: listListingPractitioners
+    api_authlogout_post: logout
+    api_authotprequest_post: requestOtp
+    api_authotpverify_post: verifyOtp
+    api_authotp_challengeIdresend_post: resendOtp
+    api_authrefresh_post: refreshSession
+    api_authregister_post: register
+    api_legaltermscurrent_get: getCurrentTerms
+    api_me_get: getMe
+    api_me_patch: updateMe
+    api_mebooking-requests_get: listBookingRequests
+    api_medata-export_post: requestDataExport
+    api_medata-exports_get_collection: listDataExports
+    api_portal_data_export_file: getDataExportFile
+    api_medeletion-request_post: requestDeletion
+    api_medeletion-requestotp_post: requestDeletionOtp
+    api_meemail-change_post: requestEmailChange
+    api_meemail-changeotp_post: requestEmailChangeOtp
+    api_meemail-changeverify_post: verifyEmailChange
+    api_melink-suggestions_get_collection: listLinkSuggestions
+    api_melink-suggestions_suggestionIdaccept_post: acceptLinkSuggestion
+    api_clinics_clinicIdconsents_get: getConsents
+    api_clinics_clinicIdconsentshistory_get: getConsentHistory
+    api_clinics_clinicIdconsents_kind_put: updateConsent
+    api_clinics_clinicIdappointments_appointmentIdquestionnaire_get: getQuestionnaire
+    api_clinics_clinicIdappointments_appointmentIdquestionnaire_put: saveQuestionnaire
+    api_clinics_clinicIdpets_petIdchange-requests_post: requestPetChange
+    api_clinics_clinicIdprescriptions_prescriptionIdrenewal-requests_post: requestRenewal
+    api_clinics_clinicIdrequests_get: listRequests
+    api_clinics_clinicIddocuments_get: listDocuments
+    api_portal_document_file: getDocumentFile
+    api_clinics_clinicIdprescriptions_prescriptionId_get: getPrescription
+    api_portal_booklet_download: downloadBooklet
+    api_portal_document_download: downloadDocument
+    api_portal_data_export_download: downloadDataExport
+    api_invitationsaccept_post: acceptInvitation
+    api_invitationslookup_post: lookupInvitation
+    api_invitationsotp_post: requestInvitationOtp
+    api_invitations_invitationIdaccept_post: acceptInvitationById
+    api_clinics_clinicIdappointments_get: listAppointments
+    api_clinics_clinicIdappointments_post: bookAppointment
+    api_clinics_clinicIdappointmentswith-new-pet_post: bookAppointmentWithNewPet
+    api_clinics_clinicIdappointments_appointmentId_get: getAppointment
+    api_portal_appointment_calendar: getAppointmentCalendar
+    api_clinics_clinicIdappointments_appointmentIdcancel_post: cancelAppointment
+    api_clinics_clinicIdappointments_appointmentIdreschedule_post: rescheduleAppointment
+    api_clinics_clinicIdbookingavailability_get: getAvailability
+    api_clinics_clinicIdbookingmotifs_get_collection: listMotifs
+    api_clinics_clinicIdbookingpractitioners_get_collection: listPractitioners

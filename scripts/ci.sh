@@ -7,8 +7,8 @@
 
 . "$(dirname "$0")/lib.sh"
 
-# Phase 4 appends api-check (the generated client matches the contract).
-KV_CI_TARGETS="format-check analyze test-architecture test-coverage coverage-gate test-scripts"
+# api-check last: the generated client matches the contract copy.
+KV_CI_TARGETS="format-check analyze test-architecture test-coverage coverage-gate test-scripts api-check"
 
 MAKE=${MAKE:-make}
 

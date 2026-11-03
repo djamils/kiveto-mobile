@@ -36,8 +36,19 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  # The generated Portal API client (packages/kiveto_portal_api, written by
+  # `make api-generate`) and its runtime: dio and tonik_util (TonikResult,
+  # OffsetDateTime, Date, ServerConfig), versions checked on pub.dev on
+  # 2026-11-03 and pinned exactly. Rule 7 confines kiveto_portal_api and
+  # tonik_util to features/*/infrastructure/, core/network/ and core/di/;
+  # Dio is refused in domain/, application/ and presentation/ (rules 1–3)
+  # and, by convention, used only under those same three data-side folders.
+  dio: 5.11.1
   flutter:
     sdk: flutter
+  kiveto_portal_api:
+    path: packages/kiveto_portal_api
+  tonik_util: 0.11.1
 
 dev_dependencies:
   flutter_test:

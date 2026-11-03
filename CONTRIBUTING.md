@@ -22,7 +22,7 @@ the commands and checks it brings **do not exist** — do not rely on them.
 | 1 | root commit, `chore/repo-foundations` | Git attributes, editor config, ignores, `CLAUDE.md`, `CONTRIBUTING.md`, BMAD 6.12.4, architecture decisions | Done |
 | 2 | `chore/toolchain-bootstrap` | `.fvmrc`, Flutter project (Android + iOS), `Makefile`, `scripts/` (`doctor`, `install`, `install-fvm`, `start`, `devices`, `clean`), `tool/devices.dart`, environment config | Done (validated on Windows and macOS) |
 | 3 | `chore/quality-gates` | very_good_analysis + riverpod_lint, architecture tests of the D15 rules, coverage gate, `tool/` as the `kiveto_tool` package, `make ci` and its steps, plain-bash checks of the scripts, git hooks, GitHub Actions, doctor NDK check | Done (validated on Windows; macOS run and first GitHub Actions run pending) |
-| 4 | `chore/portal-api-client` | Contract copy, generator spike, generated client, `make api-*` | To do |
+| 4 | `chore/portal-api-client` | Generator spike (tonik 0.11.1, D3), contract copy pinned by commit (`contracts/`), contract normaliser, generated client `packages/kiveto_portal_api` (committed, stamped), `make api-sync` / `api-generate` / `api-check` (`api-check` in `make ci`), app dependencies `dio` and `tonik_util`, rule 7 on `tonik_util`, contract fixtures and their integration test | Done (validated on Windows; macOS run pending) |
 | 5 | `feature/app-shell` | `lib/core/{network,security,errors,di}`: HTTP client, auth and refresh, token storage, errors; `lib/shared/`: `Clock`, value objects, UI kit; `lib/app/{bootstrap,routing,theme}`: `ProviderScope`, router, theme; French l10n | To do |
 | 6+ | `feature/<feature>` | The Portal slices, in the backend contract's order | To do |
 
@@ -163,22 +163,29 @@ make test-architecture  # 3. the layer and feature rules (test/architecture/)
 make test-coverage      # 4. unit, widget, integration and tool suites with coverage (coverage/lcov.info)
 make coverage-gate      # 5. 100% of the gated layers, every file of lib/ and tool/ counted
 make test-scripts       # 6. plain-bash checks of scripts/ and .githooks/ (test/scripts/)
+make api-check          # 7. the contract copy, contracts/SOURCE and the generated client agree
 make test               # every Flutter suite, without coverage
 make test-unit          # one suite: also test-widget, test-integration, test-tool
+
+make api-sync REF=<sha> # copy the backend contract at that commit, then api-generate (§8)
+make api-generate       # regenerate packages/kiveto_portal_api from contracts/portal.v1.yaml
 ```
 
 Options: `PLATFORM=android|ios` (default `android`; iOS needs macOS),
 `DEVICE=<id>`, `EMULATOR=<avd>`, `SIMULATOR=<name>`, `ENV=dev` (passes
 `config/env/<ENV>.json` with `--dart-define-from-file`), `RUN_ARGS=`
 (extra `flutter run` flags, e.g. `--release`), `BOOT_WAIT=180` (seconds),
-`V=1`, `NO_COLOR=1`, `LOG_FILE=.make/make.log`. Quiet steps write their
+`REF=<backend commit>` and `KIVETO_BACKEND_DIR=<backend checkout>` (default
+`../kiveto`) for `make api-sync`, `V=1`, `NO_COLOR=1`,
+`LOG_FILE=.make/make.log`. Quiet steps write their
 output, timestamped, to `LOG_FILE` and print its last 30 lines when they
 fail; `V=1` runs them live and shows every command (`make ci V=1`).
 `make install` and `make start` are idempotent: `pub get` runs only when
-`pubspec.yaml`, `pubspec.lock` or `tool/pubspec.yaml` changed (stamp in
-`.make/`). A test suite without `*_test.dart` has nothing to run, which is
-not a failure. `make ci` prints the duration of each step and the total
-(about a minute on a warm machine).
+`pubspec.yaml`, `pubspec.lock`, `tool/pubspec.yaml` or
+`packages/kiveto_portal_api/pubspec.yaml` changed (stamp in `.make/`). A
+test suite without `*_test.dart` has nothing to run, which is not a
+failure. `make ci` prints the duration of each step and the total (about
+two minutes on a warm machine, most of it in `test-scripts`).
 
 Nothing installs system-wide software: `make doctor` explains what is
 missing and how to install it; `make install-fvm` installs FVM for the
@@ -200,7 +207,7 @@ Windows and macOS.
 | Scripts and hooks behave, stay bash 3.2 and LF | `test/scripts/` in `make ci` | Now |
 | Conventional Commits | `commit-msg` hook | Now |
 | `make ci` green on every PR | GitHub Actions (`.github/workflows/ci.yml`) | Written, not run yet; make the check required on `master` (branch protection) |
-| Generated client matches the contract copy | `make api-check` in `make ci` | Phase 4 |
+| Contract copy unedited, generated client matches it (§8) | `make api-check` in `make ci` | Now |
 | End-to-end tests on a device | `make test-e2e`, run by hand | Phase 5 |
 | No commit before `make ci` passed on the staged tree | Claude Code hook (D14) | Deferred |
 
@@ -259,8 +266,10 @@ Dependency rules, checked by `test/architecture/` in `make ci`:
    `features/<other>/<other>.dart`; the feature graph has no cycle.
 6. `core/` and `shared/` import no feature; `shared/` imports nothing from
    `core/` or `app/`.
-7. The generated client (`kiveto_portal_api`) is imported only under
-   `features/*/infrastructure/`, `core/network/` and `core/di/`.
+7. The generated client (`kiveto_portal_api`) and its runtime
+   (`tonik_util`: `TonikResult`, `OffsetDateTime`, `Date`, `ServerConfig`)
+   are imported only under `features/*/infrastructure/`, `core/network/`
+   and `core/di/`.
 8. `DateTime.now` / `DateTime.timestamp` (inject the `Clock`), `print(` and
    `coverage:ignore` are forbidden in `features/*/domain/`,
    `features/*/application/` and `shared/domain/`.
@@ -283,10 +292,10 @@ policies: session lifecycle, one token refresh at a time, a stable
 |---|---|---|---|
 | Unit | `test/unit/` (mirrors `lib/`) | domain, application, infrastructure | Yes (`make test-unit`) |
 | Widget | `test/widget/` (mirrors `lib/**/presentation`) | pages and widgets: empty / short / long lists, states, errors | Yes (`make test-widget`) |
-| Integration | `test/integration/` | complete flows without a device: real wiring, real generated client, fake HTTP adapter fed with contract JSON | Yes (`make test-integration`) |
-| Tooling | `test/tool/` (fixtures in `test/tool/fixtures/`) | `tool/lib/`: the device picker, the Dart scanner, the coverage gate | Yes (`make test-tool`) |
+| Integration | `test/integration/` (shared helpers in `test/support/`) | complete flows without a device: real wiring, real generated client, fake HTTP adapter fed with contract JSON (`portal_api_contract_test.dart` decodes every contract fixture) | Yes (`make test-integration`) |
+| Tooling | `test/tool/` (fixtures in `test/tool/fixtures/`) | `tool/lib/`: the device picker, the Dart scanner, the coverage gate, the contract commands (`portal_api.dart`, SHA-256 included), the contract normaliser | Yes (`make test-tool`) |
 | Architecture | `test/architecture/` | the rules of §6, with self-tests that inject violations | Yes (`make test-architecture`) |
-| Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh`, doctor and install, install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`, `analyze.sh`, the git hooks, the entry points `tool/devices.dart` and `tool/coverage_gate.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
+| Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh`, doctor and install, install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`, `analyze.sh`, `api.sh`, the git hooks, the entry points `tool/devices.dart`, `tool/coverage_gate.dart`, `tool/portal_api.dart` and `tool/normalize_contract.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
 | End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`, phase 5) |
 
 Coverage policy:
@@ -314,9 +323,18 @@ Coverage policy:
   `lib/l10n/app_localizations*.dart` (gen-l10n output; also excluded from
   analysis), `tool/*.dart` (thin entry points over
   `tool/lib/`, run by the make targets and `test/scripts/`). The generated
-  client is a separate package, outside the measured scope. `tool/` is the
-  path package `kiveto_tool` so that `flutter test --coverage` measures
-  `tool/lib/`.
+  client (`packages/kiveto_portal_api`) is a separate package, outside the
+  measured scope and the analysis: `test/integration/` exercises it on the
+  contract fixtures. `tool/` is the path package `kiveto_tool` so that
+  `flutter test --coverage` measures `tool/lib/`.
+- The contract fixtures (`test/support/fixtures/portal_api/`) are real
+  responses of the backend, captured on 2026-11-03 through the generator
+  spike's in-process replay, byte for byte except the dev `trace` arrays,
+  replaced by `"[stripped]"`; one file per route and status
+  (`me.get.200.json`, `clinics.paris.home.get.200.json`,
+  `me.patch.422.json`…); `test/support/portal_api/fake_portal_backend.dart`
+  serves them to the generated client through a fake Dio
+  `HttpClientAdapter` and records the requests. Later slices reuse both.
 - Golden tests are not part of `make ci`: font rendering differs between
   Windows, macOS and Linux.
 
@@ -324,19 +342,108 @@ Coverage policy:
 
 ## 8. The Portal API contract
 
-- Source of truth: the backend's `openapi/portal.v1.yaml` (OpenAPI 3.2.0)
-  and its guide `openapi/portal-api-v1.md`.
-- `contracts/portal.v1.yaml` is a copy pinned by commit SHA in
-  `contracts/SOURCE` (repository, commit, sha256): the backend has no
-  contract tags yet. `make api-sync REF=<sha>` updates it from a local
-  backend checkout (`KIVETO_BACKEND_DIR`) or from the remote.
-- `packages/kiveto_portal_api/` is generated from that copy and committed,
-  so neither `make install` nor the CI needs the generator. Never edit it
-  by hand. `make api-check` fails when it does not match the copy.
-- The generator is chosen in phase 4, after a spike on the real contract
-  (candidates: `swagger_parser`, `tonik`).
-- An API change is a backend PR first, then a mobile PR
-  `chore(api): sync portal contract <sha>`.
+Source of truth: the backend's `openapi/portal.v1.yaml` (OpenAPI 3.2.0)
+and its guide `openapi/portal-api-v1.md`. An API change is a backend PR
+first, then a mobile PR `chore(api): sync portal contract <sha>`.
+
+**The pieces** (architecture §4, D3–D5):
+
+| Path | What | Written by |
+|---|---|---|
+| `contracts/portal.v1.yaml` | byte copy of the backend file at one commit (`-text` in `.gitattributes`: no line-ending conversion, ever) | `make api-sync` |
+| `contracts/SOURCE` | repository, path, commit, sha256 of the copy (the backend has no contract tags: pinned by commit SHA, D4) | `make api-sync` |
+| `tool/api_generator/` | the generator package: `tonik: 0.11.1` pinned, its `pubspec.lock` committed, `tonik.yaml` (configuration and readable names) | by hand, reviewed |
+| `build/kiveto_portal_api/portal.v1.yaml` | the normalised copy tonik reads (ignored) | `make api-generate` |
+| `packages/kiveto_portal_api/` | the generated client, committed (D5): neither `make install` nor the CI needs the generator | `make api-generate` |
+| `packages/kiveto_portal_api/CONTRACT` | stamp: contract sha256 and commit, tonik version, a sha256 over the generator inputs and one over the generated files | `make api-generate` |
+
+**Never edit** `contracts/` or `packages/kiveto_portal_api/` by hand: only
+the make targets write them, and `make api-check` (the last step of
+`make ci`) fails on any difference, each message ending with the command
+that fixes it — a hand-edited copy (`git checkout -- contracts/portal.v1.yaml`
+or `make api-sync REF=<sha>`), a client generated from another contract or
+commit, a generated file changed, added or removed, a changed
+`tonik.yaml`, generator lock or normaliser, another tonik pinned
+(`make api-generate`), a missing file (the target that writes it). It
+compares the tree with the `CONTRACT` stamp: a hand edit followed by a
+manual `tool/portal_api.dart stamp` would pass, so only `make api-generate`
+leaving `git status` clean proves the client is the generator's output.
+
+**The generator: tonik 0.11.1** (decision D3, spike of 2026-11-03 on the
+real contract). Pure Dart, it reads OpenAPI 3.2 natively (no rewrite of the
+document), keeps the clinic UTC offset of every `date-time`
+(`OffsetDateTime`: `2026-11-11T10:30:00+01:00` stays hour 10, offset
++01:00), types `format: date` as `Date`, sends `PATCH /me` as
+`application/merge-patch+json`, renames operations, tags, schemas,
+properties and parameters through `nameOverrides`, and needs no
+build_runner. `swagger_parser` 1.45.1 needed four contract rewrites and
+lost the offsets. Risks: a young 0.x package with one maintainer; a large
+output (~415 files).
+
+**Using the client** (phase 5 and the slices, under
+`features/*/infrastructure/`, `core/network/`, `core/di/` only — rule 7):
+`AccountApi(CustomServer(baseUrl: origin, serverConfig:
+ServerConfig<Dio>.client(dio)))`; each call returns a `TonikResult`
+(`TonikSuccess(value: GetMeResponse200(:final body))`). Every documented
+status is a typed value, errors included (`GetMeResponse401`,
+`UpdateMeResponse422` with its `ConstraintViolation`; the contract's
+`Error` schema is generated as `ProblemDetails`, so that it does not hide
+`dart:core`'s `Error`), unless an
+interceptor narrows `validateStatus` to 2xx: then a non-2xx response is a
+`TonikError` carrying the `DioException(badResponse)` and the problem+json
+bytes. A booking `startAt` must be the slot value received (no fractional
+seconds), never a UTC `DateTime`.
+
+**Commands:**
+
+```bash
+# Update the contract to a backend commit (a full or short SHA, a branch, a tag
+# known to that checkout), then regenerate and stamp the client:
+make api-sync REF=840dbead                  # backend checkout in ../kiveto
+make api-sync REF=840dbead KIVETO_BACKEND_DIR=//wsl.localhost/Ubuntu/home/<you>/kiveto   # a WSL checkout, from Windows
+make api-generate   # regenerate from the current copy (after a tonik.yaml change)
+make api-check      # the copy, SOURCE and the client agree (part of make ci)
+```
+
+`KIVETO_BACKEND_DIR` defaults to `../kiveto` (a sibling checkout); a WSL
+checkout seen from Windows works as above (`KIVETO_BACKEND_DIR` may not
+hold `| ^ & < > % "`: fvm passes it through cmd.exe; git is run with
+`-c safe.directory=*` for these read-only commands). `REF` must exist in
+that checkout (`git fetch` there first) and may only hold letters,
+digits and `. _ / -`. Copying from the remote repository is not built
+(deferred). Updating the contract, step by step: merge the backend PR;
+`make api-sync REF=<sha>`; read the diff of `contracts/` and
+`packages/kiveto_portal_api/`; refresh the fixtures of
+`test/support/fixtures/portal_api/` whose route changed (capture the real
+response from the local backend, exact bytes); fix the mappers of the
+features; `make ci`;
+commit `chore(api): sync portal contract <short sha>`.
+
+**The normalisation** (`tool/normalize_contract.dart`, run by
+`make api-generate`): the backend declares no `required` on the schemas it
+answers with, although its success bodies carry every key (`null`
+included), so a generator would type every response field as optional.
+Its problem+json bodies omit some nullable keys (`detail`, `instance`),
+which still decode: a missing nullable key reads as `null`. The normaliser
+writes `build/kiveto_portal_api/portal.v1.yaml`, where every
+**response-only** schema (reachable from the responses and from no request
+body or parameter) lists all its properties in `required`; nullability is
+kept (a `type: [T, 'null']` field stays nullable), request schemas are
+untouched (a merge-patch body stays all-optional), and nothing else
+changes. It disappears the day the backend declares `required` itself.
+
+**Readable names**: the contract's operationIds derive from the routes
+(`api_clinics_clinicIdhome_get`), its tags are French and its output
+schemas are named `<Input>.<Output>`. `tool/api_generator/tonik.yaml`
+renames them (`PetsApi.getHome`, `AppointmentDetailView`, a `type`
+property becomes `kind` or `problemType`). The normaliser refuses a
+contract whose operationId, tag or dotted schema has no entry there
+("add a readable name to nameOverrides.<section> of
+tool/api_generator/tonik.yaml"): add it, then `make api-generate`. Inline
+types keep a name tonik derives from their path (route-derived
+`ApiPortalV1…` request bodies, query enums and error bodies; enums and
+nullable wrappers named after their schema key, such as
+`AppointmentViewStatusModel`).
 
 ---
 

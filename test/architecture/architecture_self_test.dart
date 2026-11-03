@@ -98,7 +98,7 @@ import '../../client/domain/client.dart';
     });
 
     test('rule 2: an application importing Flutter, Riverpod, Dio, the '
-        'client, core/ or presentation', () {
+        'client, its runtime, core/ or presentation', () {
       final offences = _check({
         'features/patient/application/book_pet.dart': '''
 import 'package:flutter/widgets.dart';
@@ -113,6 +113,7 @@ import 'confirm_booking.dart';
 import '../../../shared/domain/clock.dart';
 import 'dart:async';
 import '../presentation/pet_page.dart';
+import 'package:tonik_util/tonik_util.dart';
 ''',
       });
 
@@ -120,7 +121,7 @@ import '../presentation/pet_page.dart';
           'features/patient/application/ may import only dart:core, '
           'dart:async, dart:collection, dart:math, its own domain and '
           'application, and shared/domain/: no Flutter, Riverpod, Dio, '
-          'kiveto_portal_api or core/';
+          'kiveto_portal_api, tonik_util or core/';
       const file = '[rule 2] lib/features/patient/application/book_pet.dart';
       _expectRule(offences, 2, [
         ('$file:1 imports package:flutter/widgets.dart (Flutter)', allowed),
@@ -143,6 +144,10 @@ import '../presentation/pet_page.dart';
         ('$file:6 imports dart:ui (Flutter)', allowed),
         ('$file:7 imports package:go_router/go_router.dart', allowed),
         ('$file:12 imports ../presentation/pet_page.dart', allowed),
+        (
+          '$file:13 imports package:tonik_util/tonik_util.dart (tonik_util)',
+          allowed,
+        ),
       ]);
       expect(_rules(offences), {2, 7});
     });
@@ -372,6 +377,35 @@ import '../domain/money.dart';
       expect(_rules(offences), {7});
     });
 
+    test('rule 7: tonik_util, the runtime of the client, imported outside '
+        'the data side', () {
+      const runtime = "import 'package:tonik_util/tonik_util.dart';\n";
+      final offences = _check({
+        'app/bootstrap/bootstrap.dart': runtime,
+        'features/patient/presentation/pet_page.dart': runtime,
+        'features/patient/di.dart': runtime,
+        // Allowed.
+        'features/patient/infrastructure/pet_api.dart': runtime,
+        'core/network/http.dart': runtime,
+        'core/di/providers.dart': runtime,
+      });
+
+      const allowed =
+          'tonik_util is imported only under '
+          'features/*/infrastructure/, core/network/ and core/di/';
+      const uri = 'package:tonik_util/tonik_util.dart';
+      _expectRule(offences, 7, [
+        ('[rule 7] lib/app/bootstrap/bootstrap.dart:1 imports $uri', allowed),
+        ('[rule 7] lib/features/patient/di.dart:1 imports $uri', allowed),
+        (
+          '[rule 7] lib/features/patient/presentation/pet_page.dart:1 '
+              'imports $uri',
+          allowed,
+        ),
+      ]);
+      expect(_rules(offences), {7});
+    });
+
     test('rule 8: DateTime.now, DateTime.timestamp, print( and coverage '
         'ignore comments in domain and application', () {
       final offences = _check({
@@ -522,6 +556,7 @@ import '../../shared/presentation/kit.dart';
       'core/network/http.dart': '''
 import 'package:dio/dio.dart';
 import 'package:kiveto_portal_api/kiveto_portal_api.dart';
+import 'package:tonik_util/tonik_util.dart';
 
 import '../errors/api_failure.dart';
 import '../security/token_store.dart';
@@ -539,6 +574,7 @@ import '../../shared/domain/clock.dart';
       'core/di/providers.dart': '''
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_portal_api/kiveto_portal_api.dart';
+import 'package:tonik_util/tonik_util.dart';
 
 import '../network/http.dart';
 ''',
@@ -588,6 +624,7 @@ import 'package:dio/dio.dart';
 import 'package:kiveto_mobile/core/network/http.dart';
 import 'package:kiveto_mobile/shared/domain/failure.dart';
 import 'package:kiveto_portal_api/kiveto_portal_api.dart';
+import 'package:tonik_util/tonik_util.dart';
 
 import '../domain/pet.dart';
 import 'pet_mapper.dart';

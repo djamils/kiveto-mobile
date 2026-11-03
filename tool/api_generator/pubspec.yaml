@@ -1,0 +1,17 @@
+name: kiveto_api_generator
+description: "Runs tonik to generate the Portal API client (make api-generate)."
+publish_to: none
+
+# The generator of packages/kiveto_portal_api (decision D3: tonik 0.11.1,
+# chosen by the phase-4 spike on the real contract). A package of its own,
+# outside the app's resolution: its dependencies never reach the app, and
+# its pubspec.lock is committed so that `fvm dart pub get --enforce-lockfile`
+# installs the exact generator that produced the committed client.
+# `make api-generate` runs `fvm dart run tonik --config tonik.yaml` here.
+
+environment:
+  sdk: ^3.13.7
+
+dev_dependencies:
+  # Checked on pub.dev on 2026-11-03 (latest, 2026-10-26, sdk >= 3.13).
+  tonik: 0.11.1

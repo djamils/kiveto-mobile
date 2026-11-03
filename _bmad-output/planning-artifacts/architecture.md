@@ -15,7 +15,9 @@ Accepted on 2026-11-02 (decisions D1–D14 below). Versions were checked on
 that date; re-check them before pinning anything in a later phase.
 Updated on 2026-11-03 by phase 3: decision D15 (the user's source tree and
 features) replaces the feature list of §2 and the `core/` split of §3 and
-§6; §5–§8 describe the tooling as built.
+§6; §5–§8 describe the tooling as built. Updated on 2026-11-03 by phase 4:
+D3 decided (tonik 0.11.1), §4 and §5–§8 describe the contract tooling as
+built, §11 records milestone V3.
 
 ## 1. Context
 
@@ -83,15 +85,15 @@ presentation ──► application ──► domain ◄── infrastructure
 | Layer | Contains | May import |
 |---|---|---|
 | `features/*/domain/` | models, value objects, sealed failures, repository contracts | `dart:core/async/collection/math`, its own domain, `shared/domain/` — no package |
-| `features/*/application/` | use cases **only** where something is orchestrated (e.g. `SignInWithCode`: verify, then branch on `authenticated` / `invitation_pending` / `registration_required`), state machines | + its own application — no Flutter, Riverpod, Dio, generated client or `core/` |
-| `features/*/infrastructure/` | repositories on the generated client, DTO → domain mapping, storage | + `dio`, `kiveto_portal_api`, `core/` — never `presentation/` |
+| `features/*/application/` | use cases **only** where something is orchestrated (e.g. `SignInWithCode`: verify, then branch on `authenticated` / `invitation_pending` / `registration_required`), state machines | + its own application — no Flutter, Riverpod, Dio, generated client, its runtime `tonik_util` or `core/` |
+| `features/*/infrastructure/` | repositories on the generated client, DTO → domain mapping, storage | + `dio`, `kiveto_portal_api`, `tonik_util`, `core/` — never `presentation/` |
 | `features/*/presentation/` | pages, widgets, Riverpod notifiers (view models), routes | Flutter, Riverpod, go_router, its own application and domain, its own `di.dart`, `core/di/`, `core/errors/`, `shared/`, other features' public APIs — never `infrastructure/`, Dio, the generated client, `core/network/` or `core/security/` |
 | `features/*/di.dart` | providers binding each domain contract to its implementation | the feature file importing `infrastructure/` (with `core/di/`, `app/bootstrap/` and tests) |
 | `features/*/<feature>.dart` | the feature's public API | the only entry point for other features; no cycles |
 | `shared/domain/` | shared kernel: value objects, `Clock`, common failures | `dart:core/async/collection/math` and itself |
 | `shared/presentation/` | UI kit, formatters | Flutter, `shared/domain/` — no feature, `core/` or `app/` |
 | `core/{network,security,errors}/` | technical core: Dio and interceptors, tokens and session, `ApiFailure` | packages, `shared/` — no feature |
-| `core/di/` | the core providers | `core/`, `kiveto_portal_api` — no feature |
+| `core/di/` | the core providers | `core/`, `kiveto_portal_api`, `tonik_util` — no feature |
 | `app/{bootstrap,routing,theme}/` | composition root | anything; `main.dart` too |
 
 Some constraints of this table are **conventions, kept by review, not
@@ -117,8 +119,9 @@ there is none), with self-tests that inject offending files:
    an allow-list: `dart:core`, `dart:async`, `dart:collection`,
    `dart:math` (CLAUDE.md §3), its own domain, `shared/domain/`.
 2. `features/*/application/`: + its own domain and `shared/domain/` (and
-   its own application); no Flutter, Riverpod, Dio, generated client,
-   `core/`. An allow-list too; the message names the forbidden family.
+   its own application); no Flutter, Riverpod, Dio, generated client or
+   its runtime `tonik_util`, `core/`. An allow-list too; the message names
+   the forbidden family.
 3. `features/*/presentation/` and `shared/presentation/`: never
    `**/infrastructure/**`, `package:dio`, `kiveto_portal_api`,
    `core/network/`, `core/security/`.
@@ -133,8 +136,10 @@ there is none), with self-tests that inject offending files:
    internals, rule 4 permitting.
 6. `core/` and `shared/` import no feature; `shared/` imports nothing from
    `core/` or `app/`.
-7. `kiveto_portal_api` only under `features/*/infrastructure/**`,
-   `core/network/**`, `core/di/**`.
+7. `kiveto_portal_api` and its runtime `tonik_util` (`TonikResult`,
+   `OffsetDateTime`, `Date`, `ServerConfig`) only under
+   `features/*/infrastructure/**`, `core/network/**`, `core/di/**`; the
+   message names the package (phase 4).
 8. `DateTime.now` / `DateTime.timestamp` (use the `Clock` port), `print(`
    and `coverage:ignore` are forbidden in `features/*/domain/`,
    `features/*/application/` and `shared/domain/`.
@@ -151,19 +156,42 @@ the state holder and the dependency injection; tests override providers.
 
 ## 4. Sharing the OpenAPI contract
 
-- `contracts/portal.v1.yaml` is a copy of the backend file, with
-  `contracts/SOURCE` (repository, commit, sha256). The backend has no
+- `contracts/portal.v1.yaml` is a byte copy of the backend file (`git show
+  <sha>:openapi/portal.v1.yaml`, `-text` in `.gitattributes`), with
+  `contracts/SOURCE` (repository, path, commit, sha256). The backend has no
   contract tags, so the copy is **pinned by commit SHA** (D4).
   `make api-sync REF=<sha>` copies it from a local backend checkout
-  (`KIVETO_BACKEND_DIR`; a WSL checkout seen from Windows needs a one-off
-  `git -c safe.directory=…`) or from the remote.
+  (`KIVETO_BACKEND_DIR`, default `../kiveto`; a WSL checkout seen from
+  Windows works because git runs with `-c safe.directory=*`), then
+  regenerates. The remote fallback (a clone of the private repository) is
+  deferred. `REF` is checked (`[0-9A-Za-z._/-]`, not starting with `-`)
+  before any `fvm` call; `<ref>^{commit}` is built in Dart.
+- `make api-generate` normalises the copy into
+  `build/kiveto_portal_api/portal.v1.yaml` (`tool/normalize_contract.dart`,
+  `package:yaml`: `required` added to every response-only schema,
+  nullability kept, request schemas untouched; it first refuses an
+  operationId, tag or dotted schema without a readable name in
+  `tool/api_generator/tonik.yaml`), runs tonik in `tool/api_generator/`
+  (`dev_dependencies: tonik: 0.11.1`, lock committed, `pub get
+  --enforce-lockfile`), then stamps the package
+  (`packages/kiveto_portal_api/CONTRACT`: contract sha256 and commit, tonik
+  version, a sha256 over `tonik.yaml`, the generator lock and the
+  normaliser, a sha256 over the generated files).
 - The client is generated into `packages/kiveto_portal_api/` (a `path:`
   dependency), **committed** (D5) and excluded from analysis and coverage:
   `make install` and the CI need neither Java nor the generator.
-  `make api-check` (in `make ci`) fails when the sha256 recorded in the
-  generated package differs from the copy's.
+  `make api-check` (the last step of `make ci`) recomputes everything and
+  fails on any difference: a hand-edited copy, a client generated from
+  another contract or commit, a generated file changed, added or removed,
+  changed generator inputs, another tonik pinned, a missing piece; each
+  message ends with the command that fixes it. It compares the tree with
+  the stamp, so a hand edit followed by a manual `stamp` would pass: the
+  proof that the client is the generator's output is `make api-generate`
+  leaving `git status` clean (regeneration is byte-identical; checked by
+  hand on Windows, not in CI). The contract's `Error` schema is generated
+  as `ProblemDetails` (it would hide `dart:core`'s `Error`).
 - Only `features/*/infrastructure/**`, `core/network/` and `core/di/`
-  import it (rule 7).
+  import it and its runtime `tonik_util` (rule 7).
 - An API change is a backend PR (DTOs + YAML), then a mobile PR
   `chore(api): sync portal contract <sha>`.
 
@@ -192,13 +220,38 @@ nullable fields are right; `PATCH /me` sends `application/merge-patch+json`;
 readable names despite the operationIds and tags; decodes `GET /me` from
 the local backend.
 
+Result (spike of 2026-11-03, D3): **tonik 0.11.1**, 16 / 18 on the nine
+criteria against 14 / 18 for `swagger_parser` 1.45.1 (which also needed
+four contract rewrites).
+
+| Criterion | tonik 0.11.1 | swagger_parser 1.45.1 |
+|---|---|---|
+| Reads OpenAPI 3.2 | natively | behind a guarded 3.2 → 3.1 rewrite |
+| Compiles, analyzer | clean with its own options (excluded from ours) | clean |
+| Nullability | both nullable forms right; every response field optional until `required` is declared → our normaliser | right with `infer_required_from_nullable` |
+| `PATCH /me` | `application/merge-patch+json` | `application/json` (interceptor needed) |
+| `date-time` offset | kept (`OffsetDateTime`), `Date` for `format: date` | lost (`DateTime.parse` → UTC); `.000Z` rejected by the backend |
+| Readable names | `nameOverrides` (operations, tags, schemas, properties, parameters) | contract rewrite needed |
+| Errors | every documented status a typed value; `DioException` with a 2xx-only `validateStatus` | `DioException` |
+| Real responses | all decoded | all decoded |
+| Deterministic | yes | yes |
+| Toolchain, output | one pinned dev package, ~10 s; ~415 files | build_runner, ~30 s; ~330 files |
+
 ## 5. Technology choices (checked 2026-11-02)
 
 Pinned in phase 3 (versions checked again on pub.dev on 2026-11-03, pinned
 exactly): very_good_analysis 11.0.0 and mocktail 1.0.5 as dev
 dependencies, riverpod_lint 3.1.9 as an analyzer plugin (no pubspec
-entry); flutter_lints removed. The other rows are added by later phases,
-checked again then.
+entry); flutter_lints removed. Pinned in phase 4 (checked on pub.dev on
+2026-11-03, all latest, pinned exactly): dio 5.11.1, tonik_util 0.11.1 and
+the path dependency `kiveto_portal_api` in the app; tonik 0.11.1 in
+`tool/api_generator/` (its own lock); yaml 3.1.4 in `kiveto_tool` (no new
+transitive package). The client brings into the app's lock, as transitive
+dependencies of dio, tonik_util and the generated package resolved
+together with the Flutter SDK pins: big_decimal 0.7.0, charset 2.0.1,
+dio_web_adapter 2.2.2, http_parser 4.1.2, mime 2.1.0, typed_data 1.4.0,
+web 1.1.2, and meta 1.18.3 → 1.19.0. The other rows are added by later
+phases, checked again then.
 
 | Role | Choice | Version | Why |
 |---|---|---|---|
@@ -207,12 +260,14 @@ checked again then.
 | State lint | riverpod_lint | 3.1.9 (pinned) | Ships on the analyzer plugin system (`plugins:` in `analysis_options.yaml`), reported by `dart analyze` |
 | Lints | very_good_analysis | 11.0.0 (pinned) | Strictest maintained rule set |
 | Routing | go_router | 18.1.2 | Maintained by the Flutter team; deep link `/invitation#t=` |
-| HTTP | dio | 5.11.1 | `QueuedInterceptor` gives one refresh in flight |
+| HTTP | dio | 5.11.1 (pinned) | `QueuedInterceptor` gives one refresh in flight; the generated client runs on our `Dio` |
+| API client generator | tonik (`tool/api_generator/`, dev dependency) | 0.11.1 (pinned, lock committed) | D3: reads OpenAPI 3.2, keeps `date-time` offsets, `nameOverrides`, no build_runner (§4) |
+| API client runtime | tonik_util | 0.11.1 (pinned) | `TonikResult`, `OffsetDateTime`, `Date`, `ServerConfig`, used by the generated package and by `infrastructure/` |
 | Tokens | flutter_secure_storage | 11.2.0 | Keychain / Keystore; minSdk 24 = template default |
 | Preferences | shared_preferences | 2.5.6 | Active clinic |
 | Localisation | flutter_localizations + gen-l10n (ARB) | SDK | The contract returns codes; labels are translated in the app |
 | Tests | flutter_test, integration_test, mocktail | SDK, 1.0.5 (pinned) | No goldens in `make ci` |
-| Coverage gate | `tool/coverage_gate.dart` (package `kiveto_tool`) | — | SDK libraries only, tested itself (§8) |
+| Tooling | `tool/` (package `kiveto_tool`): device picker, coverage gate, contract commands, contract normaliser | — | SDK libraries only, except `yaml` 3.1.4 (pinned) used by `tool/lib/contract_normalizer.dart` alone; tested at 100% itself (§8) |
 | Coverage report | coverde | 0.4.1 | HTML without Perl / genhtml; not added yet |
 
 No code generation in the app itself (D7): no riverpod_generator (4.0.9
@@ -240,15 +295,17 @@ kiveto-mobile/
 ├── Makefile                    # thin, delegates to scripts/
 ├── analysis_options.yaml  pubspec.yaml  pubspec.lock   # l10n.yaml: phase 5
 ├── config/env/dev.json.dist    # --dart-define-from-file; dev.json ignored
-├── contracts/{portal.v1.yaml,SOURCE}                    # phase 4
-├── packages/kiveto_portal_api/ # generated, committed  # phase 4
+├── contracts/{portal.v1.yaml,SOURCE}   # byte copy of the backend contract, pinned by commit (make api-sync)
+├── packages/kiveto_portal_api/ # generated by tonik, committed, stamped (CONTRACT) — make api-generate
 ├── scripts/                    # bash 3.2: lib, doctor, install, install-fvm, start, devices,
-│                               #   clean, format, analyze, test, coverage-gate, test-scripts, ci
-├── tool/                       # package kiveto_tool (SDK libraries only, path dev dependency):
-│   ├── lib/                    #   devices.dart, dart_source.dart, coverage_gate.dart
-│   └── devices.dart  coverage_gate.dart   # thin entry points run by the scripts
+│                               #   clean, format, analyze, test, coverage-gate, test-scripts, ci, api
+├── tool/                       # package kiveto_tool (SDK libraries + yaml, path dev dependency):
+│   ├── lib/                    #   devices, dart_source, coverage_gate, portal_api, contract_normalizer
+│   ├── devices.dart  coverage_gate.dart  portal_api.dart  normalize_contract.dart   # thin entry points
+│   └── api_generator/          # package kiveto_api_generator: tonik 0.11.1 (lock committed), tonik.yaml
 ├── lib/                        # the D15 tree below
 ├── test/{unit,widget,integration,architecture,tool,scripts}/
+├── test/support/               # shared test helpers: portal_api/ fake backend, fixtures/portal_api/ contract JSON
 ├── integration_test/           # phase 5
 └── android/  ios/              # applicationId / bundle id app.kiveto.portal
 ```
@@ -292,7 +349,8 @@ Portability rules:
   `printf`, `[[ -v ]]`), LF only — checked by
   `test/scripts/portability_test.sh`.
 - Anything that runs once Flutter is installed is Dart, in `tool/` (the
-  package `kiveto_tool`, SDK libraries only).
+  package `kiveto_tool`, SDK libraries only, except `yaml` for the
+  contract normaliser).
 - Systems: Windows (Git Bash) and macOS for every target. On Linux only
   `make ci` is supported and checked (GitHub Actions): the other targets
   are not refused there but untested, and `make install-fvm` refuses it.
@@ -303,7 +361,7 @@ Portability rules:
 | `make install` | doctor (blockers) → `fvm install` (no-op when cached) → `pub get` → `git config core.hooksPath .githooks` (repository-local) → `config/env/dev.json` from `.dist` if missing → summary. Idempotent; installs nothing system-wide. |
 | `make start` | `pub get` only when a pubspec changed (stamp in `.make/`) → device selection → `fvm flutter run -d <id> --dart-define-from-file=config/env/$(ENV).json`. Options `PLATFORM`, `DEVICE`, `EMULATOR`, `SIMULATOR`, `ENV`. |
 | `make devices` | Connected devices, AVDs, simulators. |
-| `make ci` | `format-check → analyze → test-architecture → test-coverage → coverage-gate → test-scripts` (phase 4 appends `api-check`), each through the calling make; stops at the first failure (`make ci failed at <target>`), prints each step's duration and the total. |
+| `make ci` | `format-check → analyze → test-architecture → test-coverage → coverage-gate → test-scripts → api-check`, each through the calling make; stops at the first failure (`make ci failed at <target>`), prints each step's duration and the total. |
 | `make format`, `format-check` | `fvm dart format` on `lib test tool` (+ `integration_test`); the check names the unformatted files and says `make format` |
 | `make analyze` | `fvm dart analyze --fatal-infos --fatal-warnings` |
 | `make test`, `test-unit`, `test-widget`, `test-integration`, `test-tool`, `test-architecture` | `fvm flutter test` on the `test/<suite>` folders holding a `*_test.dart`; the others have "nothing to run", decided before any `fvm` call |
@@ -311,13 +369,13 @@ Portability rules:
 | `make coverage-gate` | `tool/coverage_gate.dart` (§8), its report shown live |
 | `make test-scripts` | the plain-bash checks of `test/scripts/` (scripts, hooks, thin Dart entry points), one line per case |
 | `make test-e2e` | phase 5 |
-| `make api-sync REF=`, `api-generate`, `api-check` | Contract (§4), phase 4 |
+| `make api-sync REF=`, `api-generate`, `api-check` | Contract (§4), `scripts/api.sh` over `tool/portal_api.dart` and `tool/normalize_contract.dart`. `api-sync`: `REF` required and checked, `KIVETO_BACKEND_DIR` (default `../kiveto`) must exist, both before any `fvm` call; copy and `SOURCE`, then the generate steps. `api-generate`: normalises into `build/kiveto_portal_api`, resolves the generator (`pub get --enforce-lockfile` in `tool/api_generator/`), only then removes the package, runs tonik, stamps, `pub get` of the app; a failure leaves the committed client in place until tonik runs, and its message says how to go back (`git checkout -- packages/kiveto_portal_api && git clean -fdq -- packages/kiveto_portal_api`, with `contracts` too after `api-sync`) — it restores nothing itself. `api-check`: its report shown live. Options `REF` (an inherited one is ignored, like `PLATFORM`) and `KIVETO_BACKEND_DIR` (honoured from the environment). |
 | `make install-fvm` | Opt-in, current user only, from the official source; prints the `PATH` line instead of editing it (D10) |
 | `make clean`, `make reset` | `flutter clean` + stamps; reset = clean + install |
 | Options | `V=1`, `NO_COLOR=1`, `LOG_FILE=.make/make.log` — same as the Symfony Makefile |
 
-The pub-get stamp compares `pubspec.yaml`, `pubspec.lock` and
-`tool/pubspec.yaml` (phase 4 adds the generated package's pubspec) and the
+The pub-get stamp compares `pubspec.yaml`, `pubspec.lock`,
+`tool/pubspec.yaml` and `packages/kiveto_portal_api/pubspec.yaml` and the
 Flutter pin. Quiet test runs use `--reporter failures-only`, so a failure
 ends up in the 30 log lines printed.
 
@@ -377,15 +435,22 @@ not checked.
   trees.
 - **Suites:** unit (`test/unit/`, mirrors `lib/`), widget (`test/widget/`),
   integration without device (`test/integration/`: real wiring, real
-  generated client, fake Dio `HttpClientAdapter` fed with contract JSON),
-  tooling (`test/tool/`: the device picker, the scanner, the gate, with
-  fixtures), plain-bash checks (`test/scripts/`: `lib.sh`, doctor, install,
+  generated client, fake Dio `HttpClientAdapter` fed with contract JSON:
+  `test/support/portal_api/fake_portal_backend.dart` and the real
+  responses of `test/support/fixtures/portal_api/`, one per route and
+  status, decoded by `portal_api_contract_test.dart`),
+  tooling (`test/tool/`: the device picker, the scanner, the gate, the
+  contract commands with their SHA-256, the normaliser, with fixtures),
+  plain-bash checks (`test/scripts/`: `lib.sh`, doctor, install,
   install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`,
-  `analyze.sh`, hooks, the entry points `tool/devices.dart` and
-  `tool/coverage_gate.dart`, portability), end-to-end on a device
+  `analyze.sh`, `api.sh`, hooks, the entry points `tool/devices.dart`,
+  `tool/coverage_gate.dart`, `tool/portal_api.dart` and
+  `tool/normalize_contract.dart`, portability), end-to-end on a device
   (`integration_test/`, `make test-e2e`, not in `make ci`).
 - **Coverage gate** (`tool/coverage_gate.dart` over `tool/lib/`, SDK
-  libraries only, tested at 100% itself). `flutter test --coverage` leaves
+  libraries only, tested at 100% itself; `tool/lib/` as a whole is gated
+  at 100%, the contract commands and the normaliser included). The
+  generated client is outside the gate (it lists `lib/` and `tool/` only). `flutter test --coverage` leaves
   out of `lcov.info` every library no test loads (flutter/flutter#27997 was
   closed "not planned") and every library without executable line. The
   gate lists every `lib/**/*.dart` and `tool/**/*.dart` and decides per
@@ -444,7 +509,7 @@ the `AGENTS.md` block once there is code, imported from `CLAUDE.md` with
 |---|---|
 | D1 | Flutter 3.47.9 / Dart 3.13.7 through FVM 4.3.2 |
 | D2 | Package `kiveto_mobile`; ids `app.kiveto.portal`; display name "Kiveto" (phase 2); Apple Team ID to provide |
-| D3 | Generator chosen after a spike on the real contract (`swagger_parser` vs `tonik`) |
+| D3 | tonik 0.11.1 (spike 2026-11-03 on the real contract against `swagger_parser` 1.45.1, §4): generated client committed under `packages/kiveto_portal_api`, response-only schemas normalised to `required`, readable names in `tool/api_generator/tonik.yaml` |
 | D4 | Contract pinned by commit SHA while the backend has no tags |
 | D5 | Generated client committed |
 | D6 | 100% coverage for `domain/`, `application/`, `infrastructure/`; `presentation/` measured |
@@ -465,7 +530,7 @@ the `AGENTS.md` block once there is code, imported from `CLAUDE.md` with
 | 1 | root commit, `chore/repo-foundations` | Git attributes, editor config, ignores, `CLAUDE.md`, `CONTRIBUTING.md`, BMAD, this document | Documents reviewed; `bmad-help` answers in French |
 | 2 | `chore/toolchain-bootstrap` | `.fvmrc`, `flutter create` (Android + iOS), `Makefile`, `scripts/`, `config/env` | **V1:** fresh clone on Windows → `make install` → `make start` on the AVD; a second `make start` reinstalls nothing; every missing prerequisite gives an actionable message. Same on macOS, plus the iOS simulator |
 | 3 | `chore/quality-gates` | Analyzer config, architecture tests, coverage gate, hooks, `make ci`, GitHub Actions (Claude hooks deferred, D14) | **V2:** one injected violation per rule fails `make ci` with a clear message; riverpod_lint diagnostics fail `dart analyze` |
-| 4 | `chore/portal-api-client` | Generator spike, `api-sync` / `api-generate` / `api-check`, generated package | **V3:** the client decodes `GET /me` from the local backend (demo phone +33612345678); a YAML drift fails `api-check` |
+| 4 | `chore/portal-api-client` | Generator spike, `api-sync` / `api-generate` / `api-check`, generated package | **V3:** the client decodes `GET /me` from the local backend (demo phone +33612345678); a YAML drift fails `api-check`. Passed on Windows (2026-11-03): one OTP sign-in, then `GET /me` and the home, pets, upcoming appointments and documents of both clinics decoded live with no failure (offsets `+01:00` / `+02:00` kept, `Date` birth dates); a line appended to the copy made `make api-check` and `make ci` fail at `api-check` with both messages, `git checkout` restored it; the contract fixtures decode in `make ci`. macOS run pending |
 | 5 | `feature/app-shell` | `core/{network,security,errors,di}`: Dio, dev Host header, auth interceptor with one refresh, token storage, problem+json → failures, `Idempotency-Key`, `X-Device-Id`; `shared/`: `Clock`, value objects, UI kit; `app/`: bootstrap, router + `/invitation` deep link, theme from the mockup; French l10n | **V4:** N concurrent 401s trigger one refresh; 100% coverage |
 | 6 | `feature/identity-access` | Slice 1 (`identity_access`): OTP sign-in, invitation, terms, empty home | **V5:** real flow on an emulator against the local backend |
 | 7+ | `document` → `patient` + `consultation` + `home` → `scheduling` → `client` → requests → `clinic_listing` | Slices 2 to 7, in the contract's order | `make ci` green and a device demo per slice |
@@ -474,8 +539,12 @@ the `AGENTS.md` block once there is code, imported from `CLAUDE.md` with
 
 | Risk | Mitigation |
 |---|---|
-| OpenAPI 3.2 poorly supported by generators | Phase 4 spike; guarded 3.2 → 3.1 rewrite; 3.0 export as a fallback (backend change) |
-| `date-time` decoded to `DateTime`, losing the clinic offset | Spike criterion; otherwise `ClinicInstant` + the IANA zone from `GET /me` |
+| OpenAPI 3.2 poorly supported by generators | Settled by the phase 4 spike: tonik reads 3.2 natively; the swagger_parser fallback needs a guarded 3.2 → 3.1 rewrite |
+| `date-time` decoded to `DateTime`, losing the clinic offset | tonik decodes `OffsetDateTime` (offset kept); `ClinicInstant` is built from it; booking `startAt` passed from the slot value (no fractional seconds) |
+| tonik is a young 0.x package with one maintainer, with breaking minors | Exact pin and committed lock in `tool/api_generator/`; the client is committed, so a broken release blocks only regeneration; `swagger_parser` 1.45.1 stays the documented fallback (§4) |
+| Every response field optional until the backend declares `required` | The normaliser adds `required` to response-only schemas (the backend's success bodies carry every key; its problem+json bodies omit some nullable keys, which still decode as null); backend proposal in `deferred-work.md` |
+| HTTP errors are values, not `DioException`s, unless `validateStatus` is narrowed | Phase 5 interceptor narrows it to 2xx for the refresh flow; both behaviours pinned by `test/integration/portal_api_contract_test.dart` |
+| Large generated output (~415 files, 55k lines) | Excluded from analysis, coverage and the pre-commit hook; `linguist-generated`; never reviewed by hand, checked by `make api-check` |
 | Young analyzer plugin ecosystem (0.x, one shared resolution, fetched from pub during analysis) | Few plugins; warm pub cache in CI; checked at V2 |
 | FVM symbolic links on Windows | Developer Mode as a blocker in `make doctor` |
 | macOS bash 3.2 and make 3.81 | Scripts written for them; V1 on a real Mac |

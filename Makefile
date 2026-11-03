@@ -20,6 +20,11 @@ endif
 ifeq ($(origin ENV),environment)
 ENV := dev
 endif
+# REF too (api-sync): an inherited REF is ignored. KIVETO_BACKEND_DIR, a
+# name of our own, is honoured from the environment.
+ifeq ($(origin REF),environment)
+REF :=
+endif
 
 PLATFORM ?= android
 DEVICE ?=
@@ -32,12 +37,15 @@ V ?= 0
 NO_COLOR ?=
 LOG_FILE ?= .make/make.log
 FULL ?= 0
+REF ?=
+KIVETO_BACKEND_DIR ?=
 
-export PLATFORM DEVICE EMULATOR SIMULATOR ENV RUN_ARGS BOOT_WAIT V NO_COLOR LOG_FILE FULL MAKE_VERSION
+export PLATFORM DEVICE EMULATOR SIMULATOR ENV RUN_ARGS BOOT_WAIT V NO_COLOR LOG_FILE FULL REF KIVETO_BACKEND_DIR MAKE_VERSION
 
 .PHONY: help doctor install install-fvm start devices clean reset \
 	ci format format-check analyze test test-unit test-widget test-integration \
-	test-tool test-architecture test-coverage coverage-gate test-scripts
+	test-tool test-architecture test-coverage coverage-gate test-scripts \
+	api-sync api-generate api-check
 
 help:
 	@echo "Targets:"
@@ -51,7 +59,7 @@ help:
 	@echo "  reset              clean + install"
 	@echo ""
 	@echo "Quality gate:"
-	@echo "  ci                 format-check, analyze, test-architecture, test-coverage, coverage-gate, test-scripts"
+	@echo "  ci                 format-check, analyze, test-architecture, test-coverage, coverage-gate, test-scripts, api-check"
 	@echo "  format             format lib/, test/, tool/ (fvm dart format)"
 	@echo "  format-check       fail when a Dart file is not formatted"
 	@echo "  analyze            fvm dart analyze --fatal-infos --fatal-warnings"
@@ -64,6 +72,11 @@ help:
 	@echo "  test-coverage      unit, widget, integration and tool suites with coverage (coverage/lcov.info)"
 	@echo "  coverage-gate      100% of the gated layers, every file of lib/ and tool/ counted"
 	@echo "  test-scripts       plain-bash checks of scripts/ and .githooks/ (test/scripts/)"
+	@echo "  api-check          contracts/portal.v1.yaml, contracts/SOURCE and packages/kiveto_portal_api agree"
+	@echo ""
+	@echo "Portal API client (CONTRIBUTING.md section 8):"
+	@echo "  api-sync           copy the backend contract at REF into contracts/, then api-generate"
+	@echo "  api-generate       regenerate packages/kiveto_portal_api from the contract copy (tonik)"
 	@echo ""
 	@echo "Options:"
 	@echo "  PLATFORM=android|ios   start: target platform (default: android; ios needs macOS)"
@@ -74,6 +87,9 @@ help:
 	@echo "  RUN_ARGS=...           start: extra flutter run flags, e.g. RUN_ARGS=--release"
 	@echo "  BOOT_WAIT=180          start: seconds to wait for the emulator or simulator to boot"
 	@echo "  FULL=1                 doctor: add fvm flutter doctor -v"
+	@echo "  REF=<sha>              api-sync: the backend commit to copy (required)"
+	@echo "  KIVETO_BACKEND_DIR=... api-sync: the backend checkout (default ../kiveto), e.g."
+	@echo "                         //wsl.localhost/<distro>/<path>/kiveto (a WSL checkout)"
 	@echo "  V=1                    verbose output"
 	@echo "  NO_COLOR=1             disable colors"
 	@echo "  LOG_FILE=...           change log path (default: .make/make.log)"
@@ -137,3 +153,12 @@ coverage-gate:
 
 test-scripts:
 	@KV_TARGET=$@ bash scripts/test-scripts.sh
+
+api-sync:
+	@KV_TARGET=$@ bash scripts/api.sh sync
+
+api-generate:
+	@KV_TARGET=$@ bash scripts/api.sh generate
+
+api-check:
+	@KV_TARGET=$@ bash scripts/api.sh check

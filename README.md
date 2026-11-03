@@ -2,7 +2,7 @@
 
 Application Flutter (Android et iOS) du **Portal Kiveto**, l'espace des propriétaires d'animaux. Elle est cliente de l'API Portal du backend Kiveto (dépôt [djamils/kiveto](https://github.com/djamils/kiveto), contrat `openapi/portal.v1.yaml`).
 
-> **Bootstrap en cours — phases 1 à 3 sur 6 terminées ; phase 2 validée sous Windows et macOS, phase 3 sous Windows (validation macOS et premier passage de GitHub Actions en attente).** Le dépôt contient ses fondations (conventions, BMAD, Claude Code, décisions d'architecture), le projet Flutter Android et iOS (`app.kiveto.portal`, nom affiché « Kiveto »), Flutter 3.47.9 épinglé avec FVM, le `Makefile` et les contrôles qualité : `make ci` (format, analyse, règles d'architecture, tests avec couverture, seuil de couverture, vérification des scripts), les hooks git et GitHub Actions. Le client de l'API Portal arrive en phase 4 ; l'état à jour est dans [CONTRIBUTING.md](./CONTRIBUTING.md#0-bootstrap-status).
+> **Bootstrap en cours — phases 1 à 4 sur 6 terminées ; phase 2 validée sous Windows et macOS, phases 3 et 4 sous Windows (validation macOS et premier passage de GitHub Actions en attente).** Le dépôt contient ses fondations (conventions, BMAD, Claude Code, décisions d'architecture), le projet Flutter Android et iOS (`app.kiveto.portal`, nom affiché « Kiveto »), Flutter 3.47.9 épinglé avec FVM, le `Makefile` et les contrôles qualité : `make ci` (format, analyse, règles d'architecture, tests avec couverture, seuil de couverture, vérification des scripts, cohérence du contrat d'API), les hooks git et GitHub Actions. Le client de l'API Portal est généré par tonik depuis une copie du contrat du backend épinglée par commit (`contracts/`, `packages/kiveto_portal_api/`) ; le code de l'app arrive en phase 5. L'état à jour est dans [CONTRIBUTING.md](./CONTRIBUTING.md#0-bootstrap-status).
 
 ---
 
@@ -42,10 +42,20 @@ make start      # lance l'app ; démarre le premier émulateur si aucun appareil
 Avant chaque commit :
 
 ```bash
-make ci         # format, analyse, règles d'architecture, tests et couverture, scripts ; doit être vert
+make ci         # format, analyse, règles d'architecture, tests et couverture, scripts, contrat d'API ; doit être vert
 ```
 
 Le workflow GitHub Actions (`.github/workflows/ci.yml`) relancera `make ci` sur chaque pull request ; il est écrit mais n'a pas encore tourné.
+
+Contrat de l'API Portal (détails dans [CONTRIBUTING.md](./CONTRIBUTING.md#8-the-portal-api-contract)) :
+
+```bash
+make api-sync REF=<sha> KIVETO_BACKEND_DIR=<checkout du backend>   # copie le contrat à ce commit, puis régénère le client
+make api-generate   # régénère packages/kiveto_portal_api depuis contracts/portal.v1.yaml
+make api-check      # la copie, contracts/SOURCE et le client concordent (dernière étape de make ci)
+```
+
+Ne jamais modifier `contracts/` ni `packages/kiveto_portal_api/` à la main.
 
 ---
 

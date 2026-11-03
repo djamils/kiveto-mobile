@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"firstName","message":"Le prénom ne peut pas être vide.","code":"c1051bb4-d103-4f74-8988-acbcafc7fdc3"}],"detail":"firstName: Le prénom ne peut pas être vide.","type":"validation_failed","title":"Données invalides."}
