@@ -1,0 +1,59 @@
+# make ci on Linux for every pull request and every push to master
+# (architecture §8, D8). The developer machines run the same `make ci`.
+# Actions are pinned by commit SHA; FVM by its release asset's SHA-256.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # A new push to a pull request replaces its running check; every push to
+  # master is checked to the end.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    name: make ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      FVM_CACHE_PATH: /home/runner/fvm-cache
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Cache the pinned Flutter and the pub packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            /home/runner/fvm-cache
+            ~/.pub-cache
+          key: flutter-${{ runner.os }}-${{ hashFiles('.fvmrc', 'pubspec.lock', 'tool/pubspec.yaml') }}
+          # A pubspec.lock change keeps the cached Flutter SDK.
+          restore-keys: flutter-${{ runner.os }}-
+
+      - name: Install FVM 4.3.2 (official release, SHA-256 checked)
+        env:
+          FVM_VERSION: 4.3.2
+          FVM_SHA256: 17dfced05f5b0cb32398dadd0691acc2bc458e8c4b0045a781cd5aa6c85f6ecb
+        run: |
+          asset="fvm-${FVM_VERSION}-linux-x64.tar.gz"
+          curl -fsSL --proto '=https' --tlsv1.2 -o "$RUNNER_TEMP/$asset" \
+            "https://github.com/btwld/fvm/releases/download/${FVM_VERSION}/${asset}"
+          echo "${FVM_SHA256}  $RUNNER_TEMP/$asset" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/fvm"
+          tar -xzf "$RUNNER_TEMP/$asset" -C "$RUNNER_TEMP/fvm"
+          "$RUNNER_TEMP/fvm/fvm/fvm" --version
+          echo "$RUNNER_TEMP/fvm/fvm" >>"$GITHUB_PATH"
+
+      - name: Install the pinned Flutter (.fvmrc)
+        run: fvm install --skip-pub-get
+
+      - name: make ci
+        run: make ci V=1

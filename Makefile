@@ -35,18 +35,35 @@ FULL ?= 0
 
 export PLATFORM DEVICE EMULATOR SIMULATOR ENV RUN_ARGS BOOT_WAIT V NO_COLOR LOG_FILE FULL MAKE_VERSION
 
-.PHONY: help doctor install install-fvm start devices clean reset
+.PHONY: help doctor install install-fvm start devices clean reset \
+	ci format format-check analyze test test-unit test-widget test-integration \
+	test-tool test-architecture test-coverage coverage-gate test-scripts
 
 help:
 	@echo "Targets:"
-	@echo "  help            this list (default)"
-	@echo "  doctor          check the prerequisites and print how to fix them (read-only)"
-	@echo "  install         prerequisites + pinned Flutter (FVM) + pub get + config/env/dev.json"
-	@echo "  install-fvm     install FVM 4.3.2 for the current user only (opt-in)"
-	@echo "  start           run the app on a device, emulator or simulator"
-	@echo "  devices         list devices, emulators (AVDs) and, on macOS, simulators"
-	@echo "  clean           flutter clean + remove the .make/ stamps (the log is kept)"
-	@echo "  reset           clean + install"
+	@echo "  help               this list (default)"
+	@echo "  doctor             check the prerequisites and print how to fix them (read-only)"
+	@echo "  install            prerequisites + pinned Flutter (FVM) + pub get + git hooks + config/env/dev.json"
+	@echo "  install-fvm        install FVM 4.3.2 for the current user only (opt-in)"
+	@echo "  start              run the app on a device, emulator or simulator"
+	@echo "  devices            list devices, emulators (AVDs) and, on macOS, simulators"
+	@echo "  clean              flutter clean + remove the .make/ stamps (the log is kept)"
+	@echo "  reset              clean + install"
+	@echo ""
+	@echo "Quality gate:"
+	@echo "  ci                 format-check, analyze, test-architecture, test-coverage, coverage-gate, test-scripts"
+	@echo "  format             format lib/, test/, tool/ (fvm dart format)"
+	@echo "  format-check       fail when a Dart file is not formatted"
+	@echo "  analyze            fvm dart analyze --fatal-infos --fatal-warnings"
+	@echo "  test               every test suite (unit, widget, integration, tool, architecture)"
+	@echo "  test-unit          test/unit/"
+	@echo "  test-widget        test/widget/"
+	@echo "  test-integration   test/integration/ (no device)"
+	@echo "  test-tool          test/tool/ (device picker, scanner, coverage gate)"
+	@echo "  test-architecture  test/architecture/ (layer and feature rules)"
+	@echo "  test-coverage      unit, widget, integration and tool suites with coverage (coverage/lcov.info)"
+	@echo "  coverage-gate      100% of the gated layers, every file of lib/ and tool/ counted"
+	@echo "  test-scripts       plain-bash checks of scripts/ and .githooks/ (test/scripts/)"
 	@echo ""
 	@echo "Options:"
 	@echo "  PLATFORM=android|ios   start: target platform (default: android; ios needs macOS)"
@@ -81,3 +98,42 @@ clean:
 
 reset:
 	@$(MAKE) clean && $(MAKE) install
+
+ci:
+	@KV_TARGET=$@ MAKE='$(MAKE)' bash scripts/ci.sh
+
+format:
+	@KV_TARGET=$@ bash scripts/format.sh
+
+format-check:
+	@KV_TARGET=$@ bash scripts/format.sh --check
+
+analyze:
+	@KV_TARGET=$@ bash scripts/analyze.sh
+
+test:
+	@KV_TARGET=$@ bash scripts/test.sh
+
+test-unit:
+	@KV_TARGET=$@ bash scripts/test.sh unit
+
+test-widget:
+	@KV_TARGET=$@ bash scripts/test.sh widget
+
+test-integration:
+	@KV_TARGET=$@ bash scripts/test.sh integration
+
+test-tool:
+	@KV_TARGET=$@ bash scripts/test.sh tool
+
+test-architecture:
+	@KV_TARGET=$@ bash scripts/test.sh architecture
+
+test-coverage:
+	@KV_TARGET=$@ bash scripts/test.sh --coverage
+
+coverage-gate:
+	@KV_TARGET=$@ bash scripts/coverage-gate.sh
+
+test-scripts:
+	@KV_TARGET=$@ bash scripts/test-scripts.sh

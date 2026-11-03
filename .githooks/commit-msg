@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# commit-msg hook: the subject must follow Conventional Commits
+# (CONTRIBUTING.md §3). Activated by make install (core.hooksPath=.githooks,
+# this repository only). bash 3.2, standalone.
+#
+#   bash .githooks/commit-msg <message file>   exit 0 accepted, 1 refused
+#
+# The subject is the first line that is neither blank nor a # comment.
+# Accepted besides <type>(<scope>)!: <summary>: the messages git writes
+# itself (Merge ..., Revert "...", Reapply "...") and fixup! / squash! /
+# amend! commits.
+
+set -u
+
+TYPES='feat|fix|test|refactor|chore|docs|style|perf|build|ci|revert'
+CONVENTIONAL="^($TYPES)(\\([a-z0-9_.,/-]+\\))?!?: [^ ]"
+GIT_MESSAGE='^(Merge (branch|branches|remote-tracking branch|remote-tracking branches|tag|tags|pull request|commit) |Revert "|Reapply "|(fixup|squash|amend)! )'
+CR=$(printf '\r')
+
+subject=''
+while IFS= read -r line || [ -n "$line" ]; do
+  line=${line%"$CR"}
+  case $line in
+    '#'*) continue ;;
+  esac
+  if [ -n "${line//[[:space:]]/}" ]; then
+    subject=$line
+    break
+  fi
+done <"${1:?usage: commit-msg <message file>}"
+
+# C locale: [a-z] means the ASCII lower case letters, whatever the user's.
+if printf '%s\n' "$subject" | LC_ALL=C grep -Eq -e "$CONVENTIONAL" -e "$GIT_MESSAGE"; then
+  exit 0
+fi
+
+{
+  printf '✗ Commit message refused: the subject does not follow Conventional Commits.\n'
+  printf '  subject:  %s\n' "${subject:-(empty)}"
+  printf '  expected: <type>(<scope>): <short imperative summary>   (scope optional, ! for a breaking change)\n'
+  printf '  types:    %s\n' "$(printf '%s' "$TYPES" | sed 's/|/, /g')"
+  printf '  example:  feat(patient): show the vaccination history\n'
+  printf '  see CONTRIBUTING.md §3\n'
+} >&2
+exit 1

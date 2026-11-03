@@ -13,7 +13,9 @@ set -euo pipefail
 KV_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$KV_ROOT"
 
-KV_TARGET=$(basename "$0" .sh)
+# The make target, for the log: the Makefile passes it (KV_TARGET=$@), a
+# script run by hand uses its own name.
+KV_TARGET=${KV_TARGET:-$(basename "$0" .sh)}
 
 PLATFORM=${PLATFORM:-android}
 DEVICE=${DEVICE:-}
@@ -29,6 +31,21 @@ FULL=${FULL:-0}
 
 KV_STAMPS=.make
 KV_PUB_STAMP=$KV_STAMPS/pub-get.stamp
+
+# The files whose change calls for a pub get (missing ones are skipped).
+# Phase 4 adds the generated client's packages/kiveto_portal_api/pubspec.yaml.
+KV_PUB_INPUTS="pubspec.yaml pubspec.lock tool/pubspec.yaml"
+
+# The test suites, folders of test/: `make test` runs them all, `make
+# test-coverage` the ones that load lib/ and tool/lib/ (the architecture
+# tests only read files).
+KV_TEST_SUITES="unit widget integration tool architecture"
+KV_COVERAGE_SUITES="unit widget integration tool"
+
+# suite_has_tests <suite>: true when test/<suite>/ holds a *_test.dart file.
+suite_has_tests() {
+  [ -d "test/$1" ] && [ -n "$(find "test/$1" -name '*_test.dart' -type f 2>/dev/null | head -n 1)" ]
+}
 
 NL='
 '
@@ -63,6 +80,9 @@ die() {
 case "$(uname -s)" in
   MINGW* | MSYS* | CLANG64_NT* | CLANGARM64_NT* | UCRT64_NT*) KV_OS=windows KV_EXE=.exe KV_BAT=.bat ;;
   Darwin) KV_OS=macos KV_EXE='' KV_BAT='' ;;
+  # GitHub Actions runs make ci on Linux; the developer targets (install,
+  # start, install-fvm) stay Windows and macOS.
+  Linux*) KV_OS=linux KV_EXE='' KV_BAT='' ;;
   *) die "Unsupported system '$(uname -s)': use Git Bash on Windows 11, or macOS." ;;
 esac
 
@@ -152,6 +172,7 @@ fvm_fix() {
   case $KV_OS in
     windows) printf 'make install-fvm, or choco install fvm' ;;
     macos) printf 'make install-fvm, or brew tap btwld/fvm && brew install btwld/fvm/fvm' ;;
+    linux) printf 'install FVM 4.3.2 from its GitHub release (see .github/workflows/ci.yml)' ;;
   esac
 }
 
@@ -160,6 +181,7 @@ fvm_upgrade_fix() {
   case $KV_OS in
     windows) printf 'choco upgrade fvm' ;;
     macos) printf 'brew upgrade btwld/fvm/fvm' ;;
+    linux) printf 'install FVM 4.3.2 from its GitHub release' ;;
   esac
   printf ', or dart pub global activate fvm, or remove the old fvm from PATH then make install-fvm'
 }
@@ -188,12 +210,28 @@ require_flutter() {
   flutter_cached || die "Flutter $FLUTTER_VERSION is not in the FVM cache - fix: make install"
 }
 
-# pub_get_needed: true when pubspec.yaml / pubspec.lock changed since the last
+# flutter_sdk_dir: the directory of the pinned Flutter SDK in the FVM cache
+# (the "directory" of its entry in `fvm api list`, JSON-escaped on Windows:
+# D:\\Dev\\fvm\\versions\\3.47.9); fails when FVM does not list it.
+flutter_sdk_dir() {
+  local list dir
+  list=$(fvm api list --compress --skip-size-calculation 2>/dev/null) || return 1
+  dir=$(grep -o '{[^{}]*}' <<<"$list" | grep -F "\"name\":\"$FLUTTER_VERSION\"" |
+    sed -n 's/.*"directory":"\([^"]*\)".*/\1/p') || return 1
+  dir=${dir%%"$NL"*}
+  [ -n "$dir" ] || return 1
+  dir=$(printf '%s\n' "$dir" | sed 's/\\\\/\\/g')
+  to_unix "$dir"
+}
+
+# pub_get_needed: true when a file of KV_PUB_INPUTS changed since the last
 # pub get, the Flutter pin changed, or `flutter clean` removed .dart_tool/.
 pub_get_needed() {
+  local input
   if [ ! -f "$KV_PUB_STAMP" ] || [ ! -f .dart_tool/package_config.json ]; then return 0; fi
-  if [ pubspec.yaml -nt "$KV_PUB_STAMP" ]; then return 0; fi
-  if [ -f pubspec.lock ] && [ pubspec.lock -nt "$KV_PUB_STAMP" ]; then return 0; fi
+  for input in $KV_PUB_INPUTS; do
+    if [ -f "$input" ] && [ "$input" -nt "$KV_PUB_STAMP" ]; then return 0; fi
+  done
   if [ "$(cat "$KV_PUB_STAMP")" != "$FLUTTER_VERSION" ]; then return 0; fi
   return 1
 }
@@ -220,6 +258,7 @@ android_sdk() {
     case $KV_OS in
       windows) sdk="$(to_unix "${LOCALAPPDATA:-$HOME/AppData/Local}")/Android/Sdk" ;;
       macos) sdk="$HOME/Library/Android/sdk" ;;
+      linux) sdk="$HOME/Android/Sdk" ;;
     esac
   fi
   sdk=$(to_unix "$sdk")
@@ -253,6 +292,7 @@ studio_jbr() {
         if [ -d "$home" ]; then dir="$home/Contents/jbr/Contents/Home"; fi
       done
       ;;
+    linux) ;; # make ci only: no Android Studio lookup (JAVA_HOME or PATH).
   esac
   [ -n "$dir" ] && [ -f "$dir/bin/javac$KV_EXE" ] || return 1
   printf '%s\n' "$dir"

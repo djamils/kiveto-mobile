@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# pre-commit hook: the staged Dart files must be formatted (fvm dart format,
+# the check of make format-check). Activated by make install
+# (core.hooksPath=.githooks, this repository only). bash 3.2, standalone.
+#
+# It checks what is staged, not the working copy: the staged content of each
+# file is written to a temporary folder (git checkout-index), next to copies
+# of analysis_options.yaml and .dart_tool/package_config.json, through which
+# the formatter reads its options and the language version. packages/ (the
+# generated client) is left out.
+
+set -u
+
+NL='
+'
+
+refuse() {
+  printf '✗ pre-commit: %s\n' "$1" >&2
+  exit 1
+}
+
+cd "$(git rev-parse --show-toplevel)" || refuse "not in a git working tree"
+
+files=()
+while IFS= read -r -d '' file; do
+  case $file in
+    packages/*) ;;
+    *.dart) files+=("$file") ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+if [ "${#files[@]}" -eq 0 ]; then exit 0; fi
+
+if ! command -v fvm >/dev/null 2>&1; then
+  refuse "fvm is not on PATH, the staged Dart files cannot be checked - fix: make install"
+fi
+if [ ! -f .dart_tool/package_config.json ]; then
+  refuse "no .dart_tool/package_config.json, the staged Dart files cannot be checked - fix: make install"
+fi
+
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/kiveto-pre-commit.XXXXXX") || refuse "cannot create a temporary folder"
+trap 'rm -rf "$tmp"' EXIT
+
+printf '%s\0' "${files[@]}" | git checkout-index -z --stdin --prefix="$tmp/" ||
+  refuse "cannot read the staged files"
+mkdir -p "$tmp/.dart_tool"
+cp .dart_tool/package_config.json "$tmp/.dart_tool/"
+# The staged formatter options, else the working copy's.
+if git cat-file -e :analysis_options.yaml 2>/dev/null; then
+  git show :analysis_options.yaml >"$tmp/analysis_options.yaml"
+elif [ -f analysis_options.yaml ]; then
+  cp analysis_options.yaml "$tmp/"
+fi
+
+# The folder as the only argument: on Windows fvm runs dart.bat through
+# cmd.exe, whose 8191-character command line one path per staged file
+# would exceed. It holds only the staged copies (.dart_tool/ is hidden,
+# the formatter skips it).
+rc=0
+out=$(fvm dart format --output=none --set-exit-if-changed "$tmp" 2>&1) || rc=$?
+if [ "$rc" -eq 0 ]; then exit 0; fi
+
+# "Changed <path of the copy>" per unformatted file, in the form the
+# formatter prints it (Windows paths on Windows): matched by their end.
+changed=$(printf '%s\n' "$out" | tr -d '\r' | tr '\\' '/' | sed -n 's/^Changed //p')
+base=$(basename "$tmp")
+unformatted=''
+for file in "${files[@]}"; do
+  case "$NL$changed$NL" in
+    *"$base/$file$NL"*) unformatted="$unformatted  $file$NL" ;;
+  esac
+done
+
+if [ -z "$unformatted" ]; then
+  printf '%s\n' "$out" >&2
+  refuse "fvm dart format failed on the staged Dart files (output above)"
+fi
+{
+  printf '✗ pre-commit: staged Dart files not formatted:\n'
+  printf '%s' "$unformatted"
+  printf '  fix: make format, then git add\n'
+} >&2
+exit 1

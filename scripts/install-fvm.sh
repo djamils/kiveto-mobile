@@ -36,6 +36,7 @@ case $KV_OS in
     dest=$HOME/fvm/bin
     bin=fvm
     ;;
+  *) die "make install-fvm supports Windows and macOS: on $KV_OS, install FVM $FVM_VERSION from $FVM_RELEASES/$FVM_VERSION/ (the CI does it in .github/workflows/ci.yml)." ;;
 esac
 
 print_path_line() {
