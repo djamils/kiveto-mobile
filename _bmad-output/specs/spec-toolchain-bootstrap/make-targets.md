@@ -49,4 +49,4 @@ Options: `PLATFORM=android|ios` (default `android`), `DEVICE=<id>`, `EMULATOR=<a
 | macOS: an iOS simulator runtime | warning | Xcode › Settings › Components |
 | Node ≥ 20.12 and uv | warning | needed by BMAD only |
 
-Platform detection: `uname -s` → `MINGW*` / `MSYS*` (and the `CLANG*` / `UCRT64*` prefixes) = Windows (Git Bash), `Darwin` = macOS, `Linux*` = Linux for `make ci` only (GitHub Actions; `make install-fvm` refuses it), anything else is refused with a message.
+Platform detection: `uname -s` → `MINGW*` / `MSYS*` (and the `CLANG*` / `UCRT64*` prefixes) = Windows (Git Bash), `Darwin` = macOS, `Linux*` = Linux, where only `make ci` is supported and checked (GitHub Actions): the other targets are not refused but untested there, and `make install-fvm` refuses it. Anything else is refused with a message.

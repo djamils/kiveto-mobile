@@ -58,6 +58,9 @@ fi
 rc=0
 out=$(fvm dart format --output=none --set-exit-if-changed "$tmp" 2>&1) || rc=$?
 if [ "$rc" -eq 0 ]; then exit 0; fi
+# 1 only means "would change files"; any other code is an error (a file
+# that does not parse: 65), shown even when other files are listed below.
+if [ "$rc" -ne 1 ]; then printf '%s\n' "$out" >&2; fi
 
 # "Changed <path of the copy>" per unformatted file, in the form the
 # formatter prints it (Windows paths on Windows): matched by their end.
@@ -71,7 +74,7 @@ for file in "${files[@]}"; do
 done
 
 if [ -z "$unformatted" ]; then
-  printf '%s\n' "$out" >&2
+  if [ "$rc" -eq 1 ]; then printf '%s\n' "$out" >&2; fi
   refuse "fvm dart format failed on the staged Dart files (output above)"
 fi
 {

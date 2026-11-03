@@ -436,6 +436,57 @@ DateTime utc() => DateTime.timestamp();
       ]);
       expect(_rules(offences), {8});
     });
+
+    test('rules 2 and 3: export and part directives, checked like imports', () {
+      final offences = _check({
+        'features/patient/presentation/pet_view.dart':
+            "export '../infrastructure/pet_dto.dart';\n",
+        'features/patient/application/book_pet.dart':
+            "part '../presentation/booking_form.dart';\n",
+      });
+
+      _expectRule(offences, 2, [
+        (
+          '[rule 2] lib/features/patient/application/book_pet.dart:1 imports '
+              '../presentation/booking_form.dart',
+          'features/patient/application/ may import only',
+        ),
+      ]);
+      _expectRule(offences, 3, [
+        (
+          '[rule 3] lib/features/patient/presentation/pet_view.dart:1 imports '
+              '../infrastructure/pet_dto.dart',
+          'presentation reaches data through application/',
+        ),
+      ]);
+      expect(_rules(offences), {2, 3, 4});
+    });
+
+    test('rules 1 and 2: a domain or an application importing another '
+        'feature, even through its public API', () {
+      final offences = _check({
+        'features/scheduling/application/book.dart':
+            "import 'package:kiveto_mobile/features/client/client.dart';\n",
+        'features/scheduling/domain/slot.dart':
+            "import '../../client/client.dart';\n",
+      });
+
+      _expectRule(offences, 1, [
+        (
+          '[rule 1] lib/features/scheduling/domain/slot.dart:1 imports '
+              '../../client/client.dart',
+          'features/scheduling/domain/ may import only',
+        ),
+      ]);
+      _expectRule(offences, 2, [
+        (
+          '[rule 2] lib/features/scheduling/application/book.dart:1 imports '
+              'package:kiveto_mobile/features/client/client.dart',
+          'features/scheduling/application/ may import only',
+        ),
+      ]);
+      expect(_rules(offences), {1, 2});
+    });
   });
 
   test('a compliant layout with every D15 folder and every allowed edge '
@@ -535,6 +586,7 @@ void log(Logger logger) => logger.print('booked');
       'features/patient/infrastructure/pet_api.dart': '''
 import 'package:dio/dio.dart';
 import 'package:kiveto_mobile/core/network/http.dart';
+import 'package:kiveto_mobile/shared/domain/failure.dart';
 import 'package:kiveto_portal_api/kiveto_portal_api.dart';
 
 import '../domain/pet.dart';
@@ -545,8 +597,10 @@ import 'pet_mapper.dart';
       'features/patient/presentation/pet_page.dart': '''
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kiveto_mobile/core/di/providers.dart';
 import 'package:kiveto_mobile/core/errors/api_failure.dart';
 import 'package:kiveto_mobile/features/client/client.dart';
+import 'package:kiveto_mobile/shared/domain/clock.dart';
 import 'package:kiveto_mobile/shared/presentation/kit.dart';
 
 import '../application/book_pet.dart';

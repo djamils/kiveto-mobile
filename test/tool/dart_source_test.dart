@@ -137,6 +137,18 @@ void main() {
       );
     });
 
+    test('ignores top-level variables and getters named like a keyword', () {
+      expect(
+        _directives(
+          "final part = 'x.dart';\n"
+          "String get export => 'y.dart';\n"
+          "var import = 'z.dart';\n"
+          "import 'kept.dart';\n",
+        ),
+        ['import kept.dart @4-4'],
+      );
+    });
+
     test('ends a directive without semicolon at the end of the file', () {
       expect(_directives("import 'a.dart'\n\n"), ['import a.dart @1-1']);
     });
@@ -239,16 +251,20 @@ void main() {
       );
     });
 
-    test('listDartFiles lists the Dart files, sorted, without the hidden '
-        'directories but with hidden file names', () {
+    test('listDartFiles lists the Dart files, sorted, without the .dart_tool '
+        'folders but with any other hidden folder or file', () {
       write('lib/b.dart', '');
       write('lib/a/z.dart', '');
       write('lib/a/readme.md', '');
       write('lib/.hidden/x.dart', '');
-      write('lib/a/.cache/y.dart', '');
+      write('lib/a/.gen/y.dart', '');
       write('lib/a/.draft.dart', '');
+      write('lib/.dart_tool/cache.dart', '');
+      write('lib/a/.dart_tool/build/entry.dart', '');
       expect(listDartFiles(root.path, 'lib'), [
+        'lib/.hidden/x.dart',
         'lib/a/.draft.dart',
+        'lib/a/.gen/y.dart',
         'lib/a/z.dart',
         'lib/b.dart',
       ]);

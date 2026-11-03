@@ -28,15 +28,19 @@ jobs:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Cache the pinned Flutter and the pub packages
+      # ~/.dartServer holds the analyzer plugin manager's packages
+      # (riverpod_lint and what it resolves to), else fetched on every run.
+      # The key starts with the Flutter pin: a dependency or analyzer
+      # change restores the same SDK, a new pin starts a fresh cache.
+      - name: Cache the pinned Flutter, the pub packages and the analyzer plugins
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             /home/runner/fvm-cache
             ~/.pub-cache
-          key: flutter-${{ runner.os }}-${{ hashFiles('.fvmrc', 'pubspec.lock', 'tool/pubspec.yaml') }}
-          # A pubspec.lock change keeps the cached Flutter SDK.
-          restore-keys: flutter-${{ runner.os }}-
+            ~/.dartServer
+          key: flutter-${{ runner.os }}-${{ hashFiles('.fvmrc') }}-${{ hashFiles('pubspec.lock', 'tool/pubspec.yaml', 'analysis_options.yaml') }}
+          restore-keys: flutter-${{ runner.os }}-${{ hashFiles('.fvmrc') }}-
 
       - name: Install FVM 4.3.2 (official release, SHA-256 checked)
         env:

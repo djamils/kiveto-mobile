@@ -124,6 +124,45 @@ Facts established while planning (throwaway clone, 2026-11-03):
 - Given this clone after the change, then `git config --local --get core.hooksPath` prints `.githooks`, and a commit with the message `update stuff` is refused.
 - Given the emulator, when `make start RUN_ARGS=--no-resident` runs, then the app launches.
 
+### Review Findings
+
+`bmad-code-review` of the branch against `master` (2026-11-03, after the build's own review pass): 39 findings from 4 layers — 16 patch entries applied, 5 deferred (3 of them because their fix edits CLAUDE.md, an agent-context file that needs the user's own go-ahead), 11 rejected; no decision needed. `make ci` green after the patches (1 min 42; test-scripts 1 min 20, 11 bash files).
+
+- [x] [Review][Patch] The thin `tool/coverage_gate.dart` exit code is never checked: a bare call would make the gate a report only [tool/coverage_gate.dart:22]
+- [x] [Review][Patch] Nothing checks that `make analyze` fails on an info-level lint (`--fatal-infos`) [scripts/analyze.sh:11]
+- [x] [Review][Patch] The commit-msg history case reads the live `git log`: a later non-conventional subject on master turns `make ci` red for good; empty on CI's shallow checkout [test/scripts/hooks_test.sh:44]
+- [x] [Review][Patch] No self-test proves that `export` and `part` are checked like imports (the di.dart re-export bypass itself is rejected, below) [test/architecture/architecture_self_test.dart]
+- [x] [Review][Patch] Unchecked §3 table constraints (Dio outside domain/application/presentation, infrastructure → presentation, → app/, re-exports) read as enforced [_bmad-output/planning-artifacts/architecture.md:83] — architecture.md marks them as conventions; the CLAUDE.md wording ("every bullet checked") is deferred (agent-context file)
+- [x] [Review][Patch] Which layers may use another feature is undefined (domain/application cannot, by rules 1–2) [_bmad-output/planning-artifacts/architecture.md:102] — sentence added in architecture.md §3 and self-tests; the CLAUDE.md sentence is deferred
+- [x] [Review][Patch] CONTRIBUTING §3 has no `revert` row although the hook accepts it [CONTRIBUTING.md:77]
+- [x] [Review][Patch] Portability scan still misses `[ -v`, `declare -g/-l/-u`, `${v:0:-1}`, `{fd}>`, `$BASHPID`, `read -N/-i`, stepped or padded brace sequences, `lastpipe` [test/scripts/portability_test.sh:26]
+- [x] [Review][Patch] CI cache re-saves superseded SDKs under `restore-keys`, and the analyzer plugin manager is fetched on every run [.github/workflows/ci.yml:31]
+- [x] [Review][Defer] CLAUDE.md bootstrap status reads conditional and overstates phase 3 validation [CLAUDE.md:29] — deferred: agent-context file; the correction needs the user's own go-ahead (recorded in deferred-work.md)
+- [x] [Review][Patch] architecture §8 and CONTRIBUTING §7 suite lists omit the ci.sh, test-scripts.sh, format.sh checks [_bmad-output/planning-artifacts/architecture.md:386]
+- [x] [Review][Patch] The pre-commit hook drops the formatter's parse errors when another file is only unformatted [.githooks/pre-commit:73]
+- [x] [Review][Patch] `final part = 'x.dart';` / `get export => 'y'` are read as directives (no token for `=`) [tool/lib/dart_source.dart:228]
+- [x] [Review][Patch] Dart files under a hidden folder of `lib/` escape the rules and the gate [tool/lib/dart_source.dart:193]
+- [x] [Review][Patch] `devices_main_test.sh` compares stdout mixed with stderr notices [test/scripts/devices_main_test.sh:13]
+- [x] [Review][Defer] CLAUDE.md §4 says any untested file fails the gate; only gated layers do [CLAUDE.md:94] — deferred: agent-context file (recorded in deferred-work.md)
+- [x] [Review][Patch] The compliant-layout self-test misses allowed edges (presentation → core/di, shared/domain; infrastructure → shared/domain) [test/architecture/architecture_self_test.dart]
+- [x] [Review][Defer] CLAUDE.md rule 8 omits `DateTime.timestamp()` [CLAUDE.md:79] — deferred: agent-context file (recorded in deferred-work.md)
+- [x] [Review][Patch] Docs say Linux is accepted "for make ci only", yet only install-fvm refuses it [_bmad-output/planning-artifacts/architecture.md:283]
+- [x] [Review][Defer] The second doctor pass of `make install` has no test [scripts/install.sh:13] — deferred: needs a blocker-free fake machine (JDK, Developer Mode, Xcode on macOS); recorded in deferred-work.md
+- [x] [Review][Defer] CI builds no app (no Gradle / Xcode build) [.github/workflows/ci.yml:58] — deferred: beyond D8 (CI runs `make ci`); to decide when the first Actions run is watched; recorded in deferred-work.md
+
+Rejected:
+- `low` [blind] The branch bundles D15, the start.sh / doctor / install fixes and the gates, and D15 skipped a `bmad-architecture` pass — the branch intent bundles them and asks to record D15 directly.
+- `low` [blind] lcov parsing throws on a malformed `DA:` line; `make coverage-gate` alone reads a stale lcov — flutter writes the lcov; `make ci` runs test-coverage first; guards add branches.
+- `low` [edge] Malformed `DA:` line → exit 255 — same as above.
+- `low` [edge] Stale lcov when the gate runs alone — same as above.
+- `low` [edge] `git merge --squash` message refused — a squash commit needs a Conventional subject; refusing it is the point.
+- `low` [edge] `make -n ci` runs ci.sh and reports success — nobody dry-runs ci; guard adds a branch.
+- `low` [edge] `typedef Now = DateTime; Now.now()` bypasses rule 8 — deliberate evasion, not an accident the rule must catch.
+- `false` [acceptance] AC 5 checked in a throwaway clone only — verified in this clone: `git commit --allow-empty -m 'update stuff'` refused by the hook, HEAD unchanged.
+- `low` [acceptance] `format-check` may cut the "Changed" list beyond 30 log lines — the full list is in `LOG_FILE`, named in the failure; mass reformatting is rare.
+- `false` [acceptance] mocktail added unused — the intent asks for it ("add mocktail for tests").
+- `low` [acceptance] NDK exit-code assertion not discriminating — the `✗ NDK … missing` content assertion discriminates.
+
 ## Implementation Notes
 
 - Implemented by a subagent from this spec (2026-11-03), on the Windows machine of phase 2 (Git Bash 5.2, make 4.4.1, FVM 4.3.2, emulator `emulator-5554` running). Nothing committed or pushed; `.claude/` untouched.

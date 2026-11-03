@@ -16,6 +16,7 @@ const _closeParen = 0x29;
 const _star = 0x2A;
 const _slash = 0x2F;
 const _semicolon = 0x3B;
+const _equals = 0x3D;
 const _backslash = 0x5C;
 const _openBrace = 0x7B;
 const _closeBrace = 0x7D;
@@ -179,9 +180,10 @@ Map<String, String> readPackageConfig(String root) {
 }
 
 /// The `/`-separated paths, relative to [root], of the `.dart` files under
-/// `<root>/<directory>`, sorted. The files of hidden directories
-/// (`.dart_tool`) are skipped, a hidden file name is not; a missing
-/// directory has no file.
+/// `<root>/<directory>`, sorted. The files of `.dart_tool` folders (pub's
+/// and the build tools' output) are skipped, any other hidden folder or
+/// file is listed: it can still be imported. A missing directory has no
+/// file.
 List<String> listDartFiles(String root, String directory) {
   final base = Directory('$root/$directory');
   if (!base.existsSync()) return const [];
@@ -190,12 +192,10 @@ List<String> listDartFiles(String root, String directory) {
     for (final entity in base.listSync(recursive: true))
       if (entity is File && entity.path.endsWith('.dart'))
         if (entity.path.substring(skip).replaceAll(r'\', '/') case final path
-            when !path.split('/').reversed.skip(1).any(_hidden))
+            when !path.split('/').reversed.skip(1).contains('.dart_tool'))
           '$directory/$path',
   ]..sort();
 }
-
-bool _hidden(String segment) => segment.startsWith('.');
 
 int _lineOf(List<int> lineStarts, int offset) {
   var low = 0;
@@ -253,7 +253,7 @@ List<Directive> _directives(
   return directives;
 }
 
-enum _TokenKind { word, string, open, close, semicolon }
+enum _TokenKind { word, string, open, close, semicolon, equals }
 
 final class _Token {
   const new(this.kind, this.text, this.offset);
@@ -278,7 +278,7 @@ final class _Token {
 
 /// Walks a Dart file once: blanks its comments into [code], records the
 /// start of each line and the tokens the directives need (words, string
-/// literals, braces, parentheses, semicolons) outside interpolations.
+/// literals, braces, parentheses, semicolons, `=`) outside interpolations.
 final class _Lexer {
   new(this.source) : code = source.codeUnits.toList();
 
@@ -334,6 +334,9 @@ final class _Lexer {
           _openBrace || _openParen => _TokenKind.open,
           _closeBrace || _closeParen => _TokenKind.close,
           _semicolon => _TokenKind.semicolon,
+          // `final part = 'x';`, `String get export => 'y';`: the keyword is
+          // then followed by this token, not by the string.
+          _equals => _TokenKind.equals,
           _ => null,
         };
         if (kind != null) _add(kind, String.fromCharCode(unit), _i);

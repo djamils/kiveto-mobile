@@ -94,6 +94,19 @@ presentation ──► application ──► domain ◄── infrastructure
 | `core/di/` | the core providers | `core/`, `kiveto_portal_api` — no feature |
 | `app/{bootstrap,routing,theme}/` | composition root | anything; `main.dart` too |
 
+Some constraints of this table are **conventions, kept by review, not
+checked by `test/architecture/`**: where Dio may appear outside the
+domains, applications and presentations (only `infrastructure/`,
+`core/network/` and `core/di/` should use it); `infrastructure/` never
+importing `presentation/`; features and `core/` never importing `app/`;
+`di.dart` and `core/di/` not re-exporting an `infrastructure/` file or the
+generated client. Everything else is a rule below.
+
+Domain and application never import another feature (rules 1–2), not even
+its public API: cross-feature use happens in presentation, infrastructure
+or `di.dart`, through `<other>.dart`, and what several domains share
+belongs in `shared/domain/`.
+
 Rules checked by `test/architecture/` (D15), written like the Symfony
 `tests/Unit/Architecture/` tests (scan of the `import` / `export` / `part`
 directives of `lib/**`, comments stripped; collect the offences, assert
@@ -280,9 +293,9 @@ Portability rules:
   `test/scripts/portability_test.sh`.
 - Anything that runs once Flutter is installed is Dart, in `tool/` (the
   package `kiveto_tool`, SDK libraries only).
-- Systems: Windows (Git Bash) and macOS for every target; Linux is
-  accepted for `make ci` only (GitHub Actions), and `make install-fvm`
-  refuses it.
+- Systems: Windows (Git Bash) and macOS for every target. On Linux only
+  `make ci` is supported and checked (GitHub Actions): the other targets
+  are not refused there but untested, and `make install-fvm` refuses it.
 
 | Target | Contract |
 |---|---|
@@ -367,7 +380,9 @@ not checked.
   generated client, fake Dio `HttpClientAdapter` fed with contract JSON),
   tooling (`test/tool/`: the device picker, the scanner, the gate, with
   fixtures), plain-bash checks (`test/scripts/`: `lib.sh`, doctor, install,
-  install-fvm, hooks, `test.sh`, portability), end-to-end on a device
+  install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`,
+  `analyze.sh`, hooks, the entry points `tool/devices.dart` and
+  `tool/coverage_gate.dart`, portability), end-to-end on a device
   (`integration_test/`, `make test-e2e`, not in `make ci`).
 - **Coverage gate** (`tool/coverage_gate.dart` over `tool/lib/`, SDK
   libraries only, tested at 100% itself). `flutter test --coverage` leaves

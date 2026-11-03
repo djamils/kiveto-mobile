@@ -39,19 +39,27 @@ expect_status 0 "$RC" 'commit-msg skips leading comments and blank lines' "$OUT"
 commit_msg "$(printf 'feat(patient): x\r\n')"
 expect_status 0 "$RC" 'commit-msg accepts a CRLF message' "$OUT"
 
-# GitHub checks a pull request out on its own merge commit ("Merge <sha>
-# into <sha>"), which no developer writes and no hook sees: skipped.
+# The subjects of this repository's history when the hook was written
+# (`git log --format=%s` of phase 3), frozen on purpose: the live history
+# would turn make ci red on every branch the day a subject the hook refuses
+# reaches master (a GitHub web edit, a squash title), and CI's shallow
+# checkout holds a single commit anyway.
 history_refused=''
 while IFS= read -r subject; do
-  case $subject in
-    'Merge '[0-9a-f]*' into '[0-9a-f]*) continue ;;
-  esac
   commit_msg "$subject$NL"
   if [ "$RC" != 0 ]; then history_refused="$history_refused$subject$NL"; fi
-done <<EOF
-$(git -C "$KV_REPO" log --format=%s)
+done <<'EOF'
+docs: record decision D15 and the phase 3 quality gates
+chore(tooling): add the phase 3 quality gates and make ci
+Merge branch 'fix/macos-v1'
+fix(tooling): validate phase 2 on macOS
+Merge branch 'chore/toolchain-bootstrap'
+Merge branch 'chore/repo-foundations'
+chore: bootstrap the Flutter toolchain (phase 2)
+chore: add repository foundations, BMAD 6.12.4 and architecture decisions
+chore: initialize repository
 EOF
-expect_eq '' "$history_refused" 'commit-msg accepts every subject of the history'
+expect_eq '' "$history_refused" 'commit-msg accepts every subject of the history (phase 3)'
 
 for subject in 'update stuff' 'feat: ' 'Feat: x' 'feat(Patient): x' 'feat:x'; do
   commit_msg "$subject$NL"
@@ -110,6 +118,15 @@ expect_contains "$OUT" "  lib/a.dart$NL" 'pre-commit: checks the staged content'
 git -C "$repo" add lib/a.dart
 pre_commit with_real_fvm
 expect_status 0 "$RC" 'pre-commit: staged formatted file -> exit 0' "$OUT"
+
+printf '%s\n' "$UNFORMATTED" >"$repo/lib/c.dart"
+printf 'void broken( {\n' >"$repo/lib/d.dart"
+git -C "$repo" add lib/c.dart lib/d.dart
+pre_commit with_real_fvm
+expect_status 1 "$RC" 'pre-commit: one unformatted and one unparsable file -> exit 1' "$OUT"
+expect_contains "$OUT" 'could not be parsed' 'pre-commit: shows the parse error'
+expect_contains "$OUT" "  lib/c.dart$NL" 'pre-commit: still names the unformatted file'
+git -C "$repo" rm -q --cached lib/c.dart lib/d.dart
 
 mv "$repo/.dart_tool/package_config.json" "$KV_T/package_config.json"
 pre_commit with_real_fvm

@@ -84,6 +84,7 @@ split it.
 | `perf`     | A performance improvement                           |
 | `build`    | Build system, Gradle, Xcode, packaging              |
 | `ci`       | CI configuration only                               |
+| `revert`   | Reverting an earlier commit (git's own `Revert "…"` also passes) |
 
 Scope: a feature (`identity_access`, `client`, `patient`, `consultation`,
 `scheduling`, `document`, `clinic_listing`, `home`) or `core`, `shared`,
@@ -285,7 +286,7 @@ policies: session lifecycle, one token refresh at a time, a stable
 | Integration | `test/integration/` | complete flows without a device: real wiring, real generated client, fake HTTP adapter fed with contract JSON | Yes (`make test-integration`) |
 | Tooling | `test/tool/` (fixtures in `test/tool/fixtures/`) | `tool/lib/`: the device picker, the Dart scanner, the coverage gate | Yes (`make test-tool`) |
 | Architecture | `test/architecture/` | the rules of §6, with self-tests that inject violations | Yes (`make test-architecture`) |
-| Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh`, doctor and install, install-fvm, `test.sh`, the git hooks, `tool/devices.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
+| Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh`, doctor and install, install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`, `analyze.sh`, the git hooks, the entry points `tool/devices.dart` and `tool/coverage_gate.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
 | End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`, phase 5) |
 
 Coverage policy:

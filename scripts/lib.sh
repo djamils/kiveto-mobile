@@ -80,8 +80,8 @@ die() {
 case "$(uname -s)" in
   MINGW* | MSYS* | CLANG64_NT* | CLANGARM64_NT* | UCRT64_NT*) KV_OS=windows KV_EXE=.exe KV_BAT=.bat ;;
   Darwin) KV_OS=macos KV_EXE='' KV_BAT='' ;;
-  # GitHub Actions runs make ci on Linux; the developer targets (install,
-  # start, install-fvm) stay Windows and macOS.
+  # On Linux only make ci is supported and checked (GitHub Actions): the
+  # other targets are not refused but untested; install-fvm refuses it.
   Linux*) KV_OS=linux KV_EXE='' KV_BAT='' ;;
   *) die "Unsupported system '$(uname -s)': use Git Bash on Windows 11, or macOS." ;;
 esac
