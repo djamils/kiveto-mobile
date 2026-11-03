@@ -161,6 +161,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
   summary: Let the owner keep or share a document outside the app (save the PDF, "Ouvrir avec…", share sheet): the in-app viewer (`pdf_file_page.dart`, pdfrx) only shows it.
   evidence: Out of the slice 2 intent; needs a share/save package (share_plus or the platform's document picker) checked under CLAUDE.md §7.
+  update: 2026-11-03 — slice 4 (`spec-scheduling.md`) pinned `share_plus: 13.3.1` for the `.ics` of an appointment (`calendarSharerProvider`, architecture §5); the same package could hand a document's `PortalFile` to the share sheet (« Ouvrir avec… », save to Files / Drive).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
   summary: Screen 17 (slice 6): after `requestRenewal` succeeds, refresh the documents lists (expose a refresh from `features/document/document.dart`, e.g. invalidating `documentListProvider`), so the prescription card and sheet show « Renouvellement demandé » instead of the button.
@@ -228,3 +229,11 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
   summary: Without the strict 2xx chain, the generated client cannot decode a `422` problem body that carries no `violations` (`idempotency_key_reused`, `appointment_not_modifiable`…) as its typed `…Response422` (the schema's `ConstraintViolation.violations` is required): it answers a decoding `TonikError`. The app always runs the strict chain (the failure is read from the Dio response), so nothing shows; a backend proposal is to declare the 422 bodies as `oneOf` problem / validation, or to make `violations` optional.
   evidence: Build (slice 4): `test/integration/portal_api_contract_test.dart` reads both captures on the strict chain for that reason.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
+  summary: On iPad the calendar share sheet needs an origin rect: `calendarSharerProvider` calls `SharePlus.instance.share` without `sharePositionOrigin`, so « Ajouter à mon calendrier » would end in the failure SnackBar there; pass the tapped widget's rect through the seam when iOS is built.
+  evidence: Code review (blind hunter), verified, medium: the Runner targets iPhone and iPad (`TARGETED_DEVICE_FAMILY = "1,2"`) and share_plus requires `sharePositionOrigin` on iPad; iOS is out of slice 4's scope (never built).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
+  summary: The real share sheet and dialer hand-offs (`calendarSharerProvider` on share_plus, `phoneDialerProvider` on url_launcher) never run in a test: every test overrides the seams, so a dropped `mimeType` or `fileNameOverrides` would not fail `make ci`.
+  evidence: Code review (verification-gap layer, intent auditor), low: the repo keeps every platform plugin behind a provider seam with no platform-channel mocks, and `SharePlatform` is not exported by share_plus; a test needs share_plus_platform_interface as a dev dependency, or channel and path_provider mocks. Checked on the Android emulator instead (the share sheet with the `.ics`).

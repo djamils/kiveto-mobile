@@ -143,6 +143,50 @@ Fixtures in `test/support/fixtures/portal_api/` (live captures 2026-11-03, see C
 - Given any upcoming appointment, when « Ajouter à mon calendrier » is tapped, then the `.ics` bytes of the API reach the share sheet as one `text/calendar` file.
 - Given `make ci`, when it runs on the branch, then it is green.
 
+### Review Findings
+
+Code review (bmad-code-review, 2026-11-03, branch diff against `master` d89470f plus the emulator walk's no-break-space fix, generated code and captures excluded; layers: blind hunter, edge-case hunter, verification gap, acceptance auditor): 39 findings — 0 decision-needed, 16 patch (14 entries, applied), 2 defer, 21 rejected.
+
+- [x] [Review][Patch] Back, X, « Modifier » and system back stay active while the booking is sending: a slot picked meanwhile on step 3 resets the done submission and « Confirmer » books a second appointment (blind + edge) — blocked while sending (`PopScope`, no-op header actions), `_choose` also ignores a done booking [lib/features/scheduling/presentation/booking_confirm_page.dart]
+- [x] [Review][Patch] A reschedule 404 (appointment gone, or practitioner no longer bookable for the motif) reads « Ce rendez-vous n'est plus disponible. » and keeps the picker; the cancel sheet keeps its reason on a 404 (blind + edge) — the page re-reads the appointment and the practitioners, clears the slot, says « Ce créneau n'est plus proposé pour ce rendez-vous… »; the sheet clears its reason [lib/features/scheduling/presentation/reschedule_page.dart]
+- [x] [Review][Patch] The cancel sheet's network failure has no « Réessayer » unlike 14 and the reschedule (acceptance) [lib/features/scheduling/presentation/cancel_appointment_sheet.dart]
+- [x] [Review][Patch] « Le rappel CHPL de Oslo »: no elision before a vowel (blind) — the four care warnings rephrased (« … pour {pet}. ») [lib/l10n/app_fr.arb]
+- [x] [Review][Patch] « par SMS » can be false: the backend uses the owner's transactional channel (SMS or e-mail) (blind) — channel-neutral confirmation sentences [lib/l10n/app_fr.arb]
+- [x] [Review][Patch] The iPad and « real seams » deferrals only in the spec; the document-share entry ignores share_plus (blind) — deferred-work.md entries [deferred-work.md]
+- [x] [Review][Patch] AC4's test asserted the clinic-cancelled appointment, not the cancelled one; the home's reload after each change unasserted (acceptance) [test/widget/app/scheduling_flow_test.dart]
+- [x] [Review][Patch] AC1's test did not open « Mes rendez-vous » (acceptance) [test/widget/app/scheduling_flow_test.dart]
+- [x] [Review][Patch] AC2's X driven from the tab at step 2 only (acceptance) — step 4 too [test/widget/app/scheduling_flow_test.dart]
+- [x] [Review][Patch] A reschedule answered after the page was left untested (verification) [test/widget/features/scheduling/reschedule_page_test.dart]
+- [x] [Review][Patch] A « Passés » next page answering after a clinic switch untested (verification) [test/widget/features/scheduling/appointments_page_test.dart]
+- [x] [Review][Patch] An empty first page with a next cursor untested (verification) [test/widget/features/scheduling/appointments_page_test.dart]
+- [x] [Review][Patch] The picker opening on the chosen slot's week only tested in week 1 (verification) [test/widget/features/scheduling/booking_slot_page_test.dart]
+- [x] [Review][Patch] Missing pets left out of step 12 untested (verification) [test/widget/features/scheduling/booking_pet_page_test.dart]
+- [x] [Review][Defer] The real share_plus call never runs in a test (verification, filed defer) — deferred (deferred-work.md: no platform-channel mocks in the repo)
+- [x] [Review][Defer] A zero-offset clinic's slot encoded `…Z` by tonik (edge) — already deferred by the build (deferred-work.md)
+
+Rejected:
+- `low` (blind) The booking state machine lives in presentation, outside the coverage gate — it is covered by widget tests run in `make ci`; moving `confirm()` to an application use case is a refactor with no user-facing defect.
+- `low` (blind) A double tap on « Ajouter à mon calendrier » can send two `.ics` reads and a failed second share — a busy guard adds state for a rare gesture; the first share opens.
+- `false` (blind) Success exits go home while X returns to the opener — the mockup's « Plus tard » goes to the home (Main) and the spec's matrix says so.
+- `low` (blind) The `.ics` file name is French and hard-coded — a file name, not prose (same as the build review).
+- `low` (blind) The new-pet name counts UTF-16 units — emoji names are rare; the server stays the authority (its 422 shows with « Modifier »).
+- `low` (blind) « Étape {step} sur 4 » hard-codes the total — the wizard has four steps; no named harm.
+- `low` (blind) Step 13 shows the no-phone callout while `/me` loads — `/me` is loaded before step 12 lists the pets; only a `/me` reload during step 13 shows it.
+- `low` (verification, other) Back on steps 2–4 reached by a direct `go` does nothing — only tests reach them that way (no deep link or restoration targets `/booking/*`).
+- `false` (edge) Endless spinner for a clinic-less account opening the booking — `redirectFor` sends `/appointments` and `/booking/*` to `/clinics` (carried from the build review).
+- `low` (edge) Blank step 3 with no motif (deep link, reset draft) — unreachable in use (carried).
+- `low` (edge) The page of the chosen slot after a `from + 1` retry — device date behind the clinic's (carried).
+- `low` (edge) A draft practitioner no longer listed when step 3 rebuilds — needs the clinic to drop the practitioner during the booking; the server refuses the slot then.
+- `low` (edge) A device two days behind the clinic — a wrong clock (carried).
+- `false` (edge) A reschedule whose answer was lost, retried on the same slot, reads « slot taken » — the contract answers 200 without effect for the same slot and practitioner.
+- `false` (edge) A cancellation whose answer was lost, sent again, reads « cannot be modified » — the cancellation is naturally idempotent (200, same body, checked live).
+- `low` (edge) A booking delivered but answered by a network failure, then another choice: two bookings — a changed choice is a new intent by design; the first appears in the lists.
+- `low` (edge) `cursor_invalid` loops — the server's cursor is valid by construction (slices 2–3 precedent).
+- `false` (edge) A pet change keeps the motif « unasked » — the owner passes steps 13 and 3 again, which show the kept choices.
+- `false` (edge) A → B → A sends the same content under a new key — the server returns the existing appointment for the same body (natural idempotence, checked live: a new key with the same body answered the same 201).
+- `low` (acceptance) The Design Notes still describe the one-closed-window rule — fixing it edits the spec; the triage log records the change.
+- `low` (acceptance) `appointmentGone` lies outside the four key prefixes — cosmetic.
+
 ## Spec Change Log
 
 ### 2026-11-03 — Build
