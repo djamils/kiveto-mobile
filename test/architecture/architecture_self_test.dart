@@ -549,7 +549,7 @@ import '../../features/patient/patient.dart';
 import '../../features/patient/presentation/pet_page.dart';
 ''',
       'app/theme/theme.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../shared/presentation/kit.dart';
 ''',
@@ -593,7 +593,7 @@ abstract interface class Clock {
 ''',
       'shared/domain/failure.dart': 'sealed class Failure {}\n',
       'shared/presentation/kit.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../domain/clock.dart';
 ''',
@@ -632,7 +632,7 @@ import 'pet_mapper.dart';
       'features/patient/infrastructure/pet_mapper.dart':
           "import '../domain/pet_id.dart';\n",
       'features/patient/presentation/pet_page.dart': '''
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_mobile/core/di/providers.dart';
 import 'package:kiveto_mobile/core/errors/api_failure.dart';

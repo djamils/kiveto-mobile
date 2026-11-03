@@ -89,3 +89,49 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-portal-api-client.md`
   summary: Capture contract fixtures of the POST responses the normaliser also makes all-required (`POST /auth/otp/verify` for `authenticated`, `invitation_pending` and `registration_required`, `/auth/refresh`, `/auth/otp/request`, a booking 201) and decode them in an integration test — slice 1 (`identity_access`) and slice 4 (`scheduling`) at the latest.
   evidence: Code review (blind-hunter), maybe-false, if true medium: the 18 fixtures are GET responses plus the 401/404/422; the live V3(b) run decoded `requestOtp` 202 and `verifyOtp` 200 `authenticated`, but a branch-dependent body that omits a non-nullable key (e.g. an `invitation_pending` verification without tokens) would only fail at runtime as a decoding `TonikError`. Settled by capturing those responses from the local backend.
+
+## Deferred from: spec-app-shell.md (phase 5, 2026-11-03)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Correct CLAUDE.md (needs the user's own go-ahead, agent-context file): bootstrap status "phases 1–5 done" (phase 5 validated on Windows and the Android emulator, iOS not built); the stack line and §3/§6 say Material comes from `package:material_ui/material_ui.dart` (go_router 18 is built on it) and that no file of `lib/`, `test/` or `integration_test/` imports `package:flutter/material.dart` or `package:flutter/cupertino.dart` (`test/architecture/material_ui_test.dart`); §5 tonik 0.11.1 (already listed for phase 4); user-facing strings in `lib/l10n/app_fr.arb`, `fvm flutter gen-l10n` after an edit.
+  evidence: CLAUDE.md still reads "phases 1–3 done" and names no Material import rule; the spec forbids editing it (corrections go here).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Add `make test-e2e` and `integration_test/` (the real sign-in flow on an emulator against the local backend) with slice 1 (`identity_access`), and turn the "End-to-end tests on a device" row of CONTRIBUTING.md §5 on.
+  evidence: Phase 5 has no business flow to drive end to end (placeholders only); architecture §7 and CONTRIBUTING.md now point at slice 1.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Production deep links: an `autoVerify` intent filter for the production portal host (`/invitation`) in the main Android manifest, and iOS universal links (Associated Domains entitlement `applinks:<host>`, set in Xcode, with the Apple Team ID the backend's `.well-known/apple-app-site-association` needs).
+  evidence: The backend guide names no production host; phase 5 only declares the dev host `portal.kiveto.local` in `android/app/src/debug/AndroidManifest.xml` (no `autoVerify`: the dev host has no assetlinks), and the Team ID is still a placeholder (architecture §6).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Build and run phase 5 on iOS (simulator from macOS): the `AppIcon` set resized from the 1024 launcher (no alpha), DM Sans with its optical size, the secure storage (Keychain), the router and the shell.
+  evidence: Phase 5 was built and checked on Windows and the Android emulator only; no Xcode build ran.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Clear the stored tokens on the first launch after an iOS reinstall (the Keychain survives an uninstall, so a reinstalled app would come back signed in): a first-run marker that the keychain does not keep (it needs `shared_preferences` or a file), then `SecureTokenStorage.clear()`.
+  evidence: `SecureTokenStorage` and `DeviceIdStore` both use the Keychain; keeping the device id across reinstalls is wanted (device budget), keeping the session is not.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Add `shared_preferences` (2.5.6 checked on 2026-11-03; check again) with the slice that persists the active clinic (`client`), and fill `hasConfirmedClinicProvider` from `GET /me` (slice 1).
+  evidence: No phase-5 consumer (CLAUDE.md §7); the shell seam `hasConfirmedClinicProvider` stays null (no redirect) until slice 1 overrides it.
+
+## Deferred from: code review of spec-app-shell.md (2026-11-03)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Add a reactive session provider (`sessionStatusProvider` in `core/di/`, listening to the `SessionManager` notifier) and make every account-scoped provider of the slices watch it, so that a sign-out, or a sign-in as another account, rebuilds them — slice 1 (`identity_access`).
+  evidence: Review (blind-hunter), maybe-false, if true medium: `sessionManagerProvider` is a plain `Provider` returning one `ChangeNotifier`; `ref.watch` on it never fires on sign-in or sign-out (only go_router listens). Phase 5 has no account-scoped provider, so nothing is stale yet; the first ones arrive with slice 1.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Server-side logout: the `identity_access` logout use case calls `POST /auth/logout {refreshToken}` (revokes the refresh family), then `SessionManager.signOut()` whatever the answer; the account page (slice 5) uses it instead of the placeholder's local sign-out.
+  evidence: The phase-5 account placeholder's "Se déconnecter" only drops the local tokens (`SessionManager.signOut()`), so the refresh token stays valid on the server for up to 90 days of inactivity.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Global error handling in `app/bootstrap/`: `FlutterError.onError` / `PlatformDispatcher.instance.onError` (crash reporting) and a fallback screen when `bootstrap()` fails before `runApp` (no `API_BASE_URL` in a release build, D11 flavors).
+  evidence: Review (blind-hunter, intent-alignment), rejected for phase 5 (every run goes through `make start`, the `StateError` names the fix); `structure-d15.md` lists "error handlers" in `app/bootstrap/`.
+
+## Deferred from: code review of spec-app-shell.md (2026-11-03, bmad-code-review)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Design the logout request so that a token refresh cannot replay a spent refresh token: with an expired access token, `POST /auth/logout {refreshToken: A}` through `PortalHttp.dio` gets 401, the auth interceptor refreshes (A → B) and retries the same body; send logout with a "do not refresh" request flag (and fall back to a local sign-out), or on `bareDio` with the current pair — slice 1 (`identity_access`).
+  evidence: Code review (blind-hunter), maybe-false, if true medium: whether the backend revokes the whole family when given a spent member decides it (guide: "famille du jeton révoquée si elle appartient à l'appelant"); if it does not, B stays valid on the server after a sign-out.

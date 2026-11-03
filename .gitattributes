@@ -24,3 +24,11 @@ packages/kiveto_portal_api/** linguist-generated=true
 *.otf binary
 *.pdf binary
 *.jar binary
+
+# Byte copies checked by their sha256 (assets/fonts/OFL.txt keeps the CRLF
+# of google/fonts): never convert their line endings.
+assets/fonts/OFL.txt -text
+assets/licenses/lucide.txt -text
+
+# gen-l10n output (fvm flutter gen-l10n), committed: collapsed in diffs.
+lib/l10n/app_localizations*.dart linguist-generated=true

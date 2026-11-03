@@ -1,0 +1,269 @@
+{
+  "@@locale": "fr",
+
+  "appTitle": "Kiveto",
+  "@appTitle": {
+    "description": "The app name: recents screen, task switcher."
+  },
+
+  "navHome": "Accueil",
+  "@navHome": {
+    "description": "Bottom navigation: the home tab."
+  },
+  "navPets": "Animaux",
+  "@navPets": {
+    "description": "Bottom navigation: the pets tab."
+  },
+  "navAppointments": "Rendez-vous",
+  "@navAppointments": {
+    "description": "Bottom navigation: the appointments tab."
+  },
+  "navDocuments": "Documents",
+  "@navDocuments": {
+    "description": "Bottom navigation: the documents tab."
+  },
+  "navAccount": "Compte",
+  "@navAccount": {
+    "description": "Bottom navigation: the account tab."
+  },
+  "navDocumentsUnread": "{count, plural, =1{Documents, 1 nouveau} other{Documents, {count} nouveaux}}",
+  "@navDocumentsUnread": {
+    "description": "Screen reader label of the documents tab when unread documents exist.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+
+  "screenWelcomeTitle": "Bienvenue",
+  "@screenWelcomeTitle": {
+    "description": "Title of the welcome screen (7)."
+  },
+  "screenSignInCodeTitle": "Entrez le code reçu",
+  "@screenSignInCodeTitle": {
+    "description": "Title of the code entry screen (8)."
+  },
+  "screenRegisterTitle": "Créez votre compte",
+  "@screenRegisterTitle": {
+    "description": "Title of the registration screen (9)."
+  },
+  "screenOnboardingInvitationsTitle": "Vos invitations",
+  "@screenOnboardingInvitationsTitle": {
+    "description": "Title of the pending invitations screen, after a sign-in with pending invitations."
+  },
+  "screenInvitationTitle": "Activez votre espace",
+  "@screenInvitationTitle": {
+    "description": "Title of the invitation activation screen (0), opened from the invitation link."
+  },
+  "screenHomeTitle": "Accueil",
+  "@screenHomeTitle": {
+    "description": "Title of the home screen (1)."
+  },
+  "screenClinicsTitle": "Trouver une clinique",
+  "@screenClinicsTitle": {
+    "description": "Title of the clinic search screen (10)."
+  },
+  "screenPetsTitle": "Mes animaux",
+  "@screenPetsTitle": {
+    "description": "Title of the pets tab."
+  },
+  "screenPetTitle": "Fiche animal",
+  "@screenPetTitle": {
+    "description": "Title of the pet sheet (2)."
+  },
+  "screenAppointmentsTitle": "Rendez-vous",
+  "@screenAppointmentsTitle": {
+    "description": "Title of the appointments screen (4)."
+  },
+  "screenDocumentsTitle": "Documents",
+  "@screenDocumentsTitle": {
+    "description": "Title of the documents screen (5)."
+  },
+  "screenAccountTitle": "Compte",
+  "@screenAccountTitle": {
+    "description": "Title of the account screen (6)."
+  },
+  "screenBookingPetTitle": "Pour quel animal ?",
+  "@screenBookingPetTitle": {
+    "description": "Title of the booking step 1, the pet (12)."
+  },
+  "screenBookingMotifTitle": "Quel est le motif ?",
+  "@screenBookingMotifTitle": {
+    "description": "Title of the booking step 2, the reason (13)."
+  },
+  "screenBookingSlotTitle": "Choisissez un créneau",
+  "@screenBookingSlotTitle": {
+    "description": "Title of the booking step 3, the slot (3)."
+  },
+  "screenBookingConfirmTitle": "Vérifiez et confirmez",
+  "@screenBookingConfirmTitle": {
+    "description": "Title of the booking step 4, the summary (14)."
+  },
+  "screenQuestionnaireTitle": "Avant la consultation",
+  "@screenQuestionnaireTitle": {
+    "description": "Title of the pre-consultation questionnaire (15)."
+  },
+  "screenCancelAppointmentTitle": "Annuler le rendez-vous",
+  "@screenCancelAppointmentTitle": {
+    "description": "Title of the appointment cancellation screen (16)."
+  },
+  "screenRescheduleTitle": "Reporter le rendez-vous",
+  "@screenRescheduleTitle": {
+    "description": "Title of the reschedule screen (the slot picker of 3, reused)."
+  },
+  "screenPrescriptionRenewalTitle": "Demander un renouvellement",
+  "@screenPrescriptionRenewalTitle": {
+    "description": "Title of the prescription renewal screen (17)."
+  },
+  "screenClinicListingTitle": "Fiche clinique",
+  "@screenClinicListingTitle": {
+    "description": "Title of the clinic sheet of the directory (11)."
+  },
+  "screenKitGalleryTitle": "Kit d'interface",
+  "@screenKitGalleryTitle": {
+    "description": "Title of the debug-only gallery of the UI kit."
+  },
+
+  "placeholderBody": "Cet écran arrive dans une prochaine version.",
+  "@placeholderBody": {
+    "description": "Body of a screen not built yet."
+  },
+  "welcomeKitGalleryLink": "Ouvrir le kit d'interface",
+  "@welcomeKitGalleryLink": {
+    "description": "Debug builds only: the link from the welcome screen to the UI kit gallery."
+  },
+  "invitationLinkReceived": "Lien d'invitation reçu.",
+  "@invitationLinkReceived": {
+    "description": "The invitation screen received a link with a token (the token is never shown)."
+  },
+  "invitationLinkMissing": "Aucun lien d'invitation.",
+  "@invitationLinkMissing": {
+    "description": "The invitation screen was opened without a token."
+  },
+  "routeNotFoundTitle": "Page introuvable",
+  "@routeNotFoundTitle": {
+    "description": "Title shown for an unknown link or route."
+  },
+  "routeNotFoundAction": "Revenir à l'accueil",
+  "@routeNotFoundAction": {
+    "description": "Button of the unknown route page, back to the home screen."
+  },
+  "accountSignOut": "Se déconnecter",
+  "@accountSignOut": {
+    "description": "Account screen: the sign-out button."
+  },
+
+  "commonRetry": "Réessayer",
+  "@commonRetry": {
+    "description": "Retry button of the error views."
+  },
+  "commonBack": "Retour",
+  "@commonBack": {
+    "description": "Screen reader label of the back button."
+  },
+  "commonClose": "Fermer",
+  "@commonClose": {
+    "description": "Screen reader label of the close button."
+  },
+  "commonLoading": "Chargement…",
+  "@commonLoading": {
+    "description": "Screen reader label of the loading indicators."
+  },
+  "commonContinue": "Continuer",
+  "@commonContinue": {
+    "description": "Generic continue button."
+  },
+  "commonOptional": "(facultatif)",
+  "@commonOptional": {
+    "description": "Suffix of the label of an optional field."
+  },
+  "phoneCountryCode": "Indicatif pays",
+  "@phoneCountryCode": {
+    "description": "Screen reader label of the country code button of the phone field."
+  },
+
+  "errorNetworkTitle": "Pas de connexion",
+  "@errorNetworkTitle": {
+    "description": "Error view title: no usable answer (offline, timeout, cancelled)."
+  },
+  "errorNetworkBody": "Vérifiez votre connexion Internet, puis réessayez.",
+  "@errorNetworkBody": {
+    "description": "Error view body: no usable answer."
+  },
+  "errorUnauthorizedTitle": "Session expirée",
+  "@errorUnauthorizedTitle": {
+    "description": "Error view title: the server refused the session (401)."
+  },
+  "errorUnauthorizedBody": "Reconnectez-vous pour continuer.",
+  "@errorUnauthorizedBody": {
+    "description": "Error view body: the server refused the session."
+  },
+  "errorValidationTitle": "Informations à corriger",
+  "@errorValidationTitle": {
+    "description": "Error view title: the server refused the data sent (422 validation_failed)."
+  },
+  "errorValidationBody": "Certaines informations ne sont pas valides. Corrigez-les, puis réessayez.",
+  "@errorValidationBody": {
+    "description": "Error view body: the server refused the data sent."
+  },
+  "errorRateLimitedTitle": "Trop de tentatives",
+  "@errorRateLimitedTitle": {
+    "description": "Error view title: too many requests (429)."
+  },
+  "errorRateLimitedBody": "Réessayez dans {minutes} min.",
+  "@errorRateLimitedBody": {
+    "description": "Error view body: too many requests, with the wait announced by the server, rounded up to the minute.",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "errorRateLimitedBodyUnknown": "Réessayez dans quelques minutes.",
+  "@errorRateLimitedBodyUnknown": {
+    "description": "Error view body: too many requests, without a wait announced by the server."
+  },
+  "errorNotFoundTitle": "Introuvable",
+  "@errorNotFoundTitle": {
+    "description": "Error view title: the resource does not exist (404)."
+  },
+  "errorNotFoundBody": "Cet élément n'existe pas ou n'est plus disponible.",
+  "@errorNotFoundBody": {
+    "description": "Error view body: the resource does not exist."
+  },
+  "errorConflictTitle": "Action déjà traitée",
+  "@errorConflictTitle": {
+    "description": "Error view title: the action conflicts with the current state (409)."
+  },
+  "errorConflictBody": "La situation a changé entre-temps. Actualisez, puis réessayez.",
+  "@errorConflictBody": {
+    "description": "Error view body: the action conflicts with the current state."
+  },
+  "errorServerTitle": "Service indisponible",
+  "@errorServerTitle": {
+    "description": "Error view title: server error (5xx) or unexpected answer."
+  },
+  "errorServerBody": "Le service rencontre un problème. Réessayez dans un instant.",
+  "@errorServerBody": {
+    "description": "Error view body: server error or unexpected answer."
+  },
+  "errorBusinessTitle": "Action impossible",
+  "@errorBusinessTitle": {
+    "description": "Error view title: the server refused the action (another 4xx)."
+  },
+  "errorBusinessBody": "Cette action n'a pas pu aboutir.",
+  "@errorBusinessBody": {
+    "description": "Error view body: the server refused the action."
+  },
+  "errorUnknownTitle": "Une erreur est survenue",
+  "@errorUnknownTitle": {
+    "description": "Error view title: an error that is not an API failure."
+  },
+  "errorUnknownBody": "Réessayez dans un instant.",
+  "@errorUnknownBody": {
+    "description": "Error view body: an error that is not an API failure."
+  }
+}

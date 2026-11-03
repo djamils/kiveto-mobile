@@ -1,0 +1,10 @@
+# gen-l10n (`fvm flutter gen-l10n`, also run by `flutter pub get` through
+# `flutter: generate: true`): writes lib/l10n/app_localizations*.dart next to
+# the ARB. The output is committed (linguist-generated) and excluded from
+# analysis and coverage; regenerate it after every edit of an ARB file.
+arb-dir: lib/l10n
+template-arb-file: app_fr.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+format: true

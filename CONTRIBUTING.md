@@ -23,7 +23,7 @@ the commands and checks it brings **do not exist** — do not rely on them.
 | 2 | `chore/toolchain-bootstrap` | `.fvmrc`, Flutter project (Android + iOS), `Makefile`, `scripts/` (`doctor`, `install`, `install-fvm`, `start`, `devices`, `clean`), `tool/devices.dart`, environment config | Done (validated on Windows and macOS) |
 | 3 | `chore/quality-gates` | very_good_analysis + riverpod_lint, architecture tests of the D15 rules, coverage gate, `tool/` as the `kiveto_tool` package, `make ci` and its steps, plain-bash checks of the scripts, git hooks, GitHub Actions, doctor NDK check | Done (validated on Windows; macOS run and first GitHub Actions run pending) |
 | 4 | `chore/portal-api-client` | Generator spike (tonik 0.11.1, D3), contract copy pinned by commit (`contracts/`), contract normaliser, generated client `packages/kiveto_portal_api` (committed, stamped), `make api-sync` / `api-generate` / `api-check` (`api-check` in `make ci`), app dependencies `dio` and `tonik_util`, rule 7 on `tonik_util`, contract fixtures and their integration test | Done (validated on Windows; macOS run pending) |
-| 5 | `feature/app-shell` | `lib/core/{network,security,errors,di}`: HTTP client, auth and refresh, token storage, errors; `lib/shared/`: `Clock`, value objects, UI kit; `lib/app/{bootstrap,routing,theme}`: `ProviderScope`, router, theme; French l10n | To do |
+| 5 | `feature/app-shell` | `lib/core/{network,security,errors,di}`: HTTP client, auth and refresh, token storage, errors; `lib/shared/`: `Clock`, value objects, UI kit; `lib/app/{bootstrap,routing,theme}`: `ProviderScope`, router, theme; French l10n | Done (validated on Windows and the Android emulator; iOS not built) |
 | 6+ | `feature/<feature>` | The Portal slices, in the backend contract's order | To do |
 
 Update this table in the PR that completes a phase.
@@ -208,7 +208,7 @@ Windows and macOS.
 | Conventional Commits | `commit-msg` hook | Now |
 | `make ci` green on every PR | GitHub Actions (`.github/workflows/ci.yml`) | Written, not run yet; make the check required on `master` (branch protection) |
 | Contract copy unedited, generated client matches it (§8) | `make api-check` in `make ci` | Now |
-| End-to-end tests on a device | `make test-e2e`, run by hand | Phase 5 |
+| End-to-end tests on a device | `make test-e2e`, run by hand | Slice 1 (`identity_access`) |
 | No commit before `make ci` passed on the staged tree | Claude Code hook (D14) | Deferred |
 
 Until a control is available, the rule still applies and the author checks
@@ -284,6 +284,41 @@ maps its error codes to sealed failures, and owns only the client-side
 policies: session lifecycle, one token refresh at a time, a stable
 `Idempotency-Key` per user intent, the booking wizard state.
 
+### App foundation (phase 5)
+
+- **Material** comes from `package:material_ui/material_ui.dart` (go_router
+  18 is built on it): never import `package:flutter/material.dart` (nor
+  `package:flutter/cupertino.dart`: `cupertino_ui` replaces it), or the
+  app gets a second `MaterialApp`, `Theme` and `MaterialLocalizations`
+  that go_router does not see; `test/architecture/material_ui_test.dart`
+  fails on either import.
+- **Failures:** repositories throw the sealed `ApiFailure` of
+  `lib/shared/domain/api_failure.dart` (`switch (await api.getMe()) {
+  TonikSuccess(value: GetMeResponse200(:final body)) => …, final other =>
+  throw apiFailureOf(other, failures) }`, `core/network/portal_results.dart`);
+  the presentation pattern-matches it, `ErrorView` and `failureMessage`
+  give the French title and body. No generic `Result`.
+- **Session and HTTP:** the generated client runs on
+  `portalServerProvider` (`core/di/`): strict status, dev `Host`,
+  `X-Device-Id`, `Authorization` with one refresh in flight. An intent that
+  must not be applied twice holds one `IdempotencyKey` for all its retries.
+- **Files:** download them through `PortalFileDownloader`
+  (`portalFileDownloaderProvider`), never through the generated 302
+  operations (`getDocumentFile`, `getVaccinationBooklet`,
+  `getDataExportFile`): those follow the redirect inside `dart:io`, which on
+  the dev emulator fails on the unresolvable dev host.
+- **UI kit** (`lib/shared/presentation/`): the tokens, the Lucide icons and
+  the components of the mockup (`KivetoButton.primary`, `KivetoBottomNav`…);
+  build screens from them, never from raw colours or `TextStyle`s. The
+  debug-only gallery `/debug/kit` shows them all (link on the welcome page).
+- **Strings:** every user-facing string goes in `lib/l10n/app_fr.arb`, keys
+  prefixed by area; run `fvm flutter gen-l10n` after an ARB edit and commit
+  the generated `app_localizations*.dart`.
+- **Shell seams:** the slices fill `unreadDocumentsCountProvider`,
+  `accountInitialsProvider` and `hasConfirmedClinicProvider`
+  (`lib/app/routing/shell_seams.dart`) with `ProviderScope` overrides in
+  `app/bootstrap`.
+
 ---
 
 ## 7. Tests and coverage
@@ -296,7 +331,7 @@ policies: session lifecycle, one token refresh at a time, a stable
 | Tooling | `test/tool/` (fixtures in `test/tool/fixtures/`) | `tool/lib/`: the device picker, the Dart scanner, the coverage gate, the contract commands (`portal_api.dart`, SHA-256 included), the contract normaliser | Yes (`make test-tool`) |
 | Architecture | `test/architecture/` | the rules of §6, with self-tests that inject violations | Yes (`make test-architecture`) |
 | Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh`, doctor and install, install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`, `analyze.sh`, `api.sh`, the git hooks, the entry points `tool/devices.dart`, `tool/coverage_gate.dart`, `tool/portal_api.dart` and `tool/normalize_contract.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
-| End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`, phase 5) |
+| End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`, slice 1) |
 
 Coverage policy:
 
