@@ -2,7 +2,7 @@
 
 Application Flutter (Android et iOS) du **Portal Kiveto**, l'espace des propriétaires d'animaux. Elle est cliente de l'API Portal du backend Kiveto (dépôt [djamils/kiveto](https://github.com/djamils/kiveto), contrat `openapi/portal.v1.yaml`).
 
-> **Bootstrap en cours — phases 1 et 2 sur 6 terminées, phase 2 validée sous Windows et macOS.** Le dépôt contient ses fondations (conventions, BMAD, Claude Code, décisions d'architecture), le projet Flutter Android et iOS (`app.kiveto.portal`, nom affiché « Kiveto »), Flutter 3.47.9 épinglé avec FVM et le `Makefile`. Les contrôles qualité (`make ci`) arrivent en phase 3 ; l'état à jour est dans [CONTRIBUTING.md](./CONTRIBUTING.md#0-bootstrap-status).
+> **Bootstrap en cours — phases 1 à 3 sur 6 terminées ; phase 2 validée sous Windows et macOS, phase 3 sous Windows (validation macOS et premier passage de GitHub Actions en attente).** Le dépôt contient ses fondations (conventions, BMAD, Claude Code, décisions d'architecture), le projet Flutter Android et iOS (`app.kiveto.portal`, nom affiché « Kiveto »), Flutter 3.47.9 épinglé avec FVM, le `Makefile` et les contrôles qualité : `make ci` (format, analyse, règles d'architecture, tests avec couverture, seuil de couverture, vérification des scripts), les hooks git et GitHub Actions. Le client de l'API Portal arrive en phase 4 ; l'état à jour est dans [CONTRIBUTING.md](./CONTRIBUTING.md#0-bootstrap-status).
 
 ---
 
@@ -37,7 +37,15 @@ make install    # Flutter épinglé (FVM), dépendances, config/env/dev.json
 make start      # lance l'app ; démarre le premier émulateur si aucun appareil ne tourne
 ```
 
-`make install` vérifie les prérequis et explique comment installer ce qui manque, sans rien installer au niveau du système. Sans FVM, `make install-fvm` l'installe pour l'utilisateur courant uniquement et affiche la ligne `PATH` à ajouter. `make help` liste les autres cibles (`devices`, `clean`, `reset`) et les options (`PLATFORM=ios` sous macOS, `DEVICE=`, `EMULATOR=`, `ENV=`, `RUN_ARGS=`, `V=1`…). `make ci` arrive en phase 3.
+`make install` vérifie les prérequis et explique comment installer ce qui manque, sans rien installer au niveau du système ; il active aussi les hooks git de ce clone (`core.hooksPath=.githooks`). Sans FVM, `make install-fvm` l'installe pour l'utilisateur courant uniquement et affiche la ligne `PATH` à ajouter. `make help` liste les autres cibles (`devices`, `clean`, `reset`, les étapes de `make ci`) et les options (`PLATFORM=ios` sous macOS, `DEVICE=`, `EMULATOR=`, `ENV=`, `RUN_ARGS=`, `V=1`…).
+
+Avant chaque commit :
+
+```bash
+make ci         # format, analyse, règles d'architecture, tests et couverture, scripts ; doit être vert
+```
+
+Le workflow GitHub Actions (`.github/workflows/ci.yml`) relancera `make ci` sur chaque pull request ; il est écrit mais n'a pas encore tourné.
 
 ---
 
