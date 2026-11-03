@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"phone","message":"Numéro au format international attendu (+33612345678).","code":"de1e3db3-5ed4-4941-aae4-59f3667cc3a3"}],"detail":"phone: Numéro au format international attendu (+33612345678).","type":"validation_failed","title":"Données invalides."}

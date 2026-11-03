@@ -32,11 +32,16 @@ void main() {
       'DM Sans', (tester) async {
     await pumpKivetoApp(tester);
 
-    expect(find.text('Bienvenue'), findsOneWidget);
+    expect(
+      find.text('La santé de vos animaux, avec votre clinique'),
+      findsOneWidget,
+    );
     expect(find.text('Kiveto'), findsOneWidget);
     expect(tester.widget<Title>(find.byType(Title)).title, 'Kiveto');
 
-    final context = tester.element(find.text('Bienvenue'));
+    final context = tester.element(
+      find.text('La santé de vos animaux, avec votre clinique'),
+    );
     expect(Localizations.localeOf(context).languageCode, 'fr');
     expect(MaterialLocalizations.of(context).cancelButtonLabel, 'Annuler');
     final theme = Theme.of(context);

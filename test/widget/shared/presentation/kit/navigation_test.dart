@@ -273,7 +273,11 @@ void main() {
 
   testWidgets('showKivetoSheet from a tab: the scrim covers the bottom nav '
       'too (root navigator)', (tester) async {
-    await pumpKivetoApp(tester, session: await memorySession(pair('A')));
+    await pumpKivetoApp(
+      tester,
+      session: await memorySession(pair('A')),
+      initialLocation: '/appointments',
+    );
 
     unawaited(
       showKivetoSheet<void>(

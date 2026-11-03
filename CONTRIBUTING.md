@@ -24,7 +24,8 @@ the commands and checks it brings **do not exist** — do not rely on them.
 | 3 | `chore/quality-gates` | very_good_analysis + riverpod_lint, architecture tests of the D15 rules, coverage gate, `tool/` as the `kiveto_tool` package, `make ci` and its steps, plain-bash checks of the scripts, git hooks, GitHub Actions, doctor NDK check | Done (validated on Windows; macOS run and first GitHub Actions run pending) |
 | 4 | `chore/portal-api-client` | Generator spike (tonik 0.11.1, D3), contract copy pinned by commit (`contracts/`), contract normaliser, generated client `packages/kiveto_portal_api` (committed, stamped), `make api-sync` / `api-generate` / `api-check` (`api-check` in `make ci`), app dependencies `dio` and `tonik_util`, rule 7 on `tonik_util`, contract fixtures and their integration test | Done (validated on Windows; macOS run pending) |
 | 5 | `feature/app-shell` | `lib/core/{network,security,errors,di}`: HTTP client, auth and refresh, token storage, errors; `lib/shared/`: `Clock`, value objects, UI kit; `lib/app/{bootstrap,routing,theme}`: `ProviderScope`, router, theme; French l10n | Done (validated on Windows and the Android emulator; iOS not built) |
-| 6+ | `feature/<feature>` | The Portal slices, in the backend contract's order | To do |
+| 6 | `feature/identity-access` | Slice 1: `identity_access` (screens 7 Bienvenue, 8 Code, 9 Inscription, 0 Activation, the pending invitations, the logout) and a minimal `client` (`GET /me`, the active clinic in `shared_preferences`); the reactive `sessionStatusProvider`; the shell seams filled; a `/home` placeholder proving the session; `shared_preferences` 2.5.6 and `url_launcher` 6.3.3 | Done (validated on Windows and the Android emulator against the local backend: sign-in, restart, logout, two pending invitations, the invitation link, the expired link cold and warm, a clinic-less account, a registration; iOS not built) |
+| 7+ | `feature/<feature>` | The Portal slices, in the backend contract's order | To do |
 
 Update this table in the PR that completes a phase.
 
@@ -208,7 +209,7 @@ Windows and macOS.
 | Conventional Commits | `commit-msg` hook | Now |
 | `make ci` green on every PR | GitHub Actions (`.github/workflows/ci.yml`) | Written, not run yet; make the check required on `master` (branch protection) |
 | Contract copy unedited, generated client matches it (§8) | `make api-check` in `make ci` | Now |
-| End-to-end tests on a device | `make test-e2e`, run by hand | Slice 1 (`identity_access`) |
+| End-to-end tests on a device | `make test-e2e`, run by hand | Deferred (not built by slice 1; the slice is checked by hand on the emulator) |
 | No commit before `make ci` passed on the staged tree | Claude Code hook (D14) | Deferred |
 
 Until a control is available, the rule still applies and the author checks
@@ -302,6 +303,11 @@ policies: session lifecycle, one token refresh at a time, a stable
   `portalServerProvider` (`core/di/`): strict status, dev `Host`,
   `X-Device-Id`, `Authorization` with one refresh in flight. An intent that
   must not be applied twice holds one `IdempotencyKey` for all its retries.
+  What belongs to the account (`meProvider`, the active clinic…) watches
+  `sessionStatusProvider` (`core/di/`): it rebuilds on every sign-in and
+  sign-out, never on a token refresh; read it through `AsyncData` patterns
+  or `AsyncValueView`, never `.value` (a reload keeps the previous
+  account's value).
 - **Files:** download them through `PortalFileDownloader`
   (`portalFileDownloaderProvider`), never through the generated 302
   operations (`getDocumentFile`, `getVaccinationBooklet`,
@@ -317,7 +323,10 @@ policies: session lifecycle, one token refresh at a time, a stable
 - **Shell seams:** the slices fill `unreadDocumentsCountProvider`,
   `accountInitialsProvider` and `hasConfirmedClinicProvider`
   (`lib/app/routing/shell_seams.dart`) with `ProviderScope` overrides in
-  `app/bootstrap`.
+  `app/bootstrap` (`featureOverrides()`).
+- **Navigation from a feature:** features never import `app/`; a page
+  takes its exits as `void Function(BuildContext)` callbacks, built by
+  `app/routing/app_router.dart` on `AppRoutes`.
 
 ---
 
@@ -331,7 +340,7 @@ policies: session lifecycle, one token refresh at a time, a stable
 | Tooling | `test/tool/` (fixtures in `test/tool/fixtures/`) | `tool/lib/`: the device picker, the Dart scanner, the coverage gate, the contract commands (`portal_api.dart`, SHA-256 included), the contract normaliser | Yes (`make test-tool`) |
 | Architecture | `test/architecture/` | the rules of §6, with self-tests that inject violations | Yes (`make test-architecture`) |
 | Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh`, doctor and install, install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`, `analyze.sh`, `api.sh`, the git hooks, the entry points `tool/devices.dart`, `tool/coverage_gate.dart`, `tool/portal_api.dart` and `tool/normalize_contract.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
-| End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`, slice 1) |
+| End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`, deferred) |
 
 Coverage policy:
 

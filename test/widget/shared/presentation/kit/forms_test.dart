@@ -105,6 +105,65 @@ void main() {
       );
       handle.dispose();
     });
+
+    testWidgets('an error (C-18e): red boxes, the message in place of the '
+        'help text, announced', (tester) async {
+      final handle = tester.ensureSemantics();
+      final controller = TextEditingController(text: '12');
+      addTearDown(controller.dispose);
+      await pumpKit(
+        tester,
+        KivetoOtpField(
+          legend: 'Code de vérification',
+          helpText: 'Valable 10 minutes.',
+          errorText: 'Code incorrect.',
+          controller: controller,
+          autofocus: true,
+        ),
+      );
+
+      expect(find.text('Code incorrect.'), findsOneWidget);
+      expect(find.text('Valable 10 minutes.'), findsNothing);
+      final boxes = find.byType(AnimatedContainer);
+      for (var i = 0; i < 6; i++) {
+        final decoration = _boxDecoration(tester, boxes.at(i));
+        expect(
+          (decoration.border! as Border).top.color,
+          KivetoColors.danger,
+          reason: 'box $i',
+        );
+        expect(decoration.color, KivetoColors.surface, reason: 'box $i');
+      }
+      // The current box keeps its 2 px border.
+      expect(
+        (_boxDecoration(tester, boxes.at(2)).border! as Border).top.width,
+        2,
+      );
+      expect(
+        tester.getSemantics(find.byType(EditableText)).hint,
+        'Code incorrect.',
+      );
+      final live = tester.getSemantics(find.text('Code incorrect.'));
+      expect(live.label, 'Code incorrect.');
+      expect(live.flagsCollection.isLiveRegion, isTrue);
+      handle.dispose();
+    });
+  });
+
+  testWidgets('KivetoPhoneField: its formatters and onChanged', (tester) async {
+    final changes = <String>[];
+    await pumpKit(
+      tester,
+      KivetoPhoneField(
+        label: 'Numéro de mobile',
+        onChanged: changes.add,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), '06 a1');
+
+    expect(changes, ['061']);
   });
 
   testWidgets('each input is labelled with its visible label, read once', (

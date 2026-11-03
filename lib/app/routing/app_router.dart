@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kiveto_mobile/app/routing/app_routes.dart';
 import 'package:kiveto_mobile/app/routing/app_shell.dart';
+import 'package:kiveto_mobile/app/routing/home_placeholder_page.dart';
 import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
 import 'package:kiveto_mobile/app/routing/placeholder_page.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
-import 'package:kiveto_mobile/core/security/session_manager.dart';
+import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -61,6 +64,11 @@ GoRoute _page(
       PlaceholderPage(title: title(AppLocalizations.of(context)), kind: kind),
 );
 
+// The exits of the feature pages, on the paths of the app (features never
+// import app/).
+void _goWelcome(BuildContext context) => context.go(AppRoutes.welcome);
+void _goHome(BuildContext context) => context.go(AppRoutes.home);
+
 List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
   GoRoute fullScreen(String path, String Function(AppLocalizations) title) =>
       _page(
@@ -71,23 +79,50 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
       );
 
   return [
-    _page(
-      AppRoutes.welcome,
-      (l10n) => l10n.screenWelcomeTitle,
-      kind: PlaceholderKind.welcome,
+    GoRoute(
+      path: AppRoutes.welcome,
+      builder: (context, state) => WelcomePage(
+        // A `go`, not a push: a code page pushed on /welcome would be
+        // unmounted by the redirect of /welcome as soon as the session
+        // opens, before it reaches the destination of its branch.
+        onCodeSent: (context) => context.go(AppRoutes.signInCode),
+        onInvitationLink: (context, token) =>
+            context.go(AppRoutes.invitationLink(token)),
+        onKitGallery: kDebugMode
+            ? (context) => unawaited(context.push(AppRoutes.kitGallery))
+            : null,
+      ),
     ),
-    fullScreen(AppRoutes.signInCode, (l10n) => l10n.screenSignInCodeTitle),
-    fullScreen(AppRoutes.register, (l10n) => l10n.screenRegisterTitle),
-    fullScreen(
-      AppRoutes.onboardingInvitations,
-      (l10n) => l10n.screenOnboardingInvitationsTitle,
+    GoRoute(
+      path: AppRoutes.signInCode,
+      parentNavigatorKey: root,
+      builder: (context, state) => CodePage(
+        onSignedIn: _goHome,
+        onInvitations: (context) => context.go(AppRoutes.onboardingInvitations),
+        onRegister: (context) => context.go(AppRoutes.register),
+        onRestart: _goWelcome,
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.register,
+      parentNavigatorKey: root,
+      builder: (context, state) => const RegisterPage(onRestart: _goWelcome),
+    ),
+    GoRoute(
+      path: AppRoutes.onboardingInvitations,
+      parentNavigatorKey: root,
+      builder: (context, state) => const OnboardingInvitationsPage(
+        onDone: _goHome,
+        onRestart: _goWelcome,
+      ),
     ),
     GoRoute(
       path: AppRoutes.invitation,
-      builder: (context, state) => PlaceholderPage(
-        title: AppLocalizations.of(context).screenInvitationTitle,
-        kind: PlaceholderKind.invitation,
-        invitationToken: invitationTokenFrom(state.uri),
+      parentNavigatorKey: root,
+      builder: (context, state) => InvitationPage(
+        token: invitationTokenFrom(state.uri),
+        onDone: _goHome,
+        onSignIn: _goWelcome,
       ),
     ),
     StatefulShellRoute.indexedStack(
@@ -96,7 +131,10 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
       branches: [
         StatefulShellBranch(
           routes: [
-            _page(AppRoutes.home, (l10n) => l10n.screenHomeTitle),
+            GoRoute(
+              path: AppRoutes.home,
+              builder: (context, state) => const HomePlaceholderPage(),
+            ),
             _page(AppRoutes.clinics, (l10n) => l10n.screenClinicsTitle),
           ],
         ),
