@@ -149,13 +149,17 @@ boot_simulator() {
   fi
   step "No iOS device running: booting the simulator ${SIMULATOR:-$udid}..."
   run xcrun simctl boot "$udid"
-  run open -a Simulator
+  # The window is only for the user: the booted simulator runs without it,
+  # and some Xcode installs ship no Simulator.app (Xcode 27.2 seen without).
+  if ! open -b com.apple.iphonesimulator >/dev/null 2>&1; then
+    warn "Simulator.app not found: the simulator runs without a window"
+  fi
   wait_for_device
   ok "Simulator booted ($DEVICE_ID)"
 }
 
 DEVICE_ID=''
-step "Selecting a $PLATFORM device..."
+step "Selecting a device ($PLATFORM)..."
 if [ -n "$DEVICE" ]; then
   rc=0
   pick "$DEVICE" || rc=$?

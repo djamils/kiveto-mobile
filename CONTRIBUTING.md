@@ -20,7 +20,7 @@ the commands and checks it brings **do not exist** — do not rely on them.
 | Phase | Branch | Brings | Status |
 |---|---|---|---|
 | 1 | root commit, `chore/repo-foundations` | Git attributes, editor config, ignores, `CLAUDE.md`, `CONTRIBUTING.md`, BMAD 6.12.4, architecture decisions | Done |
-| 2 | `chore/toolchain-bootstrap` | `.fvmrc`, Flutter project (Android + iOS), `Makefile`, `scripts/` (`doctor`, `install`, `install-fvm`, `start`, `devices`, `clean`), `tool/devices.dart`, environment config | Done on Windows; macOS validation pending |
+| 2 | `chore/toolchain-bootstrap` | `.fvmrc`, Flutter project (Android + iOS), `Makefile`, `scripts/` (`doctor`, `install`, `install-fvm`, `start`, `devices`, `clean`), `tool/devices.dart`, environment config | Done (validated on Windows and macOS) |
 | 3 | `chore/quality-gates` | Analyzer config, architecture tests, coverage gate, git hooks, `make ci`, GitHub Actions | To do |
 | 4 | `chore/portal-api-client` | Contract copy, generator spike, generated client, `make api-*` | To do |
 | 5 | `feature/app-shell` | `lib/core/`: HTTP client, auth and refresh, token storage, errors, router, theme, French l10n | To do |
@@ -130,7 +130,7 @@ The body explains **why**; the diff already shows what.
 | Developer Mode | Settings › System › For developers | — | FVM creates symbolic links |
 | Android Studio | With the SDK, cmdline-tools, an emulator, licences accepted, and NDK (Side by side) 28.2.13676358, the version Flutter 3.47.9 asks for: SDK Manager › SDK Tools › NDK (Side by side) with "Show Package Details", or `android --no-metrics sdk install ndk/28.2.13676358` from `cmdline-tools/latest/bin` (on Windows with cmdline-tools 23.0, Gradle cannot install it itself: `sdkmanager.bat` splits `ndk;28.2.13676358` at `;`) | Same | Android builds and emulator |
 | JDK ≥ 17 | Android Studio's or an installed JDK (a JRE is not enough) | Same | Gradle |
-| Xcode ≥ 26 | — | App Store | iOS builds and simulator (Xcode 26 is required for App Store uploads) |
+| Xcode ≥ 26 | — | App Store, then `sudo xcodebuild -license accept` and `sudo xcodebuild -runFirstLaunch` (until the licence is accepted, `/usr/bin/make` and `/usr/bin/git` refuse to run, so `make doctor` cannot start: run `bash scripts/doctor.sh`), and an iOS simulator runtime (Xcode › Settings › Components) | iOS builds and simulator (Xcode 26 is required for App Store uploads) |
 | Node ≥ 20.12 and uv | | | BMAD only (`bmad-build` halts without uv) |
 
 Keep the clone on a local disk, in a path without spaces (not on a
