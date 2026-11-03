@@ -29,15 +29,17 @@ NEW=202601030000
 # reset: a project whose last pub get is newer than every input.
 reset() {
   rm -rf "$P"
-  mkdir -p "$P/scripts" "$P/tool" "$P/.dart_tool" "$P/.make"
+  mkdir -p "$P/scripts" "$P/tool" "$P/packages/kiveto_portal_api" "$P/.dart_tool" "$P/.make"
   cp "$KV_REPO/scripts/lib.sh" "$P/scripts/"
   printf '{\n  "flutter": "3.47.9"\n}\n' >"$P/.fvmrc"
   printf 'name: app\n' >"$P/pubspec.yaml"
   printf 'packages: {}\n' >"$P/pubspec.lock"
   printf 'name: kiveto_tool\n' >"$P/tool/pubspec.yaml"
+  printf 'name: kiveto_portal_api\n' >"$P/packages/kiveto_portal_api/pubspec.yaml"
   printf '{}\n' >"$P/.dart_tool/package_config.json"
   printf '3.47.9\n' >"$P/.make/pub-get.stamp"
-  touch -t "$OLD" "$P/pubspec.yaml" "$P/pubspec.lock" "$P/tool/pubspec.yaml"
+  touch -t "$OLD" "$P/pubspec.yaml" "$P/pubspec.lock" "$P/tool/pubspec.yaml" \
+    "$P/packages/kiveto_portal_api/pubspec.yaml"
   touch -t "$STAMPED" "$P/.make/pub-get.stamp"
 }
 
@@ -60,7 +62,7 @@ reset
 rm "$P/.dart_tool/package_config.json"
 expect_eq needed "$(needed)" 'pub_get_needed: no package config (flutter clean) -> needed'
 
-for input in pubspec.yaml pubspec.lock tool/pubspec.yaml; do
+for input in pubspec.yaml pubspec.lock tool/pubspec.yaml packages/kiveto_portal_api/pubspec.yaml; do
   reset
   touch -t "$NEW" "$P/$input"
   expect_eq needed "$(needed)" "pub_get_needed: newer $input -> needed"

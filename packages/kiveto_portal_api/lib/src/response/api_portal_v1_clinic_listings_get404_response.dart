@@ -1,0 +1,51 @@
+// Generated code - do not modify by hand
+
+// ignore_for_file: no_leading_underscores_for_library_prefixes
+
+import 'dart:core' as _i3;
+
+import 'package:kiveto_portal_api/src/model/error.dart' as _i2;
+import 'package:meta/meta.dart' as _i1;
+
+@_i1.immutable
+sealed class ApiPortalV1ClinicListingsGet404Response {
+  const ApiPortalV1ClinicListingsGet404Response();
+}
+
+@_i1.immutable
+class ApiPortalV1ClinicListingsGet404ResponseProblemJson
+    extends ApiPortalV1ClinicListingsGet404Response {
+  const ApiPortalV1ClinicListingsGet404ResponseProblemJson({
+    required this.body,
+  });
+
+  final _i2.Error body;
+
+  @_i3.override
+  _i3.bool operator ==(_i3.Object other) {
+    if (_i3.identical(this, other)) return true;
+    return other is ApiPortalV1ClinicListingsGet404ResponseProblemJson &&
+        other.body == this.body;
+  }
+
+  @_i3.override
+  _i3.int get hashCode => this.body.hashCode;
+}
+
+@_i1.immutable
+class ApiPortalV1ClinicListingsGet404ResponseJson
+    extends ApiPortalV1ClinicListingsGet404Response {
+  const ApiPortalV1ClinicListingsGet404ResponseJson({required this.body});
+
+  final _i2.Error body;
+
+  @_i3.override
+  _i3.bool operator ==(_i3.Object other) {
+    if (_i3.identical(this, other)) return true;
+    return other is ApiPortalV1ClinicListingsGet404ResponseJson &&
+        other.body == this.body;
+  }
+
+  @_i3.override
+  _i3.int get hashCode => this.body.hashCode;
+}

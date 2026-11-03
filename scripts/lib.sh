@@ -32,9 +32,9 @@ FULL=${FULL:-0}
 KV_STAMPS=.make
 KV_PUB_STAMP=$KV_STAMPS/pub-get.stamp
 
-# The files whose change calls for a pub get (missing ones are skipped).
-# Phase 4 adds the generated client's packages/kiveto_portal_api/pubspec.yaml.
-KV_PUB_INPUTS="pubspec.yaml pubspec.lock tool/pubspec.yaml"
+# The files whose change calls for a pub get (missing ones are skipped):
+# the app, the tooling package and the generated Portal API client.
+KV_PUB_INPUTS="pubspec.yaml pubspec.lock tool/pubspec.yaml packages/kiveto_portal_api/pubspec.yaml"
 
 # The test suites, folders of test/: `make test` runs them all, `make
 # test-coverage` the ones that load lib/ and tool/lib/ (the architecture

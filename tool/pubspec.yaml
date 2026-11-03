@@ -1,12 +1,19 @@
 name: kiveto_tool
-description: "Dart tooling of the Kiveto Mobile repository: device picker, coverage gate."
+description: "Dart tooling of the Kiveto Mobile repository: device picker, coverage gate, Portal API contract."
 publish_to: none
 
 # A package of its own so that `flutter test --coverage
 # --coverage-package=kiveto_tool` measures tool/lib/ (code imported through a
 # relative path is never recorded). The root pubspec depends on it by path;
 # `fvm dart tool/<x>.dart` resolves `package:kiveto_tool/` through the root
-# .dart_tool/package_config.json. SDK libraries only: no dependency.
+# .dart_tool/package_config.json. SDK libraries only, except `yaml` for the
+# contract normaliser (lib/contract_normalizer.dart, the only file using it):
+# reading the OpenAPI document needs a real YAML parser.
 
 environment:
   sdk: ^3.13.7
+
+dependencies:
+  # Checked on pub.dev on 2026-11-03 (latest, 2026-08-28); its dependencies
+  # (collection, source_span, string_scanner) are already in the root lock.
+  yaml: 3.1.4

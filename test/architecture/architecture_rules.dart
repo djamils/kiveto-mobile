@@ -20,7 +20,9 @@ const ruleTitles = <int, String>{
   4: "only the composition files import a feature's infrastructure/",
   5: 'features meet through their public API, without cycle',
   6: 'core/ and shared/ import no feature; shared/ no core/ or app/',
-  7: 'kiveto_portal_api only in infrastructure, core/network/, core/di/',
+  7:
+      'kiveto_portal_api and tonik_util only in infrastructure, core/network/, '
+      'core/di/',
   8: 'no DateTime.now/timestamp, print, coverage ignore in domain, application',
 };
 
@@ -142,6 +144,7 @@ final class _Target {
     (_, 'ui') => 'Flutter',
     ('dio', _) => 'Dio',
     ('kiveto_portal_api', _) => 'kiveto_portal_api',
+    ('tonik_util', _) => 'tonik_util',
     _ when under('core') => 'core/',
     _ => null,
   };
@@ -198,7 +201,7 @@ void _checkImport(_Import import, _Target target, List<Offence> offences) {
         2,
         'features/$feature/application/ may import only $_pureDart, its '
         'own domain and application, and shared/domain/: no Flutter, '
-        'Riverpod, Dio, kiveto_portal_api or core/',
+        'Riverpod, Dio, kiveto_portal_api, tonik_util or core/',
         family: target.family,
       ),
     );
@@ -265,15 +268,16 @@ void _checkImport(_Import import, _Target target, List<Offence> offences) {
     );
   }
 
-  // Rule 7: the generated client stays in the data side.
-  if (target.package == 'kiveto_portal_api' &&
+  // Rule 7: the generated client and its runtime stay in the data side.
+  final client = target.package;
+  if ((client == 'kiveto_portal_api' || client == 'tonik_util') &&
       !from.inLayer('infrastructure') &&
       !from.under('core/network') &&
       !from.under('core/di')) {
     offences.add(
       import.offence(
         7,
-        'kiveto_portal_api is imported only under '
+        '$client is imported only under '
         'features/*/infrastructure/, core/network/ and core/di/',
       ),
     );

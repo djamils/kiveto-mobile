@@ -34,8 +34,8 @@ expect_eq "format-check${NL}analyze" "$(cat "$KV_T/targets")" 'make ci: stops at
 rm "$KV_T/fail-at"
 run_ci
 expect_status 0 "$RC" 'make ci: every step passes -> exit 0' "$OUT"
-expect_eq "format-check analyze test-architecture test-coverage coverage-gate test-scripts" \
-  "$(tr '\n' ' ' <"$KV_T/targets" | sed 's/ $//')" 'make ci: the six targets, in order'
+expect_eq "format-check analyze test-architecture test-coverage coverage-gate test-scripts api-check" \
+  "$(tr '\n' ' ' <"$KV_T/targets" | sed 's/ $//')" 'make ci: the seven targets, in order'
 expect_contains "$OUT" 'make ci passed in' 'make ci: prints the total'
 
 # --- make test-scripts ------------------------------------------------------------

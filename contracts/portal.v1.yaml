@@ -1,0 +1,5160 @@
+openapi: 3.2.0
+info:
+  title: 'Kiveto Portal API'
+  description: ''
+  version: 1.0.0
+servers:
+  -
+    url: /
+    description: ''
+paths:
+  '/api/portal/v1/clinics/{clinicId}/home':
+    get:
+      operationId: api_clinics_clinicIdhome_get
+      tags:
+        - Animaux
+      responses:
+        '200':
+          description: "L'accueil."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Home'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé avec la clinique).'
+      summary: "L'accueil du propriétaire dans cette clinique."
+      description: "Animaux vivants seulement. Prochain rendez-vous (forme complète d'un rendez-vous), 3 soins aux échéances les plus proches, 2 derniers documents. Une section vide est un tableau vide (`nextAppointment: null`)."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'Home identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/pets':
+    get:
+      operationId: api_clinics_clinicIdpets_get_collection
+      tags:
+        - Animaux
+      responses:
+        '200':
+          description: 'Les animaux.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PetSummary'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé avec la clinique).'
+      summary: 'Les animaux du propriétaire dans cette clinique.'
+      description: "Décédés et disparus compris (`lifeStatus`). Vivants d'abord, puis par nom."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'PetSummary identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/pets/{petId}':
+    get:
+      operationId: api_clinics_clinicIdpets_petId_get
+      tags:
+        - Animaux
+      responses:
+        '200':
+          description: "L'animal."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé, ou animal archivé, en copropriété secondaire, vendu, donné ou d'un autre client)."
+      summary: "La fiche d'un animal."
+      description: "`lastWeight` = pesée la plus récente entre la fiche animal et les consultations clôturées (à date égale, la fiche l'emporte). `referentVet` = vétérinaire du dernier compte rendu partagé avec l'appelant."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'Pet identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: petId
+          in: path
+          description: 'Pet identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/pets/{petId}/care-items':
+    get:
+      operationId: api_clinics_clinicIdpets_petIdcare-items_get_collection
+      tags:
+        - Animaux
+      responses:
+        '200':
+          description: 'Les soins.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CareItem'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé, ou animal non visible).'
+      summary: 'Les soins préventifs à suivre pour un animal.'
+      description: "Dernier acte de chaque protocole ayant une prochaine échéance, par échéance croissante. « Aujourd'hui » = date locale de la clinique. Vide pour un animal décédé ou disparu."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'CareItem identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: petId
+          in: path
+          description: 'CareItem identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/pets/{petId}/timeline':
+    get:
+      operationId: api_clinics_clinicIdpets_petIdtimeline_get
+      tags:
+        - Animaux
+      responses:
+        '200':
+          description: 'Une page de visites.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetTimeline'
+        '400':
+          description: '`cursor_invalid`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé, ou animal non visible).'
+      summary: "Les visites d'un animal dont le compte rendu a été partagé avec l'appelant."
+      description: 'Par date de clôture décroissante. `date` = début de la consultation, avec le décalage de la clinique ; `vet` = nom figé au partage.'
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'PetTimeline identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: petId
+          in: path
+          description: 'PetTimeline identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: cursor
+          in: query
+          description: 'PetTimeline cursor'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+          style: form
+          explode: true
+        -
+          name: limit
+          in: query
+          description: 'Taille de page, ramenée entre 1 et 50 (20 par défaut).'
+          required: false
+          deprecated: false
+          schema:
+            type: integer
+          style: form
+          explode: true
+  '/api/portal/v1/clinics/{clinicId}/pets/{petId}/vaccination-booklet':
+    get:
+      operationId: api_portal_vaccination_booklet
+      tags:
+        - Animaux
+      responses:
+        '302':
+          description: "Redirection vers l'URL signée (`Cache-Control: private, no-store`)."
+        '404':
+          description: '`not_found`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '503':
+          description: '`service_unavailable` (`Retry-After`) : le service PDF est indisponible.'
+      summary: "Télécharger le carnet de vaccination d'un animal."
+      description: "PDF généré à la volée et mis en cache tant que ses données ne changent pas (vaccinations, identité, puce, en-tête de la clinique). « Aucune vaccination enregistrée » quand il n'y en a pas. Servi aussi pour un animal décédé. Redirige vers une URL signée valable 5 minutes."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: petId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  /api/portal/v1/clinic-listings:
+    get:
+      operationId: api_clinic-listings_get
+      tags:
+        - Annuaire
+      responses:
+        '200':
+          description: 'Une page de cliniques.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicListings'
+        '400':
+          description: "`cursor_invalid` (illisible, ou émis pour d'autres coordonnées)."
+        '422':
+          description: '`validation_failed` (`q`, `lat`, `lng`).'
+        '429':
+          description: '`rate_limited` (120 requêtes par minute et par adresse IP), avec `Retry-After`.'
+        '404':
+          description: 'Not found'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Rechercher une clinique de l'annuaire."
+      description: "Publique. Seules les cliniques Kiveto actives qui ont choisi de figurer dans l'annuaire. `q` (2 caractères au moins) cherche dans le nom et la ville. Avec `lat` et `lng` (ensemble) : tri par distance (150 km au plus), les cliniques sans coordonnées sont absentes de ce résultat seulement ; sinon tri par nom. Le curseur est lié à l'ordre et aux coordonnées de la recherche. `onlineBooking` est calculé en direct. `nextAvailableAt` est toujours `null` en v1."
+      parameters:
+        -
+          name: q
+          in: query
+          description: 'Nom ou ville, 2 caractères au moins.'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+          style: form
+          explode: true
+        -
+          name: lat
+          in: query
+          description: 'Latitude, de -90 à 90, avec `lng`.'
+          required: false
+          deprecated: false
+          schema:
+            type: number
+          style: form
+          explode: true
+        -
+          name: lng
+          in: query
+          description: 'Longitude, de -180 à 180, avec `lat`.'
+          required: false
+          deprecated: false
+          schema:
+            type: number
+          style: form
+          explode: true
+        -
+          name: cursor
+          in: query
+          description: 'ClinicListings cursor'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+          style: form
+          explode: true
+        -
+          name: limit
+          in: query
+          description: 'Taille de page : 20 par défaut, ramenée à 50 au plus.'
+          required: false
+          deprecated: false
+          schema:
+            type: integer
+          style: form
+          explode: true
+      security: []
+  '/api/portal/v1/clinic-listings/{listingId}':
+    get:
+      operationId: api_clinic-listings_listingId_get
+      tags:
+        - Annuaire
+      responses:
+        '200':
+          description: 'La clinique.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicListingDetail'
+        '404':
+          description: '`not_found` (inconnue, non listée ou inactive).'
+        '429':
+          description: '`rate_limited`, avec `Retry-After`.'
+      summary: "La fiche d'une clinique de l'annuaire."
+      description: "Publique (servira les pages web indexables). `openingHours` : les plages de la semaine type, par jour ISO (1 = lundi) puis heure d'ouverture, en heure locale de la clinique (`timezone`) ; les fermetures exceptionnelles n'y figurent pas."
+      parameters:
+        -
+          name: listingId
+          in: path
+          description: 'ClinicListingDetail identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      security: []
+  '/api/portal/v1/clinic-listings/{listingId}/booking/appointments':
+    post:
+      operationId: api_clinic-listings_listingIdbookingappointments_post
+      tags:
+        - Annuaire
+      responses:
+        '201':
+          description: 'La demande, `status: pending`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingBooking.BookingRequestView'
+          links: {  }
+        '400':
+          description: '`idempotency_key_missing`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (fiche inconnue, non publiée ou inactive ; motif ou praticien inconnu).'
+        '409':
+          description: '`slot_taken` : recharger les créneaux.'
+        '422':
+          description: '`already_linked`, `booking_request_limit`, `booking_not_open`, `idempotency_key_reused` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '429':
+          description: '`rate_limited` (en-tête `Retry-After`).'
+      summary: "Demande un premier rendez-vous à une clinique de l'annuaire, en nouveau client."
+      description: "Authentifié (seule route non-GET sous `/clinic-listings`). Le créneau est réservé en attente de confirmation par la clinique (toujours manuelle pour un nouveau client) ; aucun lien avec la clinique n'est créé avant qu'elle confirme. Au plus 1 demande en attente par clinique et 3 en tout ; 10 demandes par 24 h. La demande se suit avec `GET /me/booking-requests`."
+      parameters:
+        -
+          name: Idempotency-Key
+          in: header
+          description: 'Clé aléatoire (UUID) propre à cette demande, réutilisée pour ses nouvelles tentatives.'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            maxLength: 128
+          style: simple
+          explode: false
+        -
+          name: listingId
+          in: path
+          description: 'ListingBooking identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new ListingBooking resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListingBooking'
+        required: true
+  '/api/portal/v1/clinic-listings/{listingId}/booking/availability':
+    get:
+      operationId: api_clinic-listings_listingIdbookingavailability_get
+      tags:
+        - Annuaire
+      responses:
+        '200':
+          description: 'Les jours et leurs créneaux.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingAvailability'
+        '404':
+          description: '`not_found` (clinique inconnue, non listée ou inactive ; motif inconnu ou non ouvert aux nouveaux clients ; praticien non réservable pour ce motif).'
+        '422':
+          description: '`booking_not_open` ou `validation_failed` (intervalle).'
+        '429':
+          description: '`rate_limited`, avec `Retry-After`.'
+      summary: 'Les créneaux réservables en ligne par un nouveau client.'
+      description: 'Publique. Même forme et mêmes règles que `/clinics/{clinicId}/booking/availability`, mais un nouveau client est toujours validé par la clinique : seuls les créneaux au-delà du délai de confirmation sont proposés.'
+      parameters:
+        -
+          name: listingId
+          in: path
+          description: 'ListingAvailability identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: motifId
+          in: query
+          description: 'ListingAvailability motifId'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+        -
+          name: practitionerId
+          in: query
+          description: 'ListingAvailability practitionerId'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+        -
+          name: from
+          in: query
+          description: 'ListingAvailability from'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: date
+          style: form
+          explode: true
+        -
+          name: to
+          in: query
+          description: 'ListingAvailability to'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: date
+          style: form
+          explode: true
+      security: []
+  '/api/portal/v1/clinic-listings/{listingId}/booking/motifs':
+    get:
+      operationId: api_clinic-listings_listingIdbookingmotifs_get_collection
+      tags:
+        - Annuaire
+      responses:
+        '200':
+          description: 'Les motifs.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListingMotifs.BookingMotifView'
+        '404':
+          description: '`not_found` (clinique inconnue, non listée ou inactive).'
+        '422':
+          description: '`booking_not_open` (la clinique ne prend pas de nouveaux clients en ligne).'
+        '429':
+          description: '`rate_limited`, avec `Retry-After`.'
+      summary: 'Les motifs réservables en ligne par un nouveau client.'
+      description: "Publique. Même forme que `/clinics/{clinicId}/booking/motifs`, dans l'ordre de la clinique : seuls les motifs ouverts en ligne aux nouveaux clients. Sans animal, `suggested` est toujours `false`."
+      parameters:
+        -
+          name: listingId
+          in: path
+          description: 'ListingMotifs identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      security: []
+  '/api/portal/v1/clinic-listings/{listingId}/booking/practitioners':
+    get:
+      operationId: api_clinic-listings_listingIdbookingpractitioners_get_collection
+      tags:
+        - Annuaire
+      responses:
+        '200':
+          description: 'Les praticiens.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListingPractitioners.PractitionerView'
+        '404':
+          description: '`not_found` (clinique inconnue, non listée ou inactive ; motif inconnu, archivé, non ouvert en ligne ou aux nouveaux clients).'
+        '422':
+          description: '`booking_not_open` ou `validation_failed`.'
+        '429':
+          description: '`rate_limited`, avec `Retry-After`.'
+      summary: 'Les praticiens réservables en ligne par un nouveau client pour un motif.'
+      description: 'Publique. Même forme que `/clinics/{clinicId}/booking/practitioners`.'
+      parameters:
+        -
+          name: listingId
+          in: path
+          description: 'ListingPractitioners identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: motifId
+          in: query
+          description: 'ListingPractitioners motifId'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+      security: []
+  /api/portal/v1/auth/logout:
+    post:
+      operationId: api_authlogout_post
+      tags:
+        - Authentification
+      responses:
+        '204':
+          description: Déconnecté.
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '422':
+          description: 'An error occurred'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: 'Révoque la famille du refresh token (déconnexion).'
+      description: "Sans effet si le jeton n'appartient pas à l'appelant. L'access token reste valable jusqu'à son expiration (15 min)."
+      parameters: []
+      requestBody:
+        description: 'The new SessionLogout resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionLogout'
+        required: true
+  /api/portal/v1/auth/otp/request:
+    post:
+      operationId: api_authotprequest_post
+      tags:
+        - Authentification
+      responses:
+        '202':
+          description: 'Code envoyé (ou non, sans que la réponse le dise).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpRequest.OtpChallengeView'
+          links: {  }
+        '422':
+          description: '`phone_not_supported` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '429':
+          description: '`otp_rate_limited`, avec `Retry-After`.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: 'Envoie un code de connexion par SMS.'
+      description: "Même réponse que le numéro ait un compte ou non. Quotas : 3/h et 10/24 h par numéro, 30/h par IP. Pour un numéro inconnu, le SMS part dans la limite d'un budget par réseau (/24 en IPv4, /64 en IPv6), par appareil (`X-Device-Id`, simple indice) et global (500/h) ; au-delà, même réponse 202 sans SMS."
+      parameters:
+        -
+          name: X-Device-Id
+          in: header
+          description: "Identifiant stable de l'installation de l'app (facultatif) : un indice de plus contre l'envoi massif de SMS, jamais la seule limite."
+          required: false
+          deprecated: false
+          schema:
+            type: string
+            maxLength: 128
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new OtpRequest resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+        required: true
+  /api/portal/v1/auth/otp/verify:
+    post:
+      operationId: api_authotpverify_post
+      tags:
+        - Authentification
+      responses:
+        '200':
+          description: "`status` = `authenticated` (paire de jetons, invitations en attente), `invitation_pending` (jeton d'onboarding, invitations) ou `registration_required` (`registrationToken`, 15 min, usage unique, à présenter à `POST /auth/register`)."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpVerification.OtpVerificationView'
+          links: {  }
+        '403':
+          description: '`account_disabled`.'
+        '422':
+          description: '`otp_invalid`, `otp_expired`, `otp_attempts_exceeded` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: 'Vérifie un code de connexion.'
+      description: 'Vérifie un code de connexion.'
+      parameters: []
+      requestBody:
+        description: 'The new OtpVerification resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerification'
+        required: true
+  '/api/portal/v1/auth/otp/{challengeId}/resend':
+    post:
+      operationId: api_authotp_challengeIdresend_post
+      tags:
+        - Authentification
+      responses:
+        '202':
+          description: 'Nouveau code envoyé.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpResend.OtpChallengeView'
+          links: {  }
+        '404':
+          description: '`otp_challenge_not_found`.'
+        '422':
+          description: '`validation_failed` (canal autre que `sms` ou `email`).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '429':
+          description: '`otp_rate_limited` (avant `resendAvailableAt`, ou quotas), avec `Retry-After`.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: 'Renvoie un nouveau code pour le même challenge.'
+      description: "Le code précédent ne fonctionne plus. `email` n'est honoré que pour un code de **connexion** dont le numéro a un compte actif avec e-mail **vérifié** (second facteur) ; sinon même 202, rien ne change et le code SMS reste valable. Les codes d'action (changement d'e-mail, suppression) ne sont jamais renvoyés par e-mail ; un code de vérification d'e-mail n'est jamais renvoyé."
+      parameters:
+        -
+          name: challengeId
+          in: path
+          description: 'OtpResend identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new OtpResend resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpResend'
+        required: true
+  /api/portal/v1/auth/refresh:
+    post:
+      operationId: api_authrefresh_post
+      tags:
+        - Authentification
+      responses:
+        '200':
+          description: 'Nouvelle paire.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionRefresh.SessionTokensView'
+          links: {  }
+        '401':
+          description: '`refresh_revoked` : se reconnecter par code.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '422':
+          description: 'An error occurred'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: 'Échange un refresh token contre une nouvelle paire.'
+      description: 'Rotation à chaque usage. Le client doit sérialiser ses refresh : rejouer un jeton plus de 30 s après son usage, ou deux fois, révoque toute la famille.'
+      parameters: []
+      requestBody:
+        description: 'The new SessionRefresh resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionRefresh'
+        required: true
+  /api/portal/v1/auth/register:
+    post:
+      operationId: api_authregister_post
+      tags:
+        - Authentification
+      responses:
+        '201':
+          description: 'Paire de jetons et compte.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration.AcceptedInvitationView'
+          links: {  }
+        '401':
+          description: '`onboarding_invalid`.'
+        '403':
+          description: '`account_disabled`.'
+        '409':
+          description: '`account_exists` : un compte existe déjà pour ce numéro, se connecter (le jeton reste utilisable).'
+        '422':
+          description: '`terms_outdated` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '429':
+          description: '`rate_limited`, avec `Retry-After`.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Crée le compte d'un numéro sans invitation, avec le jeton d'inscription."
+      description: "Le `registrationToken` vient de la réponse `registration_required` de `/auth/otp/verify` (15 min, usage unique) et n'est accepté que par cette route. Rejouer la requête avec le même jeton pendant ses 15 minutes rend le même compte avec une nouvelle paire de jetons (réponse perdue). `email` est ignoré sans erreur quand un autre compte l'utilise déjà ; il n'est pas vérifié. 10 inscriptions par heure et par IP."
+      parameters: []
+      requestBody:
+        description: 'The new Registration resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Registration'
+        required: true
+  /api/portal/v1/legal/terms/current:
+    get:
+      operationId: api_legaltermscurrent_get
+      tags:
+        - CGU
+      responses:
+        '200':
+          description: 'CurrentTerms resource'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentTerms'
+        '404':
+          description: 'Not found'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Version courante des conditions d'utilisation du Portal."
+      description: "Publique. `version` est la valeur attendue par les routes d'acceptation (`termsVersion`)."
+      parameters: []
+  /api/portal/v1/me:
+    get:
+      operationId: api_me_get
+      tags:
+        - Compte
+      responses:
+        '200':
+          description: 'Compte et cliniques.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: 'Not found'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: 'Le compte et ses cliniques rattachées.'
+      description: 'Ne liste pas les invitations en attente : elles apparaissent à la prochaine connexion par code.'
+      parameters: []
+    patch:
+      operationId: api_me_patch
+      tags:
+        - Compte
+      responses:
+        '200':
+          description: 'Le compte modifié.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeUpdate.AccountView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (aucun profil : aucune invitation acceptée).'
+        '422':
+          description: '`validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Modifie le nom ou l'adresse du profil Portal."
+      description: "Chaque champ absent (ou `null`) reste inchangé. Modifie le profil Portal uniquement : les fiches client des cliniques ne changent pas. Adresse enregistrée telle que saisie, sans géocodage. Le téléphone et l'e-mail ne se modifient pas par cette route."
+      parameters: []
+      requestBody:
+        description: 'The updated MeUpdate resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeUpdate.jsonMergePatch'
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/MeUpdate.jsonMergePatch'
+        required: true
+  /api/portal/v1/me/booking-requests:
+    get:
+      operationId: api_mebooking-requests_get
+      tags:
+        - Compte
+      responses:
+        '200':
+          description: 'Une page de demandes.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingRequests'
+        '400':
+          description: '`cursor_invalid`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: 'Not found'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Les demandes de rendez-vous du compte auprès de cliniques de l'annuaire."
+      description: 'Toutes cliniques, de la plus récente à la plus ancienne. Une demande confirmée donne `appointmentId` : le rendez-vous se lit alors sous `/clinics/{c}/appointments`. Une demande refusée donne `declineReason`.'
+      parameters:
+        -
+          name: cursor
+          in: query
+          description: 'BookingRequests cursor'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+          style: form
+          explode: true
+        -
+          name: limit
+          in: query
+          description: 'Taille de page : 20 par défaut, ramenée à 50 au plus.'
+          required: false
+          deprecated: false
+          schema:
+            type: integer
+          style: form
+          explode: true
+  /api/portal/v1/me/data-export:
+    post:
+      operationId: api_medata-export_post
+      tags:
+        - Compte
+      responses:
+        '202':
+          description: 'Export en cours de construction.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExportRequest.DataExportRequestView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '429':
+          description: '`export_rate_limited` (`Retry-After`).'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '422':
+          description: 'An error occurred'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: 'Demande un export des données du compte.'
+      description: "Construit en asynchrone (suivi par `GET /me/data-exports`), sans exigence d'e-mail. Une archive ZIP (`schemaVersion: 1`) : `account.json`, `clinics/<clinicId>.json` par clinique rattachée, `summary.pdf`. Une adresse e-mail vérifiée reçoit seulement un avis, sans lien. Un export par 24 h ; le quota est rendu si la construction échoue."
+      parameters: []
+  /api/portal/v1/me/data-exports:
+    get:
+      operationId: api_medata-exports_get_collection
+      tags:
+        - Compte
+      responses:
+        '200':
+          description: 'Les exports.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataExportList.DataExportView'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+      summary: 'Les exports de données du compte.'
+      description: "Les plus récents d'abord. `ready` : l'archive se télécharge par `GET /me/data-exports/{id}/file` jusqu'à `expiresAt` (48 h), puis l'export est `expired`. `failed` : une nouvelle demande est acceptée aussitôt."
+      parameters: []
+  '/api/portal/v1/me/data-exports/{exportId}/file':
+    get:
+      operationId: api_portal_data_export_file
+      tags:
+        - Compte
+      responses:
+        '302':
+          description: "Redirection vers l'URL signée (`Cache-Control: private, no-store`)."
+        '404':
+          description: '`not_found`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+      summary: 'Télécharger un export de données.'
+      description: "Export de l'appelant à l'état `ready`, dans ses 48 h : redirige vers une URL signée valable 5 minutes. Un export expiré, supprimé, en cours, en échec ou d'un autre compte répond 404."
+      parameters:
+        -
+          name: exportId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  /api/portal/v1/me/deletion-request:
+    post:
+      operationId: api_medeletion-request_post
+      tags:
+        - Compte
+      responses:
+        '202':
+          description: 'Suppression engagée.'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '422':
+          description: "`otp_invalid` (code faux, de connexion ou d'un autre utilisateur), `otp_expired`, `otp_attempts_exceeded` ou `validation_failed`."
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: 'Supprime le compte, confirmé par le code SMS.'
+      description: 'Le code de `POST /me/deletion-request/otp` est vérifié. Dès la 202, le compte est désactivé : tout access token et tout refresh répondent 401. En asynchrone : liens, invitations en attente, jetons et challenges du numéro révoqués ; exports supprimés ; profil et compte anonymisés (« Compte supprimé », téléphone et e-mail effacés). Les fiches `Client` des cliniques et leurs consentements ne sont pas modifiés. Une nouvelle invitation vers ce numéro crée un nouveau compte.'
+      parameters: []
+      requestBody:
+        description: 'The new DeletionRequest resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeletionRequest'
+        required: true
+  /api/portal/v1/me/deletion-request/otp:
+    post:
+      operationId: api_medeletion-requestotp_post
+      tags:
+        - Compte
+      responses:
+        '202':
+          description: 'Code envoyé.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionOtp.OtpChallengeView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '429':
+          description: '`otp_rate_limited`, avec `Retry-After`.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '422':
+          description: 'An error occurred'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: 'Envoie par SMS le code qui confirme la suppression du compte.'
+      description: 'Code de finalité `account_deletion`, lié au compte, envoyé au mobile du compte (« Code de confirmation de suppression de votre compte Kiveto »). Mêmes quotas que les codes de connexion (par numéro, par jour, par IP). Renvoi : `POST /auth/otp/{challengeId}/resend` avec `sms` (jamais par e-mail).'
+      parameters: []
+  /api/portal/v1/me/email-change:
+    post:
+      operationId: api_meemail-change_post
+      tags:
+        - Compte
+      responses:
+        '202':
+          description: 'Code envoyé à la nouvelle adresse.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailChange.EmailVerificationChallengeView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '422':
+          description: "`otp_invalid` (code faux, d'une autre finalité ou d'un autre utilisateur), `otp_expired`, `otp_attempts_exceeded` ou `validation_failed`."
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: 'Vérifie le code SMS et envoie un code à la nouvelle adresse.'
+      description: "Le code SMS (`POST /me/email-change/otp`) est vérifié ; un code est envoyé à `email` (challenge `email_verification`, 10 min, 5 essais), à saisir sur `POST /me/email-change/verify`. Sert aussi à revérifier l'adresse actuelle non vérifiée. Aucune collision n'est signalée ici."
+      parameters: []
+      requestBody:
+        description: 'The new EmailChange resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChange'
+        required: true
+  /api/portal/v1/me/email-change/otp:
+    post:
+      operationId: api_meemail-changeotp_post
+      tags:
+        - Compte
+      responses:
+        '202':
+          description: 'Code envoyé.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailChangeOtp.OtpChallengeView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '429':
+          description: '`otp_rate_limited`, avec `Retry-After`.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '422':
+          description: 'An error occurred'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: "Envoie par SMS le code qui confirme un changement d'e-mail."
+      description: "Code de finalité `email_change`, lié au compte, envoyé au mobile du compte (« Code de confirmation de changement d'e-mail »). Mêmes quotas que les codes de connexion (par numéro, par jour, par IP). Renvoi : `POST /auth/otp/{challengeId}/resend` avec `sms` (jamais par e-mail)."
+      parameters: []
+  /api/portal/v1/me/email-change/verify:
+    post:
+      operationId: api_meemail-changeverify_post
+      tags:
+        - Compte
+      responses:
+        '200':
+          description: 'Le compte, e-mail vérifié.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailChangeVerification.AccountView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '422':
+          description: '`otp_invalid`, `otp_expired`, `otp_attempts_exceeded`, `email_taken` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Vérifie le code reçu à la nouvelle adresse : elle devient l'e-mail vérifié du compte."
+      description: "Un autre compte qui détenait l'adresse sans l'avoir vérifiée la perd ; s'il l'a vérifiée → `email_taken` (seulement ici). L'ancienne adresse vérifiée reçoit un avis de changement. Une fois vérifiée, l'adresse sert de second facteur de connexion (`resend` par e-mail)."
+      parameters: []
+      requestBody:
+        description: 'The new EmailChangeVerification resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChangeVerification'
+        required: true
+  /api/portal/v1/me/link-suggestions:
+    get:
+      operationId: api_melink-suggestions_get_collection
+      tags:
+        - Compte
+      responses:
+        '200':
+          description: "Les suggestions (liste vide s'il n'y en a pas)."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkSuggestions.LinkSuggestionView'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+      summary: 'Les cliniques qui ont un dossier client avec le numéro du compte.'
+      description: "Une suggestion par clinique (les dossiers d'une même famille sont regroupés), par nom de clinique. Seuls le nom et la ville de la clinique sont exposés, jamais un dossier client ; `id` est opaque. Le numéro doit être le mobile (`mobile`) d'un dossier non archivé d'une clinique active. Une clinique disparaît dès que le compte a un lien (quel que soit son statut) avec chacun de ses dossiers correspondants : une suggestion refusée par la clinique ne revient pas."
+      parameters: []
+  '/api/portal/v1/me/link-suggestions/{suggestionId}/accept':
+    post:
+      operationId: api_melink-suggestions_suggestionIdaccept_post
+      tags:
+        - Compte
+      responses:
+        '202':
+          description: 'Demande transmise à la clinique (`linkStatus: pending`).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkSuggestionAcceptance.LinkSuggestionAcceptedView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (suggestion inconnue ou plus proposée).'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '422':
+          description: 'An error occurred'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: 'Demande le rattachement à la clinique suggérée.'
+      description: "Ouvre un lien `pending` vers chaque dossier correspondant de la clinique ; la clinique le confirme ou le refuse dans VetApp. En attendant, `GET /me` liste la clinique avec `linkStatus: pending` et `linkedAt: null`, et les routes `/clinics/{clinicId}/…` répondent 404. Rejouer l'acceptation d'une demande en attente rend la même réponse."
+      parameters:
+        -
+          name: suggestionId
+          in: path
+          description: 'LinkSuggestionAcceptance identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/consents':
+    get:
+      operationId: api_clinics_clinicIdconsents_get
+      tags:
+        - Consentements
+      responses:
+        '200':
+          description: 'Les consentements.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consents'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de fiche liée active dans la clinique).'
+      summary: "Les consentements de l'appelant dans la clinique."
+      description: "Les cinq `kind` sont toujours renvoyés ; `channels: []` = non consenti. Relié à plusieurs fiches de la clinique : union des canaux par `kind` sur les fiches confirmées non archivées ; `grantedAt` = la date la plus récente parmi ces fiches. `effect` : `send_control` (sans consentement, le message n'est pas envoyé) ou `channel_preference` (le message part de toute façon, le consentement choisit le canal)."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'Consents identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/consents/history':
+    get:
+      operationId: api_clinics_clinicIdconsentshistory_get
+      tags:
+        - Consentements
+      responses:
+        '200':
+          description: "Une page de l'historique."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentHistory'
+        '400':
+          description: '`cursor_invalid`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de fiche liée active dans la clinique).'
+      summary: "L'historique des consentements de l'appelant dans la clinique."
+      description: 'Ajout seul, du plus récent au plus ancien ; un changement appliqué à plusieurs fiches donne une seule ligne. `source: clinic` = saisie à la clinique, auteur « La clinique » ; `source: system` + `approximate: true` = reprise des consentements existants (date au plus tard).'
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'ConsentHistory identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: cursor
+          in: query
+          description: 'ConsentHistory cursor'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+          style: form
+          explode: true
+        -
+          name: limit
+          in: query
+          description: 'Taille de page, ramenée entre 1 et 50 (20 par défaut).'
+          required: false
+          deprecated: false
+          schema:
+            type: integer
+          style: form
+          explode: true
+  '/api/portal/v1/clinics/{clinicId}/consents/{kind}':
+    put:
+      operationId: api_clinics_clinicIdconsents_kind_put
+      tags:
+        - Consentements
+      responses:
+        '200':
+          description: 'Les consentements après modification.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentUpdate.Consents'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de fiche liée active, ou `kind` inconnu).'
+        '409':
+          description: '`conflict` : modification concurrente, relire puis réessayer.'
+        '422':
+          description: '`validation_failed` (canal hors `sms`|`email`, ou liste vide sur `billing` / `clinical_documents`).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Choisit les canaux d'un consentement."
+      description: "`kind` : `appointment_reminders`, `vaccination_reminders`, `clinical_documents`, `billing` ou `marketing`. `channels` vide = retrait (types `send_control` seulement). S'applique à chaque fiche confirmée non archivée de la clinique, en une transaction ; chaque changement ajoute des lignes d'historique (source `portal`, auteur = nom du profil). Ajouter un canal = consentement daté du jour. Renvoie la même forme que `GET /clinics/{clinicId}/consents`."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'ConsentUpdate identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: kind
+          in: path
+          description: 'ConsentUpdate identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The updated ConsentUpdate resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentUpdate'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/appointments/{appointmentId}/questionnaire':
+    get:
+      operationId: api_clinics_clinicIdappointments_appointmentIdquestionnaire_get
+      tags:
+        - Demandes
+      responses:
+        '200':
+          description: 'Le questionnaire.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Questionnaire.QuestionnaireView'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé ; rendez-vous inconnu, d'un autre client, annulé ou refusé)."
+      summary: "Le questionnaire pré-visite d'un rendez-vous."
+      description: "Version 1. `status` : `not_started` (sans `answers` ni `updatedAt`) ou `submitted`. `editable` = modifiable par `PUT` : le rendez-vous occupe son créneau, n'a pas commencé et aucune consultation n'a démarré."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'Questionnaire identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: appointmentId
+          in: path
+          description: 'Questionnaire identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+    put:
+      operationId: api_clinics_clinicIdappointments_appointmentIdquestionnaire_put
+      tags:
+        - Demandes
+      responses:
+        '200':
+          description: 'Le questionnaire enregistré.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionnaireUpdate.QuestionnaireView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé ; rendez-vous inconnu, d'un autre client, annulé ou refusé)."
+        '422':
+          description: '`questionnaire_locked` ou `validation_failed` (dont `version` différente de 1).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Remplit ou modifie le questionnaire pré-visite d'un rendez-vous."
+      description: "Naturellement idempotente : les réponses remplacent les précédentes. `symptoms` : `none` ne se combine avec aucun autre. Modifiable tant que le rendez-vous occupe son créneau, n'a pas commencé et qu'aucune consultation n'a démarré ; ensuite `questionnaire_locked` (un report ne le rouvre pas). Renvoie la même forme que `GET`."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'QuestionnaireUpdate identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: appointmentId
+          in: path
+          description: 'QuestionnaireUpdate identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The updated QuestionnaireUpdate resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionnaireUpdate'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/pets/{petId}/change-requests':
+    post:
+      operationId: api_clinics_clinicIdpets_petIdchange-requests_post
+      tags:
+        - Demandes
+      responses:
+        '202':
+          description: 'La demande envoyée à la clinique.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetChangeRequestCreation.PortalRequestCreatedView'
+          links: {  }
+        '400':
+          description: '`idempotency_key_missing`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé ; animal inconnu ou d'un autre client)."
+        '422':
+          description: '`pet_not_eligible` (animal décédé, disparu ou archivé), `idempotency_key_reused` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '429':
+          description: '`rate_limited` (`Retry-After` pour le quota de 24 h).'
+      summary: "Demande à la clinique de modifier une information de l'animal."
+      description: "La clinique applique la modification à la main ; l'animal ne change pas avant. Règles par champ : `name` 1 à 60 caractères ; `weight` décimal (virgule ou point) de 0,05 à 150 kg, `measuredOn` facultatif (pas dans le futur, par défaut le jour de la demande) ; `sterilization` `neutered` ou `intact` ; `chip_number` 15 chiffres ; `other` exige `note`. 10 demandes (modification ou renouvellement) par 24 h et par clinique, et 3 demandes ouvertes au plus par animal et par champ. Pas d'annulation ni de modification d'une demande envoyée. Rejouer la requête avec la même clé Idempotency-Key rend la même réponse sans seconde demande."
+      parameters:
+        -
+          name: Idempotency-Key
+          in: header
+          description: 'Clé aléatoire (UUID) propre à cette demande, réutilisée pour ses nouvelles tentatives.'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            maxLength: 128
+          style: simple
+          explode: false
+        -
+          name: clinicId
+          in: path
+          description: 'PetChangeRequestCreation identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: petId
+          in: path
+          description: 'PetChangeRequestCreation identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new PetChangeRequestCreation resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetChangeRequestCreation'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/prescriptions/{prescriptionId}/renewal-requests':
+    post:
+      operationId: api_clinics_clinicIdprescriptions_prescriptionIdrenewal-requests_post
+      tags:
+        - Demandes
+      responses:
+        '202':
+          description: "La demande ouverte de l'ordonnance."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenewalRequestCreation.RenewalRequestCreatedView'
+          links: {  }
+        '400':
+          description: '`idempotency_key_missing`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé ; ordonnance inconnue ou d'un autre client)."
+        '422':
+          description: '`prescription_not_renewable` (non émise, substance contrôlée, animal non vivant, refus de moins de 7 jours), `idempotency_key_reused` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '429':
+          description: '`rate_limited` (`Retry-After`).'
+      summary: "Demande le renouvellement d'une ordonnance."
+      description: "Porte sur toute l'ordonnance ; la clinique rédige au besoin une nouvelle ordonnance, liée à la demande (`renewalStatus` de la liste des documents). Une seconde demande alors qu'une est ouverte rend 202 avec la même `{ requestId, status }`. 10 demandes (modification ou renouvellement) par 24 h et par clinique. Pas d'annulation d'une demande envoyée. Rejouer la requête avec la même clé Idempotency-Key rend la même réponse."
+      parameters:
+        -
+          name: Idempotency-Key
+          in: header
+          description: 'Clé aléatoire (UUID) propre à cette demande, réutilisée pour ses nouvelles tentatives.'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            maxLength: 128
+          style: simple
+          explode: false
+        -
+          name: clinicId
+          in: path
+          description: 'RenewalRequestCreation identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: prescriptionId
+          in: path
+          description: 'RenewalRequestCreation identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new RenewalRequestCreation resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenewalRequestCreation'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/requests':
+    get:
+      operationId: api_clinics_clinicIdrequests_get
+      tags:
+        - Demandes
+      responses:
+        '200':
+          description: 'Une page de demandes.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerRequestList'
+        '400':
+          description: '`cursor_invalid`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé avec la clinique).'
+      summary: 'Les demandes de modification et de renouvellement du propriétaire dans cette clinique.'
+      description: "De la plus récente à la plus ancienne. `closed` = close sans traitement (lien révoqué, client archivé, ordonnance annulée, animal archivé ou décédé). Pas d'annulation ni de modification d'une demande envoyée en v1."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'OwnerRequestList identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: cursor
+          in: query
+          description: 'OwnerRequestList cursor'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+          style: form
+          explode: true
+        -
+          name: limit
+          in: query
+          description: 'Taille de page : 20 par défaut, ramenée à 50 au plus.'
+          required: false
+          deprecated: false
+          schema:
+            type: integer
+          style: form
+          explode: true
+  '/api/portal/v1/clinics/{clinicId}/documents':
+    get:
+      operationId: api_clinics_clinicIddocuments_get
+      tags:
+        - Documents
+      responses:
+        '200':
+          description: 'Une page de documents.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentList'
+        '400':
+          description: '`cursor_invalid`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé avec la clinique).'
+        '422':
+          description: '`validation_failed`.'
+      summary: 'Les documents publiés pour le propriétaire dans cette clinique.'
+      description: 'Du plus récent au plus ancien. Statut de paiement et état des ordonnances lus en direct.'
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'DocumentList identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: type
+          in: query
+          description: 'DocumentList type'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+            enum:
+              - report
+              - prescription
+              - invoice
+              - lab_result
+              - certificate
+          style: form
+          explode: true
+        -
+          name: petId
+          in: query
+          description: 'DocumentList petId'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+        -
+          name: cursor
+          in: query
+          description: 'DocumentList cursor'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+          style: form
+          explode: true
+        -
+          name: limit
+          in: query
+          description: 'Taille de page : 20 par défaut, ramenée à 50 au plus.'
+          required: false
+          deprecated: false
+          schema:
+            type: integer
+          style: form
+          explode: true
+  '/api/portal/v1/clinics/{clinicId}/documents/{documentId}/file':
+    get:
+      operationId: api_portal_document_file
+      tags:
+        - Documents
+      responses:
+        '302':
+          description: "Redirection vers l'URL signée (`Cache-Control: private, no-store`)."
+        '404':
+          description: '`not_found`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+      summary: 'Télécharger un document.'
+      description: "Marque le document comme lu pour l'appelant, puis redirige vers une URL signée valable 5 minutes."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: documentId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/prescriptions/{prescriptionId}':
+    get:
+      operationId: api_clinics_clinicIdprescriptions_prescriptionId_get
+      tags:
+        - Documents
+      responses:
+        '200':
+          description: "L'ordonnance."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prescription'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (non publiée, retirée ou d'un autre client)."
+      summary: 'Une ordonnance publiée et ses lignes.'
+      description: 'Une ordonnance publiée et ses lignes.'
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'Prescription identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: prescriptionId
+          in: path
+          description: 'Prescription identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/files/booklets/{clinicId}/{animalId}/{hash}':
+    get:
+      operationId: api_portal_booklet_download
+      tags:
+        - Fichiers
+      responses:
+        '200':
+          description: 'Le PDF (`Cache-Control: private, no-store`).'
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: '`not_found`.'
+      summary: "Le PDF d'un carnet de vaccination (URL signée)."
+      description: "Publique : la signature tient lieu d'authentification, 5 minutes."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: animalId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: hash
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      security: []
+  '/api/portal/v1/files/documents/{clinicId}/{documentId}/{version}':
+    get:
+      operationId: api_portal_document_download
+      tags:
+        - Fichiers
+      responses:
+        '200':
+          description: 'Le PDF (`Cache-Control: private, no-store`).'
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: '`not_found`.'
+      summary: "Le PDF d'un document (URL signée)."
+      description: "Publique : la signature tient lieu d'authentification, 5 minutes. Sert la version signée même si une plus récente a été publiée depuis."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: documentId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: version
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      security: []
+  '/api/portal/v1/files/exports/{exportId}':
+    get:
+      operationId: api_portal_data_export_download
+      tags:
+        - Fichiers
+      responses:
+        '200':
+          description: "L'archive (`attachment`, `Cache-Control: private, no-store`)."
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: '`not_found`.'
+      summary: "L'archive ZIP d'un export de données (URL signée)."
+      description: "Publique : la signature tient lieu d'authentification, 5 minutes. Servie en pièce jointe tant que l'export n'a pas expiré (48 h)."
+      parameters:
+        -
+          name: exportId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      security: []
+  /api/portal/v1/invitations/accept:
+    post:
+      operationId: api_invitationsaccept_post
+      tags:
+        - Invitation
+      responses:
+        '200':
+          description: 'Paire de jetons et compte.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationAcceptance.AcceptedInvitationView'
+          links: {  }
+        '403':
+          description: '`account_disabled`.'
+        '404':
+          description: '`invitation_invalid`.'
+        '410':
+          description: '`invitation_expired` ou `invitation_already_used`.'
+        '422':
+          description: '`otp_invalid`, `otp_expired`, `otp_attempts_exceeded`, `terms_outdated` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: 'Accepte une invitation par le lien : jeton + code reçu par SMS.'
+      description: 'Rejouable : la même requête (même code, avant son expiration) après une réponse perdue renvoie une paire neuve.'
+      parameters: []
+      requestBody:
+        description: 'The new InvitationAcceptance resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationAcceptance'
+        required: true
+  /api/portal/v1/invitations/lookup:
+    post:
+      operationId: api_invitationslookup_post
+      tags:
+        - Invitation
+      responses:
+        '200':
+          description: 'Clinique, e-mail, téléphone masqué, animaux.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationLookup.InvitationLookupView'
+          links: {  }
+        '404':
+          description: '`invitation_invalid` (inconnue, ou jeton remplacé par un renvoi).'
+        '410':
+          description: '`invitation_expired` ou `invitation_already_used`.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '422':
+          description: 'An error occurred'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: 'Affiche une invitation à partir du jeton de son lien (`#t=`).'
+      description: "Le jeton voyage dans le corps, jamais dans l'URL."
+      parameters: []
+      requestBody:
+        description: 'The new InvitationLookup resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationLookup'
+        required: true
+  /api/portal/v1/invitations/otp:
+    post:
+      operationId: api_invitationsotp_post
+      tags:
+        - Invitation
+      responses:
+        '202':
+          description: 'Code envoyé.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationOtpRequest.OtpChallengeView'
+          links: {  }
+        '404':
+          description: '`invitation_invalid`.'
+        '410':
+          description: '`invitation_expired` ou `invitation_already_used`.'
+        '429':
+          description: '`otp_rate_limited`, avec `Retry-After`.'
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '422':
+          description: 'An error occurred'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: "Envoie un code au mobile de l'invitation."
+      description: 'Quotas : 3/h par invitation, 3/h et 10/24 h par numéro, 30/h par IP.'
+      parameters: []
+      requestBody:
+        description: 'The new InvitationOtpRequest resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationOtpRequest'
+        required: true
+  '/api/portal/v1/invitations/{invitationId}/accept':
+    post:
+      operationId: api_invitations_invitationIdaccept_post
+      tags:
+        - Invitation
+      responses:
+        '200':
+          description: 'Paire de jetons et compte.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationGrantAcceptance.AcceptedInvitationView'
+          links: {  }
+        '401':
+          description: '`onboarding_invalid`.'
+        '403':
+          description: '`account_disabled`.'
+        '404':
+          description: '`invitation_invalid`.'
+        '422':
+          description: '`terms_outdated` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Accepte une invitation après connexion par numéro, avec le jeton d'onboarding."
+      description: "Le jeton d'onboarding vient de `/auth/otp/verify` et n'est accepté que par cette route. Après l'acceptation de la dernière invitation du numéro, il est révoqué : en cas de `401 onboarding_invalid` après une réponse perdue, refaire la connexion par numéro."
+      parameters:
+        -
+          name: invitationId
+          in: path
+          description: 'InvitationGrantAcceptance identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new InvitationGrantAcceptance resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationGrantAcceptance'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/appointments':
+    get:
+      operationId: api_clinics_clinicIdappointments_get
+      tags:
+        - Rendez-vous
+      responses:
+        '200':
+          description: 'Une page de rendez-vous.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentList'
+        '400':
+          description: '`cursor_invalid`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé avec la clinique).'
+        '422':
+          description: '`validation_failed`.'
+      summary: 'Les rendez-vous du propriétaire dans cette clinique.'
+      description: 'Rendez-vous des fiches reliées et de leurs animaux principaux. `upcoming` (par défaut) = rendez-vous qui occupent un créneau et commencent maintenant ou plus tard, du plus proche au plus lointain ; `past` = tous les autres, du plus récent au plus ancien.'
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'AppointmentList identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: scope
+          in: query
+          description: 'AppointmentList scope'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+            enum:
+              - upcoming
+              - past
+            default: upcoming
+          style: form
+          explode: true
+        -
+          name: cursor
+          in: query
+          description: 'AppointmentList cursor'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+          style: form
+          explode: true
+        -
+          name: limit
+          in: query
+          description: 'Taille de page : 20 par défaut, ramenée à 50 au plus.'
+          required: false
+          deprecated: false
+          schema:
+            type: integer
+          style: form
+          explode: true
+    post:
+      operationId: api_clinics_clinicIdappointments_post
+      tags:
+        - Rendez-vous
+      responses:
+        '201':
+          description: 'Le rendez-vous pris.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentBooking.AppointmentView'
+          links: {  }
+        '400':
+          description: '`idempotency_key_missing`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé ; animal d'un autre client, vendu ou donné ; motif inconnu)."
+        '409':
+          description: '`slot_taken` : recharger les créneaux.'
+        '422':
+          description: '`pet_not_bookable`, `booking_not_open`, `idempotency_key_reused` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: 'Réserve un créneau en ligne pour un animal du propriétaire.'
+      description: '`status` = `confirmed` ou `pending_clinic_confirmation` selon le motif, `source: portal`. Rejouer la requête avec la même clé Idempotency-Key rend la même réponse sans second rendez-vous.'
+      parameters:
+        -
+          name: Idempotency-Key
+          in: header
+          description: 'Clé aléatoire (UUID) propre à cette réservation, réutilisée pour ses nouvelles tentatives.'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            maxLength: 128
+          style: simple
+          explode: false
+        -
+          name: clinicId
+          in: path
+          description: 'AppointmentBooking identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new AppointmentBooking resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentBooking'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/appointments/with-new-pet':
+    post:
+      operationId: api_clinics_clinicIdappointmentswith-new-pet_post
+      tags:
+        - Rendez-vous
+      responses:
+        '201':
+          description: 'Le rendez-vous pris.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentBookingWithNewPet.AppointmentView'
+          links: {  }
+        '400':
+          description: '`idempotency_key_missing`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé ; motif inconnu).'
+        '409':
+          description: '`slot_taken` : recharger les créneaux.'
+        '422':
+          description: '`booking_not_open`, `idempotency_key_reused` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+      summary: 'Réserve un créneau en ligne pour un animal que la clinique ne connaît pas encore.'
+      description: "Crée l'animal du propriétaire (sexe et stérilisation inconnus) dans la même transaction que le rendez-vous : en cas de `slot_taken`, aucun animal ne reste. Seule une nouvelle tentative de la même requête (même Idempotency-Key) réutilise l'animal qu'elle a créé ; un animal créé par la clinique n'est jamais réutilisé. Archivé automatiquement si la demande est refusée ou expire avant tout acte clinique."
+      parameters:
+        -
+          name: Idempotency-Key
+          in: header
+          description: 'Clé aléatoire (UUID) propre à cette réservation, réutilisée pour ses nouvelles tentatives.'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            maxLength: 128
+          style: simple
+          explode: false
+        -
+          name: clinicId
+          in: path
+          description: 'AppointmentBookingWithNewPet identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new AppointmentBookingWithNewPet resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentBookingWithNewPet'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/appointments/{appointmentId}':
+    get:
+      operationId: api_clinics_clinicIdappointments_appointmentId_get
+      tags:
+        - Rendez-vous
+      responses:
+        '200':
+          description: 'Le rendez-vous.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment.AppointmentView'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé, ou rendez-vous inconnu ou d'un autre client)."
+      summary: 'Un rendez-vous du propriétaire.'
+      description: "`relatedCareItem` = le soin de l'animal du type de soin du motif, sinon `null` (avertissement de l'écran 16)."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'Appointment identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: appointmentId
+          in: path
+          description: 'Appointment identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/appointments/{appointmentId}/calendar.ics':
+    get:
+      operationId: api_portal_appointment_calendar
+      tags:
+        - Rendez-vous
+      responses:
+        '200':
+          description: 'Le fichier iCalendar (`attachment`, `Cache-Control: private, no-store`).'
+          content:
+            text/calendar:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: '`not_found`.'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+      summary: 'Ajouter un rendez-vous à son agenda.'
+      description: "`METHOD:PUBLISH`, sans participant ni organisateur, même `UID` que l'invitation envoyée par e-mail, `SEQUENCE` de la dernière envoyée, `STATUS:TENTATIVE` tant que le rendez-vous est à confirmer. 404 pour un rendez-vous d'un autre client, annulé, refusé, terminé ou non honoré."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: appointmentId
+          in: path
+          description: ''
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+  '/api/portal/v1/clinics/{clinicId}/appointments/{appointmentId}/cancel':
+    post:
+      operationId: api_clinics_clinicIdappointments_appointmentIdcancel_post
+      tags:
+        - Rendez-vous
+      responses:
+        '200':
+          description: 'Le rendez-vous annulé (`status: cancelled_by_client`).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentCancellation.AppointmentView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé ; rendez-vous inconnu ou d'un autre client)."
+        '422':
+          description: '`cancellation_window_closed`, `appointment_not_modifiable` (refusé, terminé, non honoré, annulé par la clinique) ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: "Annule un rendez-vous dans le délai d'annulation."
+      description: 'Naturellement idempotente : un rendez-vous déjà annulé par le client rend 200 avec le même corps.'
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'AppointmentCancellation identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: appointmentId
+          in: path
+          description: 'AppointmentCancellation identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new AppointmentCancellation resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentCancellation'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/appointments/{appointmentId}/reschedule':
+    post:
+      operationId: api_clinics_clinicIdappointments_appointmentIdreschedule_post
+      tags:
+        - Rendez-vous
+      responses:
+        '200':
+          description: 'Le rendez-vous déplacé.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentReschedule.AppointmentView'
+          links: {  }
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: "`not_found` (pas de lien confirmé ; rendez-vous inconnu ou d'un autre client ; praticien non réservable pour le motif)."
+        '409':
+          description: '`slot_taken` : recharger les créneaux.'
+        '422':
+          description: '`booking_not_open`, `cancellation_window_closed`, `appointment_not_modifiable` ou `validation_failed`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintViolation'
+          links: {  }
+        '400':
+          description: 'Invalid input'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          links: {  }
+      summary: 'Déplace un rendez-vous pris en ligne.'
+      description: "Seulement un rendez-vous pris en ligne avec un motif, dans le délai d'annulation. Le statut est conservé (une demande à confirmer reste à confirmer et repart pour un nouveau délai). Même créneau et même praticien : 200 sans effet."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'AppointmentReschedule identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: appointmentId
+          in: path
+          description: 'AppointmentReschedule identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+      requestBody:
+        description: 'The new AppointmentReschedule resource'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentReschedule'
+        required: true
+  '/api/portal/v1/clinics/{clinicId}/booking/availability':
+    get:
+      operationId: api_clinics_clinicIdbookingavailability_get
+      tags:
+        - Rendez-vous
+      responses:
+        '200':
+          description: 'Les jours et leurs créneaux.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingAvailability'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé ; motif inconnu, ou praticien non réservable pour ce motif).'
+        '422':
+          description: '`booking_not_open` (réservation désactivée, clinique non active) ou `validation_failed` (intervalle).'
+      summary: "Les créneaux réservables en ligne d'un praticien pour un motif."
+      description: "Un jour par date demandée (dates locales de la clinique, incluses, 14 jours au plus, `from` ≥ aujourd'hui local). `open` = jour d'ouverture, hors fermeture exceptionnelle, dans l'horizon. Créneaux émis avec le décalage de la clinique."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'BookingAvailability identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: motifId
+          in: query
+          description: 'BookingAvailability motifId'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+        -
+          name: practitionerId
+          in: query
+          description: 'BookingAvailability practitionerId'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+        -
+          name: from
+          in: query
+          description: 'BookingAvailability from'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: date
+          style: form
+          explode: true
+        -
+          name: to
+          in: query
+          description: 'BookingAvailability to'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: date
+          style: form
+          explode: true
+  '/api/portal/v1/clinics/{clinicId}/booking/motifs':
+    get:
+      operationId: api_clinics_clinicIdbookingmotifs_get_collection
+      tags:
+        - Rendez-vous
+      responses:
+        '200':
+          description: 'Les motifs.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingMotifs.BookingMotifView'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé avec la clinique, ou animal non visible).'
+        '422':
+          description: '`booking_not_open` ou `validation_failed`.'
+      summary: 'Les motifs de rendez-vous réservables en ligne.'
+      description: "Dans l'ordre de la clinique. Avec `petId`, un motif est `suggested` quand l'animal a un soin en retard ou à prévoir du type de soin du motif (`suggestionReason` : « Rappel de vaccin en retard », « Rappel de vaccin à prévoir »…)."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'BookingMotifs identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: petId
+          in: query
+          description: 'BookingMotifs petId'
+          required: false
+          deprecated: false
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+  '/api/portal/v1/clinics/{clinicId}/booking/practitioners':
+    get:
+      operationId: api_clinics_clinicIdbookingpractitioners_get_collection
+      tags:
+        - Rendez-vous
+      responses:
+        '200':
+          description: 'Les praticiens.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingPractitioners.PractitionerView'
+        '401':
+          description: '`unauthorized` ou `token_expired`.'
+        '404':
+          description: '`not_found` (pas de lien confirmé ; motif inconnu, archivé ou non ouvert en ligne).'
+        '422':
+          description: '`booking_not_open` ou `validation_failed`.'
+      summary: 'Les praticiens réservables en ligne pour un motif.'
+      description: "Par nom. Un praticien qui a quitté la clinique depuis l'enregistrement du motif n'apparaît plus."
+      parameters:
+        -
+          name: clinicId
+          in: path
+          description: 'BookingPractitioners identifier'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+          style: simple
+          explode: false
+        -
+          name: motifId
+          in: query
+          description: 'BookingPractitioners motifId'
+          required: true
+          deprecated: false
+          schema:
+            type: string
+            format: uuid
+          style: form
+          explode: true
+components:
+  schemas:
+    AccountView:
+      type: object
+      properties:
+        id:
+          type: string
+        firstName:
+          type:
+            - string
+            - 'null'
+        lastName:
+          type:
+            - string
+            - 'null'
+        email:
+          description: 'Possibly null; see emailVerified.'
+          type:
+            - string
+            - 'null'
+        emailVerified:
+          description: 'The owner proved the e-mail; a verified e-mail is a second sign-in factor.'
+          type: boolean
+        maskedPhone:
+          type: string
+        address:
+          anyOf:
+            -
+              $ref: '#/components/schemas/AddressView'
+            -
+              type: 'null'
+    AddressView:
+      type: object
+      properties:
+        line1:
+          type: string
+        line2:
+          type:
+            - string
+            - 'null'
+        postalCode:
+          type:
+            - string
+            - 'null'
+        city:
+          type: string
+        country:
+          type: string
+    Appointment.AppointmentView:
+      type: object
+      description: 'An appointment of the owner (AppointmentView).'
+      properties:
+        id:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        pet:
+          anyOf:
+            -
+              $ref: '#/components/schemas/PetReferenceView'
+            -
+              type: 'null'
+        motif:
+          $ref: '#/components/schemas/MotifReferenceView'
+        practitioner:
+          $ref: '#/components/schemas/PractitionerView'
+        status:
+          type: string
+          enum:
+            - confirmed
+            - pending_clinic_confirmation
+            - cancelled_by_client
+            - cancelled_by_clinic
+            - declined
+            - completed
+            - no_show
+        source:
+          type: string
+          enum:
+            - clinic
+            - portal
+        cancellableUntil:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        questionnaireStatus:
+          type: string
+          enum:
+            - not_started
+            - submitted
+        relatedCareItem:
+          anyOf:
+            -
+              $ref: '#/components/schemas/RelatedCareItemView'
+            -
+              type: 'null'
+    AppointmentBooking:
+      type: object
+      properties:
+        petId:
+          type: string
+          format: uuid
+        motifId:
+          type: string
+          format: uuid
+        practitionerId:
+          type: string
+          format: uuid
+        startAt:
+          type: string
+          format: date-time
+    AppointmentBooking.AppointmentView:
+      type: object
+      properties:
+        id:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        pet:
+          anyOf:
+            -
+              $ref: '#/components/schemas/PetReferenceView'
+            -
+              type: 'null'
+        motif:
+          $ref: '#/components/schemas/MotifReferenceView'
+        practitioner:
+          $ref: '#/components/schemas/PractitionerView'
+        status:
+          type: string
+          enum:
+            - confirmed
+            - pending_clinic_confirmation
+            - cancelled_by_client
+            - cancelled_by_clinic
+            - declined
+            - completed
+            - no_show
+        source:
+          type: string
+          enum:
+            - clinic
+            - portal
+        cancellableUntil:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        questionnaireStatus:
+          type: string
+          enum:
+            - not_started
+            - submitted
+        relatedCareItem:
+          anyOf:
+            -
+              $ref: '#/components/schemas/RelatedCareItemView'
+            -
+              type: 'null'
+    AppointmentBookingWithNewPet:
+      type: object
+      required:
+        - newPet
+      properties:
+        newPet:
+          $ref: '#/components/schemas/NewPet'
+        motifId:
+          type: string
+          format: uuid
+        practitionerId:
+          type: string
+          format: uuid
+        startAt:
+          type: string
+          format: date-time
+    AppointmentBookingWithNewPet.AppointmentView:
+      type: object
+      properties:
+        id:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        pet:
+          anyOf:
+            -
+              $ref: '#/components/schemas/PetReferenceView'
+            -
+              type: 'null'
+        motif:
+          $ref: '#/components/schemas/MotifReferenceView'
+        practitioner:
+          $ref: '#/components/schemas/PractitionerView'
+        status:
+          type: string
+          enum:
+            - confirmed
+            - pending_clinic_confirmation
+            - cancelled_by_client
+            - cancelled_by_clinic
+            - declined
+            - completed
+            - no_show
+        source:
+          type: string
+          enum:
+            - clinic
+            - portal
+        cancellableUntil:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        questionnaireStatus:
+          type: string
+          enum:
+            - not_started
+            - submitted
+        relatedCareItem:
+          anyOf:
+            -
+              $ref: '#/components/schemas/RelatedCareItemView'
+            -
+              type: 'null'
+    AppointmentCancellation:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - unavailable
+            - no_longer_needed
+            - seen_elsewhere
+            - other
+    AppointmentCancellation.AppointmentView:
+      type: object
+      properties:
+        id:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        pet:
+          anyOf:
+            -
+              $ref: '#/components/schemas/PetReferenceView'
+            -
+              type: 'null'
+        motif:
+          $ref: '#/components/schemas/MotifReferenceView'
+        practitioner:
+          $ref: '#/components/schemas/PractitionerView'
+        status:
+          type: string
+          enum:
+            - confirmed
+            - pending_clinic_confirmation
+            - cancelled_by_client
+            - cancelled_by_clinic
+            - declined
+            - completed
+            - no_show
+        source:
+          type: string
+          enum:
+            - clinic
+            - portal
+        cancellableUntil:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        questionnaireStatus:
+          type: string
+          enum:
+            - not_started
+            - submitted
+        relatedCareItem:
+          anyOf:
+            -
+              $ref: '#/components/schemas/RelatedCareItemView'
+            -
+              type: 'null'
+    AppointmentList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppointmentView'
+        nextCursor:
+          type:
+            - string
+            - 'null'
+    AppointmentReschedule:
+      type: object
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        practitionerId:
+          type: string
+          format: uuid
+    AppointmentReschedule.AppointmentView:
+      type: object
+      properties:
+        id:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        pet:
+          anyOf:
+            -
+              $ref: '#/components/schemas/PetReferenceView'
+            -
+              type: 'null'
+        motif:
+          $ref: '#/components/schemas/MotifReferenceView'
+        practitioner:
+          $ref: '#/components/schemas/PractitionerView'
+        status:
+          type: string
+          enum:
+            - confirmed
+            - pending_clinic_confirmation
+            - cancelled_by_client
+            - cancelled_by_clinic
+            - declined
+            - completed
+            - no_show
+        source:
+          type: string
+          enum:
+            - clinic
+            - portal
+        cancellableUntil:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        questionnaireStatus:
+          type: string
+          enum:
+            - not_started
+            - submitted
+        relatedCareItem:
+          anyOf:
+            -
+              $ref: '#/components/schemas/RelatedCareItemView'
+            -
+              type: 'null'
+    AppointmentView:
+      type: object
+      properties:
+        id:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        pet:
+          anyOf:
+            -
+              $ref: '#/components/schemas/PetReferenceView'
+            -
+              type: 'null'
+        motif:
+          $ref: '#/components/schemas/MotifReferenceView'
+        practitioner:
+          $ref: '#/components/schemas/PractitionerView'
+        status:
+          type: string
+          enum:
+            - confirmed
+            - pending_clinic_confirmation
+            - cancelled_by_client
+            - cancelled_by_clinic
+            - declined
+            - completed
+            - no_show
+        source:
+          type: string
+          enum:
+            - clinic
+            - portal
+        cancellableUntil:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        questionnaireStatus:
+          type: string
+          enum:
+            - not_started
+            - submitted
+        relatedCareItem:
+          anyOf:
+            -
+              $ref: '#/components/schemas/RelatedCareItemView'
+            -
+              type: 'null'
+    AvailabilityDayView:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        open:
+          type: boolean
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilitySlotView'
+    AvailabilitySlotView:
+      type: object
+      properties:
+        startAt:
+          type: string
+          format: date-time
+    BookingAvailability:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityDayView'
+    BookingMotifs.BookingMotifView:
+      type: object
+      description: 'A motif the owner may book online; the route answers a plain JSON array of them.'
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+        durationMin:
+          type: integer
+        suggested:
+          type: boolean
+        suggestionReason:
+          description: '« Rappel de vaccin en retard », « Rappel de vaccin à prévoir »…, null when not suggested.'
+          type:
+            - string
+            - 'null'
+    BookingPractitioners.PractitionerView:
+      type: object
+      description: 'A practitioner bookable online for the motif; the route answers a plain JSON array of them.'
+      properties:
+        id:
+          type: string
+        displayName:
+          type:
+            - string
+            - 'null'
+    BookingRequestPetView:
+      type: object
+      properties:
+        name:
+          type:
+            - string
+            - 'null'
+        species:
+          type:
+            - string
+            - 'null'
+          enum:
+            - dog
+            - cat
+            - nac
+            - other
+            - null
+    BookingRequestView:
+      type: object
+      properties:
+        id:
+          type: string
+        clinic:
+          $ref: '#/components/schemas/ClinicSummaryView'
+        pet:
+          $ref: '#/components/schemas/BookingRequestPetView'
+        motif:
+          description: "The motif's label."
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - declined
+        declineReason:
+          type:
+            - string
+            - 'null'
+          enum:
+            - declined
+            - expired
+            - cancelled
+            - account_deleted
+            - null
+        appointmentId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+    BookingRequests:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingRequestView'
+        nextCursor:
+          type:
+            - string
+            - 'null'
+    CareItem:
+      type: object
+      description: |-
+        The latest act of a preventive protocol and where it stands against its
+        due date. The care-items route answers a plain JSON array of it.
+      properties:
+        kind:
+          type: string
+        label:
+          type: string
+        lastDoneOn:
+          type: string
+          format: date
+        dueOn:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - overdue
+            - due_soon
+            - up_to_date
+    ClinicLinkView:
+      type: object
+      properties:
+        clinicId:
+          type: string
+        name:
+          type: string
+        city:
+          type:
+            - string
+            - 'null'
+        timezone:
+          type: string
+        linkStatus:
+          type: string
+          enum:
+            - pending
+            - confirmed
+        linkedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        petNames:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        unreadDocuments:
+          type: integer
+    ClinicListingDetail:
+      type: object
+      description: "A clinic of the directory, in full; `id` is the listing id, never the clinic's."
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          anyOf:
+            -
+              $ref: '#/components/schemas/ListingAddressView'
+            -
+              type: 'null'
+        phone:
+          type:
+            - string
+            - 'null'
+        timezone:
+          type: string
+        openingHours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningHoursView'
+        acceptsNewClients:
+          type: boolean
+        onlineBooking:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+    ClinicListingSummaryView:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          anyOf:
+            -
+              $ref: '#/components/schemas/ListingAddressView'
+            -
+              type: 'null'
+        phone:
+          type:
+            - string
+            - 'null'
+        distanceM:
+          type:
+            - integer
+            - 'null'
+        onKiveto:
+          type: boolean
+        onlineBooking:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        nextAvailableAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    ClinicListings:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClinicListingSummaryView'
+        nextCursor:
+          type:
+            - string
+            - 'null'
+    ClinicSummaryView:
+      type: object
+      properties:
+        name:
+          type: string
+        city:
+          type:
+            - string
+            - 'null'
+    ConsentHistory:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentHistoryItemView'
+        nextCursor:
+          type:
+            - string
+            - 'null'
+    ConsentHistoryItemView:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - appointment_reminders
+            - vaccination_reminders
+            - clinical_documents
+            - billing
+            - marketing
+        channel:
+          type: string
+          enum:
+            - sms
+            - email
+        action:
+          type: string
+          enum:
+            - granted
+            - withdrawn
+        at:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum:
+            - portal
+            - clinic
+            - system
+        author:
+          type: string
+        approximate:
+          type: boolean
+    ConsentUpdate:
+      type: object
+      required:
+        - channels
+      properties:
+        channels:
+          type: array
+          items:
+            type: string
+            enum:
+              - sms
+              - email
+    ConsentUpdate.Consents:
+      type: object
+      properties:
+        preferredChannel:
+          type:
+            - string
+            - 'null'
+          enum:
+            - sms
+            - email
+            - phone
+            - mail
+            - null
+        consents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentView'
+    ConsentView:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - appointment_reminders
+            - vaccination_reminders
+            - clinical_documents
+            - billing
+            - marketing
+        channels:
+          type: array
+          items:
+            type: string
+            enum:
+              - sms
+              - email
+        grantedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        effect:
+          type: string
+          enum:
+            - send_control
+            - channel_preference
+    Consents:
+      type: object
+      properties:
+        preferredChannel:
+          type:
+            - string
+            - 'null'
+          enum:
+            - sms
+            - email
+            - phone
+            - mail
+            - null
+        consents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentView'
+    ConstraintViolation:
+      type: object
+      description: 'Unprocessable entity'
+      properties:
+        status:
+          default: 422
+          type: integer
+        violations:
+          type: array
+          items:
+            type: object
+            properties:
+              propertyPath:
+                type: string
+                description: 'The property path of the violation'
+              message:
+                type: string
+                description: 'The message associated with the violation'
+              code:
+                type: string
+                description: 'The code of the violation'
+              hint:
+                type: string
+                description: 'An extra hint to understand the violation'
+              payload:
+                type: object
+                additionalProperties: true
+                description: 'The serialized payload of the violation'
+            required:
+              - propertyPath
+              - message
+        detail:
+          readOnly: true
+          type: string
+        type:
+          readOnly: true
+          type: string
+        title:
+          readOnly: true
+          type:
+            - string
+            - 'null'
+        instance:
+          readOnly: true
+          type:
+            - string
+            - 'null'
+    CurrentTerms:
+      type: object
+      properties:
+        version:
+          type: string
+        url:
+          type: string
+    DataExportList.DataExportView:
+      type: object
+      description: 'The exports of the account; the route answers a plain JSON array of them.'
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        requestedAt:
+          type: string
+        readyAt:
+          type:
+            - string
+            - 'null'
+        expiresAt:
+          type:
+            - string
+            - 'null'
+    DataExportRequest.DataExportRequestView:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+    DeletionOtp.OtpChallengeView:
+      type: object
+      properties:
+        challengeId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        resendAvailableAt:
+          type: string
+          format: date-time
+    DeletionRequest:
+      type: object
+      required:
+        - challengeId
+        - code
+      properties:
+        challengeId:
+          format: uuid
+          externalDocs:
+            url: 'https://schema.org/identifier'
+          type: string
+        code:
+          pattern: '^(\d{6})$'
+          type: string
+    DocumentList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentView'
+        nextCursor:
+          type:
+            - string
+            - 'null'
+    DocumentView:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - report
+            - prescription
+            - invoice
+            - lab_result
+            - certificate
+        title:
+          type: string
+        petIds:
+          type: array
+          items:
+            type: string
+        issuedAt:
+          type: string
+          format: date-time
+        unread:
+          type: boolean
+        invoice:
+          anyOf:
+            -
+              $ref: '#/components/schemas/InvoiceSummaryView'
+            -
+              type: 'null'
+        prescription:
+          anyOf:
+            -
+              $ref: '#/components/schemas/PrescriptionSummaryView'
+            -
+              type: 'null'
+    EmailChange:
+      type: object
+      required:
+        - challengeId
+        - code
+        - email
+      properties:
+        challengeId:
+          format: uuid
+          externalDocs:
+            url: 'https://schema.org/identifier'
+          type: string
+        code:
+          pattern: '^(\d{6})$'
+          type: string
+        email:
+          format: email
+          maxLength: 180
+          externalDocs:
+            url: 'https://schema.org/email'
+          type: string
+    EmailChange.EmailVerificationChallengeView:
+      type: object
+      properties:
+        challengeId:
+          type: string
+    EmailChangeOtp.OtpChallengeView:
+      type: object
+      properties:
+        challengeId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        resendAvailableAt:
+          type: string
+          format: date-time
+    EmailChangeVerification:
+      type: object
+      required:
+        - challengeId
+        - code
+      properties:
+        challengeId:
+          format: uuid
+          externalDocs:
+            url: 'https://schema.org/identifier'
+          type: string
+        code:
+          pattern: '^(\d{6})$'
+          type: string
+    EmailChangeVerification.AccountView:
+      type: object
+      properties:
+        id:
+          type: string
+        firstName:
+          type:
+            - string
+            - 'null'
+        lastName:
+          type:
+            - string
+            - 'null'
+        email:
+          description: 'Possibly null; see emailVerified.'
+          type:
+            - string
+            - 'null'
+        emailVerified:
+          description: 'The owner proved the e-mail; a verified e-mail is a second sign-in factor.'
+          type: boolean
+        maskedPhone:
+          type: string
+        address:
+          anyOf:
+            -
+              $ref: '#/components/schemas/AddressView'
+            -
+              type: 'null'
+    Error:
+      type: object
+      description: 'A representation of common errors.'
+      properties:
+        title:
+          readOnly: true
+          description: 'A short, human-readable summary of the problem.'
+          type:
+            - string
+            - 'null'
+        detail:
+          readOnly: true
+          description: 'A human-readable explanation specific to this occurrence of the problem.'
+          type:
+            - string
+            - 'null'
+        status:
+          type:
+            - integer
+            - 'null'
+          examples:
+            - 404
+          default: 400
+        instance:
+          readOnly: true
+          description: 'A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.'
+          type:
+            - string
+            - 'null'
+        type:
+          readOnly: true
+          description: 'A URI reference that identifies the problem type'
+          type: string
+    Home:
+      type: object
+      properties:
+        nextAppointment:
+          anyOf:
+            -
+              $ref: '#/components/schemas/AppointmentView'
+            -
+              type: 'null'
+        pets:
+          type: array
+          items:
+            $ref: '#/components/schemas/PetSummary'
+        careItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeCareItemView'
+        latestDocuments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentView'
+    HomeCareItemView:
+      type: object
+      properties:
+        pet:
+          $ref: '#/components/schemas/PetReferenceView'
+        kind:
+          type: string
+        label:
+          type: string
+        lastDoneOn:
+          type: string
+          format: date
+        dueOn:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - overdue
+            - due_soon
+            - up_to_date
+    InvitationAcceptance:
+      type: object
+      required:
+        - token
+        - challengeId
+        - code
+        - termsVersion
+      properties:
+        token:
+          type: string
+        challengeId:
+          format: uuid
+          externalDocs:
+            url: 'https://schema.org/identifier'
+          type: string
+        code:
+          pattern: '^(\d{6})$'
+          type: string
+        termsVersion:
+          description: 'The `version` of /legal/terms/current.'
+          type: string
+    InvitationAcceptance.AcceptedInvitationView:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshToken:
+          type: string
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        account:
+          $ref: '#/components/schemas/AccountView'
+    InvitationClinicView:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        city:
+          type:
+            - string
+            - 'null'
+    InvitationGrantAcceptance:
+      type: object
+      required:
+        - onboardingToken
+        - termsVersion
+      properties:
+        onboardingToken:
+          type: string
+        termsVersion:
+          description: 'The `version` of /legal/terms/current.'
+          type: string
+    InvitationGrantAcceptance.AcceptedInvitationView:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshToken:
+          type: string
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        account:
+          $ref: '#/components/schemas/AccountView'
+    InvitationLookup:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    InvitationLookup.InvitationLookupView:
+      type: object
+      properties:
+        invitationId:
+          type: string
+        clinic:
+          $ref: '#/components/schemas/InvitationClinicView'
+        email:
+          type:
+            - string
+            - 'null'
+        maskedPhone:
+          type: string
+        petNames:
+          type: array
+          items:
+            type: string
+        expiresAt:
+          type: string
+          format: date-time
+    InvitationOtpRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    InvitationOtpRequest.OtpChallengeView:
+      type: object
+      properties:
+        challengeId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        resendAvailableAt:
+          type: string
+          format: date-time
+    InvoiceSummaryView:
+      type: object
+      properties:
+        total:
+          $ref: '#/components/schemas/MoneyView'
+        paymentStatus:
+          type: string
+          enum:
+            - unpaid
+            - partially_paid
+            - paid
+            - credited
+    LinkSuggestionAcceptance.LinkSuggestionAcceptedView:
+      type: object
+      properties:
+        linkStatus:
+          type: string
+          enum:
+            - pending
+    LinkSuggestions.LinkSuggestionView:
+      type: object
+      description: 'The clinics the account may ask to be linked to; the route answers a plain JSON array of them.'
+      properties:
+        id:
+          description: 'Opaque: names neither the clinic nor a client file.'
+          type: string
+        clinic:
+          $ref: '#/components/schemas/ClinicSummaryView'
+        matchedOn:
+          type: string
+          enum:
+            - phone
+    ListingAddressView:
+      type: object
+      properties:
+        line:
+          type: string
+        postalCode:
+          type:
+            - string
+            - 'null'
+        city:
+          type: string
+    ListingAvailability:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityDayView'
+    ListingBooking:
+      type: object
+      required:
+        - newPet
+      properties:
+        newPet:
+          $ref: '#/components/schemas/NewPet'
+        motifId:
+          type: string
+          format: uuid
+        practitionerId:
+          type: string
+          format: uuid
+        startAt:
+          type: string
+          format: date-time
+    ListingBooking.BookingRequestView:
+      type: object
+      properties:
+        id:
+          type: string
+        clinic:
+          $ref: '#/components/schemas/ClinicSummaryView'
+        pet:
+          $ref: '#/components/schemas/BookingRequestPetView'
+        motif:
+          description: "The motif's label."
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - declined
+        declineReason:
+          type:
+            - string
+            - 'null'
+          enum:
+            - declined
+            - expired
+            - cancelled
+            - account_deleted
+            - null
+        appointmentId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+    ListingMotifs.BookingMotifView:
+      type: object
+      description: 'A motif a new client may book online; the route answers a plain JSON array of them.'
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+        durationMin:
+          type: integer
+        suggested:
+          type: boolean
+        suggestionReason:
+          description: '« Rappel de vaccin en retard », « Rappel de vaccin à prévoir »…, null when not suggested.'
+          type:
+            - string
+            - 'null'
+    ListingPractitioners.PractitionerView:
+      type: object
+      description: 'A practitioner a new client may book online for the motif; the route answers a plain JSON array of them.'
+      properties:
+        id:
+          type: string
+        displayName:
+          type:
+            - string
+            - 'null'
+    Me:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/AccountView'
+        clinics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClinicLinkView'
+    MeUpdate.AccountView:
+      type: object
+      properties:
+        id:
+          type: string
+        firstName:
+          type:
+            - string
+            - 'null'
+        lastName:
+          type:
+            - string
+            - 'null'
+        email:
+          description: 'Possibly null; see emailVerified.'
+          type:
+            - string
+            - 'null'
+        emailVerified:
+          description: 'The owner proved the e-mail; a verified e-mail is a second sign-in factor.'
+          type: boolean
+        maskedPhone:
+          type: string
+        address:
+          anyOf:
+            -
+              $ref: '#/components/schemas/AddressView'
+            -
+              type: 'null'
+    MeUpdate.jsonMergePatch:
+      type: object
+      properties:
+        firstName:
+          type:
+            - string
+            - 'null'
+          minLength: 1
+          maxLength: 60
+        lastName:
+          type:
+            - string
+            - 'null'
+          minLength: 1
+          maxLength: 60
+        address:
+          anyOf:
+            -
+              $ref: '#/components/schemas/ProfileAddress'
+            -
+              type: 'null'
+    MoneyView:
+      type: object
+      properties:
+        amount:
+          type: integer
+        currency:
+          type: string
+    MotifReferenceView:
+      type: object
+      properties:
+        id:
+          type:
+            - string
+            - 'null'
+        label:
+          type: string
+    NewPet:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          maxLength: 80
+          type: string
+        species:
+          type: string
+          enum:
+            - dog
+            - cat
+            - nac
+            - other
+    OngoingTreatment:
+      type: object
+      required:
+        - has
+      properties:
+        has:
+          type:
+            - boolean
+            - 'null'
+        details:
+          type:
+            - string
+            - 'null'
+          maxLength: 500
+    OngoingTreatmentView:
+      type: object
+      properties:
+        has:
+          type: boolean
+        details:
+          type:
+            - string
+            - 'null'
+    OpeningHoursView:
+      type: object
+      properties:
+        day:
+          type: integer
+          minimum: 1
+          maximum: 7
+        opensAt:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+        closesAt:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+    OtpRequest:
+      type: object
+      required:
+        - phone
+      properties:
+        phone:
+          pattern: '^(\+[1-9]\d{6,14})$'
+          description: 'E.164, e.g. `+33612345678`.'
+          type: string
+    OtpRequest.OtpChallengeView:
+      type: object
+      properties:
+        challengeId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        resendAvailableAt:
+          type: string
+          format: date-time
+    OtpResend:
+      type: object
+      required:
+        - channel
+      properties:
+        channel:
+          enum:
+            - sms
+            - email
+          type: string
+    OtpResend.OtpChallengeView:
+      type: object
+      properties:
+        challengeId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        resendAvailableAt:
+          type: string
+          format: date-time
+    OtpVerification:
+      type: object
+      required:
+        - challengeId
+        - code
+      properties:
+        challengeId:
+          format: uuid
+          externalDocs:
+            url: 'https://schema.org/identifier'
+          type: string
+        code:
+          pattern: '^(\d{6})$'
+          type: string
+    OtpVerification.OtpVerificationView:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - authenticated
+            - invitation_pending
+            - registration_required
+        accessToken:
+          type:
+            - string
+            - 'null'
+        accessTokenExpiresAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        refreshToken:
+          type:
+            - string
+            - 'null'
+        refreshTokenExpiresAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        pendingInvitations:
+          type: array
+          items:
+            type: object
+            required:
+              - invitationId
+              - clinic
+            properties:
+              invitationId:
+                type: string
+                format: uuid
+              clinic:
+                type: object
+                required:
+                  - name
+                  - city
+                properties:
+                  name: { type: string }
+                  city: { type: [string, 'null'] }
+        onboardingToken:
+          type:
+            - string
+            - 'null'
+        onboardingTokenExpiresAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        registrationToken:
+          type:
+            - string
+            - 'null'
+        invitations:
+          type: array
+          items:
+            type: object
+            required:
+              - invitationId
+              - clinic
+            properties:
+              invitationId:
+                type: string
+                format: uuid
+              clinic:
+                type: object
+                required:
+                  - name
+                  - city
+                properties:
+                  name: { type: string }
+                  city: { type: [string, 'null'] }
+        registrationTokenExpiresAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    OwnerRequestList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortalRequestView'
+        nextCursor:
+          type:
+            - string
+            - 'null'
+    Pet:
+      type: object
+      description: 'The listed shape of a pet, plus its latest weight, masked chip and referent vet.'
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        species:
+          type: string
+          enum:
+            - dog
+            - cat
+            - nac
+            - other
+        breed:
+          type:
+            - string
+            - 'null'
+        sex:
+          type: string
+          enum:
+            - male
+            - female
+            - unknown
+        sterilization:
+          type: string
+          enum:
+            - intact
+            - neutered
+            - unknown
+        birthDate:
+          type:
+            - string
+            - 'null'
+          format: date
+        initial:
+          type: string
+        lifeStatus:
+          type: string
+          enum:
+            - alive
+            - deceased
+            - missing
+        lastWeight:
+          anyOf:
+            -
+              $ref: '#/components/schemas/PetWeightView'
+            -
+              type: 'null'
+        chipNumberMasked:
+          type:
+            - string
+            - 'null'
+        referentVet:
+          type:
+            - string
+            - 'null'
+    PetChangeRequestCreation:
+      type: object
+      required:
+        - field
+        - proposedValue
+      properties:
+        field:
+          type: string
+          enum:
+            - name
+            - weight
+            - sterilization
+            - chip_number
+            - other
+        proposedValue:
+          type: string
+          maxLength: 120
+        measuredOn:
+          type:
+            - string
+            - 'null'
+          format: date
+        note:
+          type:
+            - string
+            - 'null'
+          maxLength: 500
+    PetChangeRequestCreation.PortalRequestCreatedView:
+      type: object
+      properties:
+        requestId:
+          type: string
+    PetReferenceView:
+      type: object
+      properties:
+        id:
+          type:
+            - string
+            - 'null'
+        name:
+          type: string
+    PetSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        species:
+          type: string
+          enum:
+            - dog
+            - cat
+            - nac
+            - other
+        breed:
+          type:
+            - string
+            - 'null'
+        sex:
+          type: string
+          enum:
+            - male
+            - female
+            - unknown
+        sterilization:
+          type: string
+          enum:
+            - intact
+            - neutered
+            - unknown
+        birthDate:
+          type:
+            - string
+            - 'null'
+          format: date
+        initial:
+          type: string
+        lifeStatus:
+          type: string
+          enum:
+            - alive
+            - deceased
+            - missing
+    PetTimeline:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEntryView'
+        nextCursor:
+          type:
+            - string
+            - 'null'
+    PetWeightView:
+      type: object
+      properties:
+        weightGrams:
+          type: integer
+        at:
+          type: string
+          format: date
+    PortalRequestView:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum:
+            - pet_change
+            - prescription_renewal
+        petId:
+          type: string
+        field:
+          type:
+            - string
+            - 'null'
+          enum:
+            - name
+            - weight
+            - sterilization
+            - chip_number
+            - other
+            - null
+        proposedValue:
+          type:
+            - string
+            - 'null'
+        prescriptionId:
+          type:
+            - string
+            - 'null'
+        status:
+          type: string
+          enum:
+            - submitted
+            - done
+            - rejected
+            - closed
+        submittedAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        resolutionMessage:
+          type:
+            - string
+            - 'null'
+        resultingPrescriptionId:
+          type:
+            - string
+            - 'null'
+    PractitionerView:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type:
+            - string
+            - 'null'
+    Prescription:
+      type: object
+      properties:
+        id:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        vet:
+          type: string
+        pet:
+          $ref: '#/components/schemas/PetReferenceView'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrescriptionLineView'
+    PrescriptionLineView:
+      type: object
+      properties:
+        label:
+          type: string
+        quantity:
+          type: string
+        posologySummary:
+          type: string
+    PrescriptionSummaryView:
+      type: object
+      properties:
+        id:
+          type: string
+        validUntil:
+          type:
+            - string
+            - 'null'
+          format: date
+        renewable:
+          type: boolean
+        renewalStatus:
+          type:
+            - object
+            - 'null'
+    ProfileAddress:
+      type: object
+      required:
+        - streetLine1
+        - city
+      properties:
+        streetLine1:
+          maxLength: 255
+          type: string
+        postalCode:
+          maxLength: 20
+          type:
+            - string
+            - 'null'
+        city:
+          maxLength: 255
+          type: string
+        countryCode:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          example: FR
+    Questionnaire.QuestionnaireView:
+      type: object
+      description: 'The pre-visit questionnaire of an appointment of the owner (QuestionnaireView).'
+      properties:
+        version:
+          type: integer
+          enum:
+            - 1
+        status:
+          type: string
+          enum:
+            - not_started
+            - submitted
+        answers:
+          anyOf:
+            -
+              $ref: '#/components/schemas/QuestionnaireAnswersView'
+            -
+              type: 'null'
+        updatedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        editable:
+          type: boolean
+    QuestionnaireAnswersView:
+      type: object
+      properties:
+        symptoms:
+          type: array
+          items:
+            type: string
+            enum:
+              - none
+              - cough
+              - vomiting
+              - diarrhea
+              - appetite_loss
+              - itching
+              - lameness
+        ongoingTreatment:
+          $ref: '#/components/schemas/OngoingTreatmentView'
+        temperament:
+          type: string
+          enum:
+            - calm
+            - stressed
+            - may_bite
+        notes:
+          type:
+            - string
+            - 'null'
+    QuestionnaireUpdate:
+      type: object
+      required:
+        - version
+        - symptoms
+        - ongoingTreatment
+        - temperament
+      properties:
+        version:
+          type: integer
+          enum:
+            - 1
+        symptoms:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - none
+              - cough
+              - vomiting
+              - diarrhea
+              - appetite_loss
+              - itching
+              - lameness
+        ongoingTreatment:
+          anyOf:
+            -
+              $ref: '#/components/schemas/OngoingTreatment'
+            -
+              type: 'null'
+        temperament:
+          type: string
+          enum:
+            - calm
+            - stressed
+            - may_bite
+        notes:
+          type:
+            - string
+            - 'null'
+          maxLength: 1000
+    QuestionnaireUpdate.QuestionnaireView:
+      type: object
+      properties:
+        version:
+          type: integer
+          enum:
+            - 1
+        status:
+          type: string
+          enum:
+            - not_started
+            - submitted
+        answers:
+          anyOf:
+            -
+              $ref: '#/components/schemas/QuestionnaireAnswersView'
+            -
+              type: 'null'
+        updatedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        editable:
+          type: boolean
+    Registration:
+      type: object
+      required:
+        - registrationToken
+        - firstName
+        - lastName
+        - termsVersion
+      properties:
+        registrationToken:
+          type: string
+        firstName:
+          maxLength: 60
+          type: string
+        lastName:
+          maxLength: 60
+          type: string
+        email:
+          format: email
+          maxLength: 180
+          description: 'Optional, never verified; ignored when another account already uses it.'
+          externalDocs:
+            url: 'https://schema.org/email'
+          type:
+            - string
+            - 'null'
+        termsVersion:
+          description: 'The `version` of /legal/terms/current.'
+          type: string
+    Registration.AcceptedInvitationView:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshToken:
+          type: string
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        account:
+          $ref: '#/components/schemas/AccountView'
+    RelatedCareItemView:
+      type: object
+      properties:
+        kind:
+          type: string
+        label:
+          type: string
+        dueOn:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - booked
+            - overdue
+            - due_soon
+            - up_to_date
+    RenewalRequestCreation:
+      type: object
+      required:
+        - petCondition
+      properties:
+        petCondition:
+          type: string
+          enum:
+            - improved
+            - no_improvement
+            - adverse_effects
+        note:
+          type:
+            - string
+            - 'null'
+          maxLength: 500
+    RenewalRequestCreation.RenewalRequestCreatedView:
+      type: object
+      properties:
+        requestId:
+          type: string
+        status:
+          type: string
+          enum:
+            - submitted
+    SessionLogout:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+    SessionRefresh:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+    SessionRefresh.SessionTokensView:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshToken:
+          type: string
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+    TimelineDocumentView:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - report
+            - prescription
+            - invoice
+            - lab_result
+            - certificate
+    TimelineEntryView:
+      type: object
+      properties:
+        visitId:
+          type: string
+        date:
+          type: string
+          format: date-time
+        vet:
+          type:
+            - string
+            - 'null'
+        title:
+          type: string
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineDocumentView'
+  responses: {  }
+  parameters: {  }
+  examples: {  }
+  requestBodies: {  }
+  headers: {  }
+  securitySchemes:
+    Bearer:
+      type: apiKey
+      description: 'Value for the Authorization header parameter.'
+      name: Authorization
+      in: header
+security:
+  -
+    Bearer: []
+tags:
+  -
+    name: Rendez-vous
+    description: 'A practitioner bookable online for the motif; the route answers a plain JSON array of them.'
+  -
+    name: Compte
+    description: "Resource 'Compte' operations."
+  -
+    name: Animaux
+    description: "Resource 'Animaux' operations."
+  -
+    name: Annuaire
+    description: 'A practitioner a new client may book online for the motif; the route answers a plain JSON array of them.'
+  -
+    name: Consentements
+    description: "Resource 'Consentements' operations."
+  -
+    name: CGU
+    description: "Resource 'CGU' operations."
+  -
+    name: Documents
+    description: "Resource 'Documents' operations."
+  -
+    name: Invitation
+    description: "Resource 'Invitation' operations."
+  -
+    name: Authentification
+    description: "Resource 'Authentification' operations."
+  -
+    name: Demandes
+    description: "Resource 'Demandes' operations."
+webhooks: {  }
