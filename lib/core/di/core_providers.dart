@@ -9,6 +9,11 @@ import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/shared/domain/clock.dart';
 import 'package:kiveto_portal_api/kiveto_portal_api.dart';
 
+// The presentation compares the session status without importing
+// core/security/ (rule 3).
+export 'package:kiveto_mobile/core/security/session_manager.dart'
+    show SessionStatus;
+
 // The core services, as plain Riverpod providers (no code generation, D7).
 // The first three are read before runApp and overridden by app/bootstrap;
 // the slices build their repositories in features/*/di.dart on
@@ -28,6 +33,37 @@ final deviceIdProvider = Provider<String>(
 final sessionManagerProvider = Provider<SessionManager>(
   (ref) => throw UnimplementedError('sessionManagerProvider: set by bootstrap'),
 );
+
+/// The session status, reactive: the providers that belong to the account
+/// (`GET /me`, the active clinic…) watch it and rebuild on every sign-in
+/// and sign-out, a sign-in over a signed-in session included, but not on a
+/// token refresh (`SessionManager.generation`).
+final sessionStatusProvider =
+    NotifierProvider<SessionStatusNotifier, SessionStatus>(
+      SessionStatusNotifier.new,
+    );
+
+final class SessionStatusNotifier extends Notifier<SessionStatus> {
+  @override
+  SessionStatus build() {
+    final session = ref.watch(sessionManagerProvider);
+    var generation = session.generation;
+    void changed() {
+      if (session.generation == generation) return;
+      generation = session.generation;
+      state = session.status;
+    }
+
+    session.addListener(changed);
+    ref.onDispose(() => session.removeListener(changed));
+    return session.status;
+  }
+
+  /// A sign-in over a signed-in session is another account, or the same
+  /// one signed in again: notify even when the status is the same.
+  @override
+  bool updateShouldNotify(SessionStatus previous, SessionStatus next) => true;
+}
 
 /// The one secure storage of the app (tokens, device id). iOS: readable
 /// after the first unlock, never migrated to another device (backup, Quick

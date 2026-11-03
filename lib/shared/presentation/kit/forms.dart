@@ -286,6 +286,8 @@ class KivetoPhoneField extends StatelessWidget {
     this.helpText,
     this.errorText,
     this.onSubmitted,
+    this.onChanged,
+    this.inputFormatters,
   });
 
   final String label;
@@ -296,6 +298,11 @@ class KivetoPhoneField extends StatelessWidget {
   final String? helpText;
   final String? errorText;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
+
+  /// Formats the number as it is typed (the sign-in page groups it in
+  /// pairs).
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -355,6 +362,8 @@ class KivetoPhoneField extends StatelessWidget {
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.telephoneNumberNational],
                 onSubmitted: onSubmitted,
+                onChanged: onChanged,
+                inputFormatters: inputFormatters,
                 style: input,
                 decoration: _fieldDecoration(
                   error: errorText != null,
@@ -433,11 +442,14 @@ class KivetoCodeField extends StatelessWidget {
 
 /// C-21: the OTP boxes: one hidden text field (digits only, one-time-code
 /// autofill) drawing [length] boxes: filled, current (focused) or empty.
+/// With [errorText] (C-18e): red borders, the message in place of the help
+/// text, announced.
 class KivetoOtpField extends StatefulWidget {
   const new({
     required this.legend,
     super.key,
     this.helpText,
+    this.errorText,
     this.length = 6,
     this.controller,
     this.onChanged,
@@ -447,6 +459,7 @@ class KivetoOtpField extends StatefulWidget {
 
   final String legend;
   final String? helpText;
+  final String? errorText;
   final int length;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
@@ -503,6 +516,7 @@ class _KivetoOtpFieldState extends State<KivetoOtpField> {
   Widget build(BuildContext context) {
     final code = _controller.text;
     final helpText = widget.helpText;
+    final errorText = widget.errorText;
     final digit = kivetoTextStyle(22, FontWeight.w700, color: KivetoColors.ink);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -522,6 +536,7 @@ class _KivetoOtpFieldState extends State<KivetoOtpField> {
                     child: _OtpBox(
                       digit: i < code.length ? code[i] : null,
                       current: _focus.hasFocus && i == code.length,
+                      error: errorText != null,
                       style: digit,
                     ),
                   ),
@@ -531,7 +546,7 @@ class _KivetoOtpFieldState extends State<KivetoOtpField> {
             Positioned.fill(
               child: _labelled(
                 widget.legend,
-                note: widget.helpText,
+                note: errorText ?? helpText,
                 TextField(
                   controller: _controller,
                   focusNode: _focus,
@@ -566,7 +581,21 @@ class _KivetoOtpFieldState extends State<KivetoOtpField> {
             ),
           ],
         ),
-        if (helpText != null) ...[
+        if (errorText != null) ...[
+          const SizedBox(height: KivetoSpace.m),
+          // Also the input's hint; a live region so that it is announced
+          // when it appears.
+          Semantics(
+            liveRegion: true,
+            label: errorText,
+            child: ExcludeSemantics(
+              child: Text(
+                errorText,
+                style: KivetoText.caption.copyWith(color: KivetoColors.danger),
+              ),
+            ),
+          ),
+        ] else if (helpText != null) ...[
           const SizedBox(height: KivetoSpace.m),
           ExcludeSemantics(child: Text(helpText, style: KivetoText.caption)),
         ],
@@ -576,10 +605,16 @@ class _KivetoOtpFieldState extends State<KivetoOtpField> {
 }
 
 class _OtpBox extends StatelessWidget {
-  const new({required this.digit, required this.current, required this.style});
+  const new({
+    required this.digit,
+    required this.current,
+    required this.error,
+    required this.style,
+  });
 
   final String? digit;
   final bool current;
+  final bool error;
   final TextStyle style;
 
   @override
@@ -590,9 +625,13 @@ class _OtpBox extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 56),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: current ? KivetoColors.brandSubtle : KivetoColors.surface,
+        color: current && !error
+            ? KivetoColors.brandSubtle
+            : KivetoColors.surface,
         border: Border.all(
-          color: digit != null || current
+          color: error
+              ? KivetoColors.danger
+              : digit != null || current
               ? KivetoColors.brand
               : KivetoColors.borderStrong,
           width: current ? 2 : 1,

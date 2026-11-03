@@ -131,6 +131,31 @@ void main() {
       },
     );
 
+    test('generation: a sign-in and a sign-out that ends a session count, '
+        'a refresh does not', () async {
+      expect(session.generation, 0);
+
+      await session.open(pair('A'));
+      expect(session.generation, 1);
+
+      // A sign-in over a signed-in session is a new session.
+      await session.open(pair('C'));
+      expect(session.generation, 2);
+
+      // A refresh replaces the tokens of the same session.
+      await session.replaceTokens(expected: pair('C'), next: pair('D'));
+      expect(session.tokens, pair('D'));
+      expect(session.generation, 2);
+      expect(notifications, 3);
+
+      await session.signOut();
+      expect(session.generation, 3);
+
+      // Nothing to end.
+      await session.signOut();
+      expect(session.generation, 3);
+    });
+
     test('writes reach the storage in order', () async {
       final writes = [
         session.open(pair('A')),

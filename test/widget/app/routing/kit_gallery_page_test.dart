@@ -6,7 +6,6 @@ import 'package:kiveto_mobile/app/routing/app_router.dart';
 import 'package:kiveto_mobile/app/routing/app_routes.dart';
 import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
-import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';

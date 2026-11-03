@@ -10,6 +10,12 @@ abstract final class AppRoutes {
   /// the token in the fragment. Reachable signed out and signed in.
   static const invitation = '/invitation';
 
+  /// The invitation page of [token], the token in the fragment as the link
+  /// carries it (never in the path or the query): a link pasted on the
+  /// welcome page.
+  static String invitationLink(String token) =>
+      '$invitation#t=${Uri.encodeQueryComponent(token)}';
+
   // The shell: one branch per tab.
   static const home = '/home'; // 1
   static const clinics = '/clinics'; // 10, in the home branch
@@ -52,12 +58,11 @@ const Set<String> _public = {
   AppRoutes.kitGallery,
 };
 
-/// The sign-in screens a signed-in session skips.
-const Set<String> _signInOnly = {
-  AppRoutes.welcome,
-  AppRoutes.signInCode,
-  AppRoutes.register,
-};
+/// The sign-in screens a signed-in session skips. Not the code page (8): the
+/// session opens while it is shown, and it navigates itself to the
+/// destination of the verification's branch (the home, or the pending
+/// invitations); a redirect would unmount it mid-branch.
+const Set<String> _signInOnly = {AppRoutes.welcome, AppRoutes.register};
 
 /// The locations that need a confirmed clinic.
 const List<String> _clinicScoped = [
@@ -95,6 +100,12 @@ String? redirectFor({
 /// The invitation token of `/invitation#t=<token>`, or null. It is sent in
 /// a request body by slice 1 and nowhere else: never logged or shown.
 String? invitationTokenFrom(Uri uri) {
-  final token = Uri.splitQueryString(uri.fragment)['t'];
-  return token == null || token.isEmpty ? null : token;
+  try {
+    final token = Uri.splitQueryString(uri.fragment)['t'];
+    return token == null || token.isEmpty ? null : token;
+  } on FormatException {
+    // A malformed encoding (`#t=%FF`): not a link the app sent, the page
+    // says the link is invalid.
+    return null;
+  }
 }

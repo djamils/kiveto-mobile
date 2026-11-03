@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/app/bootstrap/bootstrap.dart';
 import 'package:kiveto_mobile/app/kiveto_app.dart';
+import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/network/api_config.dart';
 import 'package:kiveto_mobile/core/security/device_id_store.dart';
@@ -25,7 +26,10 @@ void main() {
     await bootstrap(readConfig: _config);
     await tester.pumpAndSettle();
 
-    expect(find.text('Bienvenue'), findsOneWidget);
+    expect(
+      find.text('La santé de vos animaux, avec votre clinique'),
+      findsOneWidget,
+    );
     expect(
       await const FlutterSecureStorage().read(key: DeviceIdStore.key),
       isNotNull,
@@ -54,6 +58,20 @@ void main() {
       storage.iOptions.accessibility,
       KeychainAccessibility.first_unlock_this_device,
     );
+
+    // The shell seams are the features' (featureOverrides()).
+    final overridden = [
+      for (final override
+          in tester.widget<ProviderScope>(find.byType(ProviderScope)).overrides)
+        '$override',
+    ];
+    for (final seam in <Object>[
+      hasConfirmedClinicProvider,
+      accountInitialsProvider,
+      unreadDocumentsCountProvider,
+    ]) {
+      expect(overridden, contains('$seam.overrideWith(...)'), reason: '$seam');
+    }
   });
 
   test('without --dart-define: a StateError before runApp', () async {

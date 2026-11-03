@@ -66,10 +66,16 @@ dependencies:
   # go_router 18 is built on material_ui (the Material library moved out of
   # the SDK): the app imports package:material_ui/material_ui.dart, never
   # package:flutter/material.dart, so that there is one MaterialApp, one
-  # Theme and one MaterialLocalizations. shared_preferences (active clinic)
-  # is deferred to the slice that persists it.
+  # Theme and one MaterialLocalizations.
   material_ui: 1.9.0
+  # Slice 1 (identity_access, client), versions checked on pub.dev on
+  # 2026-11-03 (both latest, flutter.dev, Dart >= 3.11, resolution checked
+  # with `fvm flutter pub add --dry-run`) and pinned exactly:
+  # shared_preferences keeps the active clinic per account, url_launcher
+  # opens the terms of use.
+  shared_preferences: 2.5.6
   tonik_util: 0.11.1
+  url_launcher: 6.3.3
 
 dev_dependencies:
   flutter_test:

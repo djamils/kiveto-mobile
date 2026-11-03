@@ -1,6 +1,8 @@
 // The redirects (pure table, then on a pumped router), the invitation deep
 // link, the shell: tabs with their own stack, badge and initials seams.
 
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/app/routing/app_router.dart';
@@ -9,9 +11,12 @@ import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
+import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/portal_api/fake_portal_backend.dart';
 
 String? _redirect(
   String location, {
@@ -60,14 +65,12 @@ void main() {
       }
     });
 
-    test('signed in: the sign-in pages go home', () {
-      for (final path in [
-        AppRoutes.welcome,
-        AppRoutes.signInCode,
-        AppRoutes.register,
-      ]) {
+    test('signed in: the sign-in pages go home, except the code page (it '
+        'navigates itself once the session opens)', () {
+      for (final path in [AppRoutes.welcome, AppRoutes.register]) {
         expect(_redirect(path), AppRoutes.home);
       }
+      expect(_redirect(AppRoutes.signInCode), isNull);
       expect(_redirect(AppRoutes.home), isNull);
       expect(_redirect(AppRoutes.invitation), isNull);
       expect(_redirect(AppRoutes.onboardingInvitations), isNull);
@@ -118,6 +121,17 @@ void main() {
     expect(invitationTokenFrom(Uri.parse('/invitation')), isNull);
     expect(invitationTokenFrom(Uri.parse('/invitation#t=')), isNull);
     expect(invitationTokenFrom(Uri.parse('/invitation?t=abc')), isNull);
+    // A malformed encoding is no token.
+    expect(invitationTokenFrom(Uri.parse('/invitation#t=%FF')), isNull);
+  });
+
+  test('invitationLink keeps the token in the fragment', () {
+    final link = AppRoutes.invitationLink('a+b/c');
+
+    expect(link, startsWith('${AppRoutes.invitation}#t='));
+    expect(Uri.parse(link).path, AppRoutes.invitation);
+    expect(Uri.parse(link).query, isEmpty);
+    expect(invitationTokenFrom(Uri.parse(link)), 'a+b/c');
   });
 
   test('the paths of the routes with ids', () {
@@ -150,7 +164,7 @@ void main() {
       final container = await pumpKivetoApp(tester, session: session);
 
       expect(_location(container), AppRoutes.welcome);
-      expect(find.text('Bienvenue'), findsOneWidget);
+      expect(find.byType(WelcomePage), findsOneWidget);
 
       await session.open(pair('A'));
       await tester.pumpAndSettle();
@@ -168,6 +182,7 @@ void main() {
         final container = await pumpKivetoApp(
           tester,
           session: await memorySession(pair('A')),
+          seams: false,
           overrides: [
             hasConfirmedClinicProvider.overrideWith(
               (ref) => ref.watch(_clinicSeam),
@@ -189,6 +204,7 @@ void main() {
       final container = await pumpKivetoApp(
         tester,
         session: await memorySession(pair('A')),
+        seams: false,
         overrides: [hasConfirmedClinicProvider.overrideWithValue(false)],
       );
 
@@ -198,26 +214,112 @@ void main() {
     });
 
     for (final signedIn in [false, true]) {
-      testWidgets(
-        'the invitation link (${signedIn ? 'signed in' : 'signed '
-                  'out'}) says a link arrived, never the token',
-        (tester) async {
-          await pumpKivetoApp(
-            tester,
-            session: await memorySession(signedIn ? pair('A') : null),
-            initialLocation: '/invitation#t=abc',
+      testWidgets('the invitation link (${signedIn ? 'signed in' : 'signed '
+                    'out'}) opens the invitation page with its token, sent in '
+          'the lookup body only, never shown', (tester) async {
+        final backend = FakePortalBackend()
+          ..on(
+            'POST',
+            '/api/portal/v1/invitations/lookup',
+            PortalReply.fixture('invitations.lookup.post.200.json'),
+          )
+          ..on(
+            'POST',
+            '/api/portal/v1/invitations/otp',
+            PortalReply.fixture('invitations.otp.post.202.json', status: 202),
           );
+        final container = await pumpKivetoApp(
+          tester,
+          session: await memorySession(signedIn ? pair('A') : null),
+          backend: backend,
+          initialLocation: '/invitation#t=abc',
+        );
 
-          expect(find.text("Lien d'invitation reçu."), findsOneWidget);
-          expect(find.textContaining('abc'), findsNothing);
-        },
-      );
+        expect(_location(container), '/invitation#t=abc');
+        expect(find.byType(InvitationPage), findsOneWidget);
+        expect(
+          find.text('Invitation : Clinique Vétérinaire de Paris'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('abc'), findsNothing);
+        final lookup = backend
+            .requestsTo('/api/portal/v1/invitations/lookup')
+            .single;
+        expect(utf8.decode(lookup.body), '{"token":"abc"}');
+        expect(lookup.uri.toString(), isNot(contains('abc')));
+      });
     }
 
-    testWidgets('/invitation without a fragment: no link', (tester) async {
+    testWidgets('a second invitation link while the first is shown: the '
+        'same page reads the new token', (tester) async {
+      final backend = FakePortalBackend()
+        ..onRequest(
+          'POST',
+          '/api/portal/v1/invitations/lookup',
+          (request) => utf8.decode(request.body) == '{"token":"PERRIN_TOKEN"}'
+              ? PortalReply.fixture(
+                  'invitations.lookup.expired.post.410.json',
+                  status: 410,
+                )
+              : PortalReply.fixture('invitations.lookup.post.200.json'),
+        )
+        ..on(
+          'POST',
+          '/api/portal/v1/invitations/otp',
+          PortalReply.fixture('invitations.otp.post.202.json', status: 202),
+        )
+        ..on(
+          'GET',
+          '/api/portal/v1/legal/terms/current',
+          PortalReply.fixture('legal.terms.current.get.200.json'),
+        );
+      final container = await pumpKivetoApp(
+        tester,
+        backend: backend,
+        initialLocation: '/invitation#t=PERRIN_TOKEN',
+      );
+      expect(find.text('Invitation expirée'), findsOneWidget);
+      final page = tester.state<State>(find.byType(InvitationPage));
+
+      container.read(routerProvider).go('/invitation#t=ROUSSEL_TOKEN');
+      await tester.pumpAndSettle();
+
+      // The same page (go_router keys it by path), updated with the token.
+      expect(tester.state<State>(find.byType(InvitationPage)), same(page));
+
+      expect(find.text('Invitation expirée'), findsNothing);
+      expect(
+        find.text('Invitation : Clinique Vétérinaire de Paris'),
+        findsOneWidget,
+      );
+      final lookups = backend.requestsTo('/api/portal/v1/invitations/lookup');
+      expect(lookups.map((request) => utf8.decode(request.body)), [
+        '{"token":"PERRIN_TOKEN"}',
+        '{"token":"ROUSSEL_TOKEN"}',
+      ]);
+      expect(
+        utf8.decode(
+          backend.requestsTo('/api/portal/v1/invitations/otp').single.body,
+        ),
+        '{"token":"ROUSSEL_TOKEN"}',
+      );
+    });
+
+    testWidgets('/invitation without a fragment: the invalid link state', (
+      tester,
+    ) async {
       await pumpKivetoApp(tester, initialLocation: AppRoutes.invitation);
 
-      expect(find.text("Aucun lien d'invitation."), findsOneWidget);
+      expect(find.text("Lien d'invitation invalide"), findsOneWidget);
+    });
+
+    testWidgets('/invitation with a malformed token: the invalid link state', (
+      tester,
+    ) async {
+      await pumpKivetoApp(tester, initialLocation: '/invitation#t=%FF');
+
+      expect(find.text("Lien d'invitation invalide"), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('each tab keeps its own stack; the active tab goes back to '
@@ -284,6 +386,7 @@ void main() {
       await pumpKivetoApp(
         tester,
         session: await memorySession(pair('A')),
+        seams: false,
         overrides: [
           unreadDocumentsCountProvider.overrideWithValue(2),
           accountInitialsProvider.overrideWithValue('SB'),
@@ -335,10 +438,33 @@ void main() {
     ) async {
       await pumpKivetoApp(tester);
 
-      await tester.tap(find.text("Ouvrir le kit d'interface"));
+      final link = find.text("Ouvrir le kit d'interface");
+      await tester.ensureVisible(link);
+      await tester.pumpAndSettle();
+      await tester.tap(link);
       await tester.pumpAndSettle();
 
       expect(find.byType(KitGalleryPage), findsOneWidget);
+    });
+
+    testWidgets('the flow pages opened without their flow go back to their '
+        'start', (tester) async {
+      final container = await pumpKivetoApp(tester);
+      final router = container.read(routerProvider);
+      for (final path in [AppRoutes.signInCode, AppRoutes.register]) {
+        router.go(path);
+        await tester.pumpAndSettle();
+        expect(_location(container), AppRoutes.welcome, reason: path);
+      }
+      router.go(AppRoutes.onboardingInvitations);
+      await tester.pumpAndSettle();
+      expect(_location(container), AppRoutes.welcome);
+
+      await session(container).open(pair('A'));
+      await tester.pumpAndSettle();
+      router.go(AppRoutes.onboardingInvitations);
+      await tester.pumpAndSettle();
+      expect(_location(container), AppRoutes.home);
     });
 
     testWidgets('every placeholder route builds', (tester) async {
@@ -358,22 +484,10 @@ void main() {
         (AppRoutes.bookingSlot, 'Choisissez un créneau'),
         (AppRoutes.bookingConfirm, 'Vérifiez et confirmez'),
         (AppRoutes.clinicListing('l'), 'Fiche clinique'),
-        (AppRoutes.onboardingInvitations, 'Vos invitations'),
       ]) {
         router.go(path);
         await tester.pumpAndSettle();
         expect(find.text(title), findsWidgets, reason: path);
-      }
-
-      await session(container).signOut();
-      await tester.pumpAndSettle();
-      for (final (path, title) in [
-        (AppRoutes.signInCode, 'Entrez le code reçu'),
-        (AppRoutes.register, 'Créez votre compte'),
-      ]) {
-        router.go(path);
-        await tester.pumpAndSettle();
-        expect(find.text(title), findsOneWidget, reason: path);
       }
     });
   });

@@ -28,6 +28,7 @@ final class SessionManager with ChangeNotifier {
 
   final TokenStorage _storage;
   TokenPair? _tokens;
+  int _generation = 0;
   Future<void> _persisted = Future.value();
 
   SessionStatus get status =>
@@ -35,18 +36,26 @@ final class SessionManager with ChangeNotifier {
 
   TokenPair? get tokens => _tokens;
 
+  /// Counts the session changes: [open] (a sign-in, an invitation
+  /// acceptance, a registration) and a [signOut] that ends a session
+  /// increment it; a refresh ([replaceTokens]) does not. What belongs to
+  /// the account rather than to its tokens is rebuilt when it changes,
+  /// never on a refresh.
+  int get generation => _generation;
+
   /// Signs in with [tokens], replacing any pair: after a sign-in, an
   /// invitation acceptance or a registration, the newest pair always wins.
+  /// Always a new session, also over a signed-in one.
   Future<void> open(TokenPair tokens) {
-    _tokens = tokens;
-    notifyListeners();
-    return _persist(() => _storage.write(tokens));
+    _generation++;
+    return _install(tokens);
   }
 
   /// Forgets the session (memory, then storage).
   Future<void> signOut() {
     if (_tokens != null) {
       _tokens = null;
+      _generation++;
       notifyListeners();
     }
     return _persist(_storage.clear);
@@ -60,7 +69,7 @@ final class SessionManager with ChangeNotifier {
     required TokenPair next,
   }) async {
     if (_tokens?.refreshToken != expected.refreshToken) return false;
-    await open(next);
+    await _install(next);
     return true;
   }
 
@@ -69,6 +78,14 @@ final class SessionManager with ChangeNotifier {
   Future<void> signOutIfCurrent(TokenPair expected) async {
     if (_tokens?.refreshToken != expected.refreshToken) return;
     await signOut();
+  }
+
+  /// Installs [tokens] in memory, notifies, then persists them; [open]
+  /// counts a new session, a refresh does not.
+  Future<void> _install(TokenPair tokens) {
+    _tokens = tokens;
+    notifyListeners();
+    return _persist(() => _storage.write(tokens));
   }
 
   Future<void> _persist(Future<void> Function() write) =>

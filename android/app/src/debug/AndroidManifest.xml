@@ -11,13 +11,15 @@
          adb shell am start -a android.intent.action.VIEW
            -d "https://portal.kiveto.local/invitation#t=<token>" app.kiveto.portal
          (no autoVerify: the dev host serves no assetlinks; the production
-         host is not known yet). -->
+         host is not known yet). The dev backend writes its invitation SMS
+         with http://portal.kiveto.local/invitation#t=…: both schemes. -->
     <application android:networkSecurityConfig="@xml/network_security_config">
         <activity android:name=".MainActivity" tools:node="merge">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="http"/>
                 <data
                     android:scheme="https"
                     android:host="portal.kiveto.local"

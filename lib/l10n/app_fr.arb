@@ -37,10 +37,6 @@
     }
   },
 
-  "screenWelcomeTitle": "Bienvenue",
-  "@screenWelcomeTitle": {
-    "description": "Title of the welcome screen (7)."
-  },
   "screenSignInCodeTitle": "Entrez le code reçu",
   "@screenSignInCodeTitle": {
     "description": "Title of the code entry screen (8)."
@@ -48,18 +44,6 @@
   "screenRegisterTitle": "Créez votre compte",
   "@screenRegisterTitle": {
     "description": "Title of the registration screen (9)."
-  },
-  "screenOnboardingInvitationsTitle": "Vos invitations",
-  "@screenOnboardingInvitationsTitle": {
-    "description": "Title of the pending invitations screen, after a sign-in with pending invitations."
-  },
-  "screenInvitationTitle": "Activez votre espace",
-  "@screenInvitationTitle": {
-    "description": "Title of the invitation activation screen (0), opened from the invitation link."
-  },
-  "screenHomeTitle": "Accueil",
-  "@screenHomeTitle": {
-    "description": "Title of the home screen (1)."
   },
   "screenClinicsTitle": "Trouver une clinique",
   "@screenClinicsTitle": {
@@ -133,14 +117,6 @@
   "welcomeKitGalleryLink": "Ouvrir le kit d'interface",
   "@welcomeKitGalleryLink": {
     "description": "Debug builds only: the link from the welcome screen to the UI kit gallery."
-  },
-  "invitationLinkReceived": "Lien d'invitation reçu.",
-  "@invitationLinkReceived": {
-    "description": "The invitation screen received a link with a token (the token is never shown)."
-  },
-  "invitationLinkMissing": "Aucun lien d'invitation.",
-  "@invitationLinkMissing": {
-    "description": "The invitation screen was opened without a token."
   },
   "routeNotFoundTitle": "Page introuvable",
   "@routeNotFoundTitle": {
@@ -265,5 +241,473 @@
   "errorUnknownBody": "Réessayez dans un instant.",
   "@errorUnknownBody": {
     "description": "Error view body: an error that is not an API failure."
+  },
+
+  "identityWelcomeTitle": "La santé de vos animaux, avec votre clinique",
+  "@identityWelcomeTitle": {
+    "description": "Welcome screen (7): the title."
+  },
+  "identityWelcomeIntro": "Rendez-vous en ligne, documents, rappels de vaccins.",
+  "@identityWelcomeIntro": {
+    "description": "Welcome screen (7): the line under the title."
+  },
+  "identityPhoneLabel": "Numéro de mobile",
+  "@identityPhoneLabel": {
+    "description": "Welcome screen (7): label of the mobile number field."
+  },
+  "identityPhoneHint": "6 12 34 56 78",
+  "@identityPhoneHint": {
+    "description": "Welcome screen (7): placeholder of the mobile number field (a French number without its leading 0)."
+  },
+  "identityPhoneHelp": "Vous recevrez un code par SMS. Pas de mot de passe.",
+  "@identityPhoneHelp": {
+    "description": "Welcome screen (7): help text under the mobile number field."
+  },
+  "identityRequestCode": "Recevoir mon code",
+  "@identityRequestCode": {
+    "description": "Welcome screen (7): the button that sends the sign-in code by SMS."
+  },
+  "identityInvitationBoxTitle": "Votre clinique vous a envoyé une invitation ?",
+  "@identityInvitationBoxTitle": {
+    "description": "Welcome screen (7): title of the invitation box at the bottom."
+  },
+  "identityInvitationBoxBody": "Ouvrez le lien reçu par SMS ou email : vos animaux et votre historique seront déjà là.",
+  "@identityInvitationBoxBody": {
+    "description": "Welcome screen (7): body of the invitation box."
+  },
+  "identityInvitationBoxAction": "J'ai un lien d'invitation",
+  "@identityInvitationBoxAction": {
+    "description": "Welcome screen (7): link of the invitation box, opens the invitation link sheet."
+  },
+  "identityCountrySheetTitle": "Indicatif du numéro",
+  "@identityCountrySheetTitle": {
+    "description": "Country code sheet of the welcome screen: its title."
+  },
+  "identityCountryFrance": "France",
+  "@identityCountryFrance": {
+    "description": "Country code sheet: +33."
+  },
+  "identityCountryReunionMayotte": "La Réunion · Mayotte",
+  "@identityCountryReunionMayotte": {
+    "description": "Country code sheet: +262."
+  },
+  "identityCountryGuadeloupe": "Guadeloupe",
+  "@identityCountryGuadeloupe": {
+    "description": "Country code sheet: +590."
+  },
+  "identityCountryGuyane": "Guyane",
+  "@identityCountryGuyane": {
+    "description": "Country code sheet: +594."
+  },
+  "identityCountryMartinique": "Martinique",
+  "@identityCountryMartinique": {
+    "description": "Country code sheet: +596."
+  },
+  "identityCountrySaintPierre": "Saint-Pierre-et-Miquelon",
+  "@identityCountrySaintPierre": {
+    "description": "Country code sheet: +508."
+  },
+  "identityCountryWallis": "Wallis-et-Futuna",
+  "@identityCountryWallis": {
+    "description": "Country code sheet: +681."
+  },
+  "identityCountryNewCaledonia": "Nouvelle-Calédonie",
+  "@identityCountryNewCaledonia": {
+    "description": "Country code sheet: +687."
+  },
+  "identityCountryPolynesia": "Polynésie française",
+  "@identityCountryPolynesia": {
+    "description": "Country code sheet: +689."
+  },
+  "identityInvitationSheetBody": "Le lien reçu par SMS ou email ouvre directement l'application. Vous pouvez aussi le coller ici.",
+  "@identityInvitationSheetBody": {
+    "description": "Invitation link sheet of the welcome screen: the explanation (its title is identityInvitationBoxAction)."
+  },
+  "identityInvitationSheetLabel": "Lien d'invitation",
+  "@identityInvitationSheetLabel": {
+    "description": "Invitation link sheet: label of the field where the link is pasted."
+  },
+  "identityInvitationSheetHint": "https://…/invitation#t=…",
+  "@identityInvitationSheetHint": {
+    "description": "Invitation link sheet: placeholder of the link field."
+  },
+  "identityInvitationSheetAction": "Ouvrir l'invitation",
+  "@identityInvitationSheetAction": {
+    "description": "Invitation link sheet: the button that opens the pasted invitation."
+  },
+  "identityInvitationSheetError": "Ce lien n'est pas un lien d'invitation. Copiez le lien complet reçu par SMS ou email.",
+  "@identityInvitationSheetError": {
+    "description": "Invitation link sheet: the pasted text is not an invitation link."
+  },
+  "identityCodeSentTo": "Envoyé par SMS au {phone}.",
+  "@identityCodeSentTo": {
+    "description": "Code screen (8): where the code was sent; the number is shown in bold.",
+    "placeholders": {
+      "phone": {
+        "type": "String",
+        "example": "06 12 34 56 78"
+      }
+    }
+  },
+  "identityCodeEdit": "Modifier",
+  "@identityCodeEdit": {
+    "description": "Code screen (8): link back to the welcome screen to change the number."
+  },
+  "identityCodeLegend": "Code de vérification",
+  "@identityCodeLegend": {
+    "description": "Code screen (8): legend of the 6 code boxes."
+  },
+  "identityCodeHelp": "Valable 10 minutes.",
+  "@identityCodeHelp": {
+    "description": "Code screen (8): help text under the code boxes."
+  },
+  "identityCodeResendSmsIn": "Renvoyer le SMS dans {time}",
+  "@identityCodeResendSmsIn": {
+    "description": "Code screen (8): the disabled resend button during the countdown (m:ss).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "0:24"
+      }
+    }
+  },
+  "identityCodeResendSms": "Renvoyer le SMS",
+  "@identityCodeResendSms": {
+    "description": "Code screen (8): sends a new code by SMS."
+  },
+  "identityCodeResendEmail": "Recevoir le code par email",
+  "@identityCodeResendEmail": {
+    "description": "Code screen (8): sends a new code by email (verified email only)."
+  },
+  "identityCodeResentEmail": "Si un email vérifié est associé à votre compte, le code vous y a été envoyé.",
+  "@identityCodeResentEmail": {
+    "description": "Code screen (8): after a resend by email (the server answers the same whether an email exists or not)."
+  },
+  "identityCodeResentSms": "Nouveau code envoyé par SMS.",
+  "@identityCodeResentSms": {
+    "description": "Code screen (8) and invitation screen (0): after a resend by SMS."
+  },
+  "identityCodeNotReceived": "Vous n'avez pas reçu de code ? Réessayez dans quelques minutes.",
+  "@identityCodeNotReceived": {
+    "description": "Code screen (8): footnote once the resend countdown is over."
+  },
+  "identityCodeSubmit": "Valider",
+  "@identityCodeSubmit": {
+    "description": "Code screen (8): verifies the code."
+  },
+  "identityRestart": "Recommencer",
+  "@identityRestart": {
+    "description": "Sign-in screens: back to the welcome screen after a request that is no longer valid."
+  },
+  "identityReconnect": "Se reconnecter",
+  "@identityReconnect": {
+    "description": "Invitation screens: back to the welcome screen after the verification expired."
+  },
+  "identityBackHome": "Revenir à l'accueil",
+  "@identityBackHome": {
+    "description": "Invitation screens: back to the welcome screen (signed out) or to the home (signed in)."
+  },
+  "identityRegisterVerified": "{phone} vérifié",
+  "@identityRegisterVerified": {
+    "description": "Registration screen (9): the success tag of the verified number.",
+    "placeholders": {
+      "phone": {
+        "type": "String",
+        "example": "06 12 34 56 78"
+      }
+    }
+  },
+  "identityFirstNameLabel": "Prénom",
+  "@identityFirstNameLabel": {
+    "description": "Registration screen (9): label of the first name field."
+  },
+  "identityLastNameLabel": "Nom",
+  "@identityLastNameLabel": {
+    "description": "Registration screen (9): label of the last name field."
+  },
+  "identityEmailLabel": "Email",
+  "@identityEmailLabel": {
+    "description": "Registration (9) and invitation (0) screens: label of the email field."
+  },
+  "identityRegisterEmailHelp": "Pour recevoir vos documents et confirmations.",
+  "@identityRegisterEmailHelp": {
+    "description": "Registration screen (9): help text under the optional email field."
+  },
+  "identityRegisterNote": "Vos animaux seront ajoutés lors de votre premier rendez-vous, ou retrouvés si votre clinique utilise déjà Kiveto.",
+  "@identityRegisterNote": {
+    "description": "Registration screen (9): the note under the form."
+  },
+  "identityRegisterSubmit": "Créer mon compte",
+  "@identityRegisterSubmit": {
+    "description": "Registration screen (9): creates the account."
+  },
+  "identityTermsConsent": "J'accepte les {terms} et la {privacy}.",
+  "@identityTermsConsent": {
+    "description": "Terms checkbox (screens 0, 9 and the pending invitations); both placeholders are links.",
+    "placeholders": {
+      "terms": {
+        "type": "String",
+        "example": "conditions d'utilisation"
+      },
+      "privacy": {
+        "type": "String",
+        "example": "politique de confidentialité"
+      }
+    }
+  },
+  "identityTermsLink": "conditions d'utilisation",
+  "@identityTermsLink": {
+    "description": "Terms checkbox: the link to the terms of use."
+  },
+  "identityPrivacyLink": "politique de confidentialité",
+  "@identityPrivacyLink": {
+    "description": "Terms checkbox: the link to the privacy policy (the terms page)."
+  },
+  "identityTermsOpenError": "Impossible d'ouvrir les conditions d'utilisation.",
+  "@identityTermsOpenError": {
+    "description": "Snackbar: the terms page could not be opened."
+  },
+  "identityTermsLoadError": "Impossible de charger les conditions d'utilisation.",
+  "@identityTermsLoadError": {
+    "description": "Terms checkbox: the current terms could not be loaded (a retry link follows)."
+  },
+  "identityInvitationTag": "Invitation : {clinic}",
+  "@identityInvitationTag": {
+    "description": "Invitation screens: the tag naming the inviting clinic.",
+    "placeholders": {
+      "clinic": {
+        "type": "String",
+        "example": "Clinique des Lices"
+      }
+    }
+  },
+  "identityInvitationTitle": "Activez votre espace pour suivre {pets}",
+  "@identityInvitationTitle": {
+    "description": "Invitation screen (0): the title with the pet names (\"Moka et Pistache\").",
+    "placeholders": {
+      "pets": {
+        "type": "String",
+        "example": "Moka et Pistache"
+      }
+    }
+  },
+  "identityInvitationTitleNoPet": "Activez votre espace",
+  "@identityInvitationTitleNoPet": {
+    "description": "Invitation screens: the title without pet names."
+  },
+  "identityNamesAnd": "{head} et {last}",
+  "@identityNamesAnd": {
+    "description": "A list of names: the first ones joined by commas, then the last one (\"Moka, Oslo et Pistache\").",
+    "placeholders": {
+      "head": {
+        "type": "String",
+        "example": "Moka, Oslo"
+      },
+      "last": {
+        "type": "String",
+        "example": "Pistache"
+      }
+    }
+  },
+  "identityInvitationIntro": "Rendez-vous, documents et rappels de soins, au même endroit.",
+  "@identityInvitationIntro": {
+    "description": "Invitation screen (0): the line under the title."
+  },
+  "identityInvitationEmailHelp": "Renseigné par la clinique.",
+  "@identityInvitationEmailHelp": {
+    "description": "Invitation screen (0): help text under the read-only email."
+  },
+  "identityInvitationCodeLabel": "Code reçu par SMS au {maskedPhone}",
+  "@identityInvitationCodeLabel": {
+    "description": "Invitation screen (0): label of the code field, with the masked number as the server sends it.",
+    "placeholders": {
+      "maskedPhone": {
+        "type": "String",
+        "example": "+33 6 •• •• •• 55"
+      }
+    }
+  },
+  "identityInvitationCodeHint": "6 chiffres",
+  "@identityInvitationCodeHint": {
+    "description": "Invitation screen (0): placeholder of the code field."
+  },
+  "identityInvitationResendIn": "Renvoyer le code dans {time}",
+  "@identityInvitationResendIn": {
+    "description": "Invitation screen (0): the disabled resend button during the countdown (m:ss).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "0:24"
+      }
+    }
+  },
+  "identityInvitationResend": "Renvoyer le code",
+  "@identityInvitationResend": {
+    "description": "Invitation screen (0): sends a new invitation code by SMS."
+  },
+  "identityInvitationSubmit": "Activer mon espace",
+  "@identityInvitationSubmit": {
+    "description": "Invitation screens: accepts the invitation."
+  },
+  "identityInvitationExistingAccount": "Déjà un compte Kiveto ? {action}",
+  "@identityInvitationExistingAccount": {
+    "description": "Invitation screen (0), signed out: the bottom line; the placeholder is a link.",
+    "placeholders": {
+      "action": {
+        "type": "String",
+        "example": "Rattacher cette clinique"
+      }
+    }
+  },
+  "identityInvitationAttach": "Rattacher cette clinique",
+  "@identityInvitationAttach": {
+    "description": "Invitation screen (0): link to the welcome screen, to sign in with an existing account."
+  },
+  "identityInvitationExpiredTitle": "Invitation expirée",
+  "@identityInvitationExpiredTitle": {
+    "description": "Invitation screen (0): title of an expired invitation."
+  },
+  "identityInvitationExpiredBody": "Ce lien n'est plus valable. Demandez à votre clinique de vous renvoyer une invitation.",
+  "@identityInvitationExpiredBody": {
+    "description": "Invitation screen (0): body of an expired invitation."
+  },
+  "identityInvitationInvalidTitle": "Lien d'invitation invalide",
+  "@identityInvitationInvalidTitle": {
+    "description": "Invitation screen (0): title of an unknown, replaced or incomplete link."
+  },
+  "identityInvitationInvalidBody": "Ce lien est incomplet ou a été remplacé par un envoi plus récent. Utilisez le dernier lien reçu, ou connectez-vous avec votre numéro.",
+  "@identityInvitationInvalidBody": {
+    "description": "Invitation screen (0): body of an unknown, replaced or incomplete link."
+  },
+  "identityInvitationUsedTitle": "Invitation déjà utilisée",
+  "@identityInvitationUsedTitle": {
+    "description": "Invitation screen (0): title of an invitation already accepted."
+  },
+  "identityInvitationUsedBody": "Cette invitation a déjà été acceptée. Connectez-vous avec votre numéro pour retrouver votre espace.",
+  "@identityInvitationUsedBody": {
+    "description": "Invitation screen (0): body of an invitation already accepted."
+  },
+  "identityInvitationSignIn": "Se connecter avec mon numéro",
+  "@identityInvitationSignIn": {
+    "description": "Invitation screen (0), unusable link, signed out: to the welcome screen."
+  },
+  "identityOnboardingCount": "{count, plural, =1{1 invitation} other{{count} invitations}}",
+  "@identityOnboardingCount": {
+    "description": "Pending invitations screen: the tag when several clinics invite.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "identityOnboardingBody": "Votre clinique vous invite à retrouver vos animaux sur Kiveto : rendez-vous, documents et rappels de soins, au même endroit.",
+  "@identityOnboardingBody": {
+    "description": "Pending invitations screen: the line under the title."
+  },
+  "identityOnboardingAcceptSelected": "Accepter cette invitation",
+  "@identityOnboardingAcceptSelected": {
+    "description": "Pending invitations screen, several invitations: accepts the selected one."
+  },
+  "identityOnboardingAccepted": "Invitation acceptée : {clinic}.",
+  "@identityOnboardingAccepted": {
+    "description": "Pending invitations screen: after an acceptance, other invitations left.",
+    "placeholders": {
+      "clinic": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Paris"
+      }
+    }
+  },
+  "identityOnboardingLater": "Plus tard",
+  "@identityOnboardingLater": {
+    "description": "Pending invitations screen, signed in: to the home, the invitations left for later."
+  },
+  "identityOnboardingNotNow": "Pas maintenant ? {action}",
+  "@identityOnboardingNotNow": {
+    "description": "Pending invitations screen, signed out: the bottom line; the placeholder is a link.",
+    "placeholders": {
+      "action": {
+        "type": "String",
+        "example": "Revenir à l'accueil"
+      }
+    }
+  },
+  "identityOnboardingNone": "Aucune invitation en attente.",
+  "@identityOnboardingNone": {
+    "description": "Pending invitations screen: every invitation was removed (no longer available)."
+  },
+  "identityErrorPhoneNotSupported": "Ce numéro de mobile n'est pas encore pris en charge par Kiveto.",
+  "@identityErrorPhoneNotSupported": {
+    "description": "Welcome screen (7): 422 phone_not_supported."
+  },
+  "identityErrorPhoneInvalid": "Vérifiez votre numéro de mobile.",
+  "@identityErrorPhoneInvalid": {
+    "description": "Welcome screen (7): 422 validation_failed on the number."
+  },
+  "identityErrorOtpInvalid": "Code incorrect. Vérifiez-le, puis réessayez.",
+  "@identityErrorOtpInvalid": {
+    "description": "Code fields: 422 otp_invalid."
+  },
+  "identityErrorOtpExpired": "Ce code a expiré. Demandez-en un nouveau.",
+  "@identityErrorOtpExpired": {
+    "description": "Code fields: 422 otp_expired."
+  },
+  "identityErrorOtpAttemptsExceeded": "Trop d'essais. Demandez un nouveau code.",
+  "@identityErrorOtpAttemptsExceeded": {
+    "description": "Code fields: 422 otp_attempts_exceeded."
+  },
+  "identityErrorOtpRateLimited": "Trop de demandes de code. Réessayez dans {minutes} min.",
+  "@identityErrorOtpRateLimited": {
+    "description": "429 otp_rate_limited, with the wait announced by the server (Retry-After), rounded up to the minute.",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "60"
+      }
+    }
+  },
+  "identityErrorOtpRateLimitedUnknown": "Trop de demandes de code. Réessayez dans quelques minutes.",
+  "@identityErrorOtpRateLimitedUnknown": {
+    "description": "429 otp_rate_limited without a wait announced by the server."
+  },
+  "identityErrorOtpChallengeNotFound": "Cette demande de code n'est plus valable. Recommencez.",
+  "@identityErrorOtpChallengeNotFound": {
+    "description": "Code screen (8): 404 otp_challenge_not_found on a resend."
+  },
+  "identityErrorAccountDisabled": "Ce compte est désactivé. Contactez votre clinique.",
+  "@identityErrorAccountDisabled": {
+    "description": "403 account_disabled."
+  },
+  "identityErrorOnboardingInvalid": "Votre vérification a expiré. Reconnectez-vous avec votre numéro.",
+  "@identityErrorOnboardingInvalid": {
+    "description": "401 onboarding_invalid: the onboarding or registration grant expired."
+  },
+  "identityErrorAccountExists": "Un compte existe déjà pour ce numéro. Connectez-vous avec votre numéro.",
+  "@identityErrorAccountExists": {
+    "description": "Registration screen (9): 409 account_exists."
+  },
+  "identityErrorTermsOutdated": "Les conditions d'utilisation ont changé : relisez-les, puis acceptez-les à nouveau.",
+  "@identityErrorTermsOutdated": {
+    "description": "422 terms_outdated: the terms were reloaded and the checkbox unchecked."
+  },
+  "identityErrorInvitationInvalid": "Cette invitation n'est plus disponible.",
+  "@identityErrorInvitationInvalid": {
+    "description": "Pending invitations screen: 404 invitation_invalid, the invitation was removed from the list."
+  },
+
+  "homeGreeting": "Bonjour {firstName}",
+  "@homeGreeting": {
+    "description": "Home screen (1): the greeting with the account's first name.",
+    "placeholders": {
+      "firstName": {
+        "type": "String",
+        "example": "Sarah"
+      }
+    }
+  },
+  "homeGreetingNoName": "Bonjour",
+  "@homeGreetingNoName": {
+    "description": "Home screen (1): the greeting of an account without a first name."
   }
 }

@@ -136,12 +136,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Documents, 1 nouveau} other{Documents, {count} nouveaux}}'**
   String navDocumentsUnread(int count);
 
-  /// Title of the welcome screen (7).
-  ///
-  /// In fr, this message translates to:
-  /// **'Bienvenue'**
-  String get screenWelcomeTitle;
-
   /// Title of the code entry screen (8).
   ///
   /// In fr, this message translates to:
@@ -153,24 +147,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Créez votre compte'**
   String get screenRegisterTitle;
-
-  /// Title of the pending invitations screen, after a sign-in with pending invitations.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vos invitations'**
-  String get screenOnboardingInvitationsTitle;
-
-  /// Title of the invitation activation screen (0), opened from the invitation link.
-  ///
-  /// In fr, this message translates to:
-  /// **'Activez votre espace'**
-  String get screenInvitationTitle;
-
-  /// Title of the home screen (1).
-  ///
-  /// In fr, this message translates to:
-  /// **'Accueil'**
-  String get screenHomeTitle;
 
   /// Title of the clinic search screen (10).
   ///
@@ -279,18 +255,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ouvrir le kit d\'interface'**
   String get welcomeKitGalleryLink;
-
-  /// The invitation screen received a link with a token (the token is never shown).
-  ///
-  /// In fr, this message translates to:
-  /// **'Lien d\'invitation reçu.'**
-  String get invitationLinkReceived;
-
-  /// The invitation screen was opened without a token.
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun lien d\'invitation.'**
-  String get invitationLinkMissing;
 
   /// Title shown for an unknown link or route.
   ///
@@ -465,6 +429,558 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Réessayez dans un instant.'**
   String get errorUnknownBody;
+
+  /// Welcome screen (7): the title.
+  ///
+  /// In fr, this message translates to:
+  /// **'La santé de vos animaux, avec votre clinique'**
+  String get identityWelcomeTitle;
+
+  /// Welcome screen (7): the line under the title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous en ligne, documents, rappels de vaccins.'**
+  String get identityWelcomeIntro;
+
+  /// Welcome screen (7): label of the mobile number field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de mobile'**
+  String get identityPhoneLabel;
+
+  /// Welcome screen (7): placeholder of the mobile number field (a French number without its leading 0).
+  ///
+  /// In fr, this message translates to:
+  /// **'6 12 34 56 78'**
+  String get identityPhoneHint;
+
+  /// Welcome screen (7): help text under the mobile number field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous recevrez un code par SMS. Pas de mot de passe.'**
+  String get identityPhoneHelp;
+
+  /// Welcome screen (7): the button that sends the sign-in code by SMS.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir mon code'**
+  String get identityRequestCode;
+
+  /// Welcome screen (7): title of the invitation box at the bottom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre clinique vous a envoyé une invitation ?'**
+  String get identityInvitationBoxTitle;
+
+  /// Welcome screen (7): body of the invitation box.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrez le lien reçu par SMS ou email : vos animaux et votre historique seront déjà là.'**
+  String get identityInvitationBoxBody;
+
+  /// Welcome screen (7): link of the invitation box, opens the invitation link sheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai un lien d\'invitation'**
+  String get identityInvitationBoxAction;
+
+  /// Country code sheet of the welcome screen: its title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indicatif du numéro'**
+  String get identityCountrySheetTitle;
+
+  /// Country code sheet: +33.
+  ///
+  /// In fr, this message translates to:
+  /// **'France'**
+  String get identityCountryFrance;
+
+  /// Country code sheet: +262.
+  ///
+  /// In fr, this message translates to:
+  /// **'La Réunion · Mayotte'**
+  String get identityCountryReunionMayotte;
+
+  /// Country code sheet: +590.
+  ///
+  /// In fr, this message translates to:
+  /// **'Guadeloupe'**
+  String get identityCountryGuadeloupe;
+
+  /// Country code sheet: +594.
+  ///
+  /// In fr, this message translates to:
+  /// **'Guyane'**
+  String get identityCountryGuyane;
+
+  /// Country code sheet: +596.
+  ///
+  /// In fr, this message translates to:
+  /// **'Martinique'**
+  String get identityCountryMartinique;
+
+  /// Country code sheet: +508.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saint-Pierre-et-Miquelon'**
+  String get identityCountrySaintPierre;
+
+  /// Country code sheet: +681.
+  ///
+  /// In fr, this message translates to:
+  /// **'Wallis-et-Futuna'**
+  String get identityCountryWallis;
+
+  /// Country code sheet: +687.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle-Calédonie'**
+  String get identityCountryNewCaledonia;
+
+  /// Country code sheet: +689.
+  ///
+  /// In fr, this message translates to:
+  /// **'Polynésie française'**
+  String get identityCountryPolynesia;
+
+  /// Invitation link sheet of the welcome screen: the explanation (its title is identityInvitationBoxAction).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le lien reçu par SMS ou email ouvre directement l\'application. Vous pouvez aussi le coller ici.'**
+  String get identityInvitationSheetBody;
+
+  /// Invitation link sheet: label of the field where the link is pasted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien d\'invitation'**
+  String get identityInvitationSheetLabel;
+
+  /// Invitation link sheet: placeholder of the link field.
+  ///
+  /// In fr, this message translates to:
+  /// **'https://…/invitation#t=…'**
+  String get identityInvitationSheetHint;
+
+  /// Invitation link sheet: the button that opens the pasted invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir l\'invitation'**
+  String get identityInvitationSheetAction;
+
+  /// Invitation link sheet: the pasted text is not an invitation link.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce lien n\'est pas un lien d\'invitation. Copiez le lien complet reçu par SMS ou email.'**
+  String get identityInvitationSheetError;
+
+  /// Code screen (8): where the code was sent; the number is shown in bold.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyé par SMS au {phone}.'**
+  String identityCodeSentTo(String phone);
+
+  /// Code screen (8): link back to the welcome screen to change the number.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get identityCodeEdit;
+
+  /// Code screen (8): legend of the 6 code boxes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de vérification'**
+  String get identityCodeLegend;
+
+  /// Code screen (8): help text under the code boxes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valable 10 minutes.'**
+  String get identityCodeHelp;
+
+  /// Code screen (8): the disabled resend button during the countdown (m:ss).
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le SMS dans {time}'**
+  String identityCodeResendSmsIn(String time);
+
+  /// Code screen (8): sends a new code by SMS.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le SMS'**
+  String get identityCodeResendSms;
+
+  /// Code screen (8): sends a new code by email (verified email only).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir le code par email'**
+  String get identityCodeResendEmail;
+
+  /// Code screen (8): after a resend by email (the server answers the same whether an email exists or not).
+  ///
+  /// In fr, this message translates to:
+  /// **'Si un email vérifié est associé à votre compte, le code vous y a été envoyé.'**
+  String get identityCodeResentEmail;
+
+  /// Code screen (8) and invitation screen (0): after a resend by SMS.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau code envoyé par SMS.'**
+  String get identityCodeResentSms;
+
+  /// Code screen (8): footnote once the resend countdown is over.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez pas reçu de code ? Réessayez dans quelques minutes.'**
+  String get identityCodeNotReceived;
+
+  /// Code screen (8): verifies the code.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get identityCodeSubmit;
+
+  /// Sign-in screens: back to the welcome screen after a request that is no longer valid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recommencer'**
+  String get identityRestart;
+
+  /// Invitation screens: back to the welcome screen after the verification expired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se reconnecter'**
+  String get identityReconnect;
+
+  /// Invitation screens: back to the welcome screen (signed out) or to the home (signed in).
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenir à l\'accueil'**
+  String get identityBackHome;
+
+  /// Registration screen (9): the success tag of the verified number.
+  ///
+  /// In fr, this message translates to:
+  /// **'{phone} vérifié'**
+  String identityRegisterVerified(String phone);
+
+  /// Registration screen (9): label of the first name field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get identityFirstNameLabel;
+
+  /// Registration screen (9): label of the last name field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get identityLastNameLabel;
+
+  /// Registration (9) and invitation (0) screens: label of the email field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email'**
+  String get identityEmailLabel;
+
+  /// Registration screen (9): help text under the optional email field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour recevoir vos documents et confirmations.'**
+  String get identityRegisterEmailHelp;
+
+  /// Registration screen (9): the note under the form.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos animaux seront ajoutés lors de votre premier rendez-vous, ou retrouvés si votre clinique utilise déjà Kiveto.'**
+  String get identityRegisterNote;
+
+  /// Registration screen (9): creates the account.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer mon compte'**
+  String get identityRegisterSubmit;
+
+  /// Terms checkbox (screens 0, 9 and the pending invitations); both placeholders are links.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte les {terms} et la {privacy}.'**
+  String identityTermsConsent(String terms, String privacy);
+
+  /// Terms checkbox: the link to the terms of use.
+  ///
+  /// In fr, this message translates to:
+  /// **'conditions d\'utilisation'**
+  String get identityTermsLink;
+
+  /// Terms checkbox: the link to the privacy policy (the terms page).
+  ///
+  /// In fr, this message translates to:
+  /// **'politique de confidentialité'**
+  String get identityPrivacyLink;
+
+  /// Snackbar: the terms page could not be opened.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ouvrir les conditions d\'utilisation.'**
+  String get identityTermsOpenError;
+
+  /// Terms checkbox: the current terms could not be loaded (a retry link follows).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les conditions d\'utilisation.'**
+  String get identityTermsLoadError;
+
+  /// Invitation screens: the tag naming the inviting clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitation : {clinic}'**
+  String identityInvitationTag(String clinic);
+
+  /// Invitation screen (0): the title with the pet names ("Moka et Pistache").
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez votre espace pour suivre {pets}'**
+  String identityInvitationTitle(String pets);
+
+  /// Invitation screens: the title without pet names.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez votre espace'**
+  String get identityInvitationTitleNoPet;
+
+  /// A list of names: the first ones joined by commas, then the last one ("Moka, Oslo et Pistache").
+  ///
+  /// In fr, this message translates to:
+  /// **'{head} et {last}'**
+  String identityNamesAnd(String head, String last);
+
+  /// Invitation screen (0): the line under the title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous, documents et rappels de soins, au même endroit.'**
+  String get identityInvitationIntro;
+
+  /// Invitation screen (0): help text under the read-only email.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseigné par la clinique.'**
+  String get identityInvitationEmailHelp;
+
+  /// Invitation screen (0): label of the code field, with the masked number as the server sends it.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code reçu par SMS au {maskedPhone}'**
+  String identityInvitationCodeLabel(String maskedPhone);
+
+  /// Invitation screen (0): placeholder of the code field.
+  ///
+  /// In fr, this message translates to:
+  /// **'6 chiffres'**
+  String get identityInvitationCodeHint;
+
+  /// Invitation screen (0): the disabled resend button during the countdown (m:ss).
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code dans {time}'**
+  String identityInvitationResendIn(String time);
+
+  /// Invitation screen (0): sends a new invitation code by SMS.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code'**
+  String get identityInvitationResend;
+
+  /// Invitation screens: accepts the invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer mon espace'**
+  String get identityInvitationSubmit;
+
+  /// Invitation screen (0), signed out: the bottom line; the placeholder is a link.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà un compte Kiveto ? {action}'**
+  String identityInvitationExistingAccount(String action);
+
+  /// Invitation screen (0): link to the welcome screen, to sign in with an existing account.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rattacher cette clinique'**
+  String get identityInvitationAttach;
+
+  /// Invitation screen (0): title of an expired invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitation expirée'**
+  String get identityInvitationExpiredTitle;
+
+  /// Invitation screen (0): body of an expired invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce lien n\'est plus valable. Demandez à votre clinique de vous renvoyer une invitation.'**
+  String get identityInvitationExpiredBody;
+
+  /// Invitation screen (0): title of an unknown, replaced or incomplete link.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien d\'invitation invalide'**
+  String get identityInvitationInvalidTitle;
+
+  /// Invitation screen (0): body of an unknown, replaced or incomplete link.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce lien est incomplet ou a été remplacé par un envoi plus récent. Utilisez le dernier lien reçu, ou connectez-vous avec votre numéro.'**
+  String get identityInvitationInvalidBody;
+
+  /// Invitation screen (0): title of an invitation already accepted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitation déjà utilisée'**
+  String get identityInvitationUsedTitle;
+
+  /// Invitation screen (0): body of an invitation already accepted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette invitation a déjà été acceptée. Connectez-vous avec votre numéro pour retrouver votre espace.'**
+  String get identityInvitationUsedBody;
+
+  /// Invitation screen (0), unusable link, signed out: to the welcome screen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se connecter avec mon numéro'**
+  String get identityInvitationSignIn;
+
+  /// Pending invitations screen: the tag when several clinics invite.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 invitation} other{{count} invitations}}'**
+  String identityOnboardingCount(int count);
+
+  /// Pending invitations screen: the line under the title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre clinique vous invite à retrouver vos animaux sur Kiveto : rendez-vous, documents et rappels de soins, au même endroit.'**
+  String get identityOnboardingBody;
+
+  /// Pending invitations screen, several invitations: accepts the selected one.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter cette invitation'**
+  String get identityOnboardingAcceptSelected;
+
+  /// Pending invitations screen: after an acceptance, other invitations left.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitation acceptée : {clinic}.'**
+  String identityOnboardingAccepted(String clinic);
+
+  /// Pending invitations screen, signed in: to the home, the invitations left for later.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get identityOnboardingLater;
+
+  /// Pending invitations screen, signed out: the bottom line; the placeholder is a link.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas maintenant ? {action}'**
+  String identityOnboardingNotNow(String action);
+
+  /// Pending invitations screen: every invitation was removed (no longer available).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune invitation en attente.'**
+  String get identityOnboardingNone;
+
+  /// Welcome screen (7): 422 phone_not_supported.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro de mobile n\'est pas encore pris en charge par Kiveto.'**
+  String get identityErrorPhoneNotSupported;
+
+  /// Welcome screen (7): 422 validation_failed on the number.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre numéro de mobile.'**
+  String get identityErrorPhoneInvalid;
+
+  /// Code fields: 422 otp_invalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code incorrect. Vérifiez-le, puis réessayez.'**
+  String get identityErrorOtpInvalid;
+
+  /// Code fields: 422 otp_expired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code a expiré. Demandez-en un nouveau.'**
+  String get identityErrorOtpExpired;
+
+  /// Code fields: 422 otp_attempts_exceeded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop d\'essais. Demandez un nouveau code.'**
+  String get identityErrorOtpAttemptsExceeded;
+
+  /// 429 otp_rate_limited, with the wait announced by the server (Retry-After), rounded up to the minute.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de demandes de code. Réessayez dans {minutes} min.'**
+  String identityErrorOtpRateLimited(int minutes);
+
+  /// 429 otp_rate_limited without a wait announced by the server.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de demandes de code. Réessayez dans quelques minutes.'**
+  String get identityErrorOtpRateLimitedUnknown;
+
+  /// Code screen (8): 404 otp_challenge_not_found on a resend.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande de code n\'est plus valable. Recommencez.'**
+  String get identityErrorOtpChallengeNotFound;
+
+  /// 403 account_disabled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte est désactivé. Contactez votre clinique.'**
+  String get identityErrorAccountDisabled;
+
+  /// 401 onboarding_invalid: the onboarding or registration grant expired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre vérification a expiré. Reconnectez-vous avec votre numéro.'**
+  String get identityErrorOnboardingInvalid;
+
+  /// Registration screen (9): 409 account_exists.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un compte existe déjà pour ce numéro. Connectez-vous avec votre numéro.'**
+  String get identityErrorAccountExists;
+
+  /// 422 terms_outdated: the terms were reloaded and the checkbox unchecked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les conditions d\'utilisation ont changé : relisez-les, puis acceptez-les à nouveau.'**
+  String get identityErrorTermsOutdated;
+
+  /// Pending invitations screen: 404 invitation_invalid, the invitation was removed from the list.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette invitation n\'est plus disponible.'**
+  String get identityErrorInvitationInvalid;
+
+  /// Home screen (1): the greeting with the account's first name.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour {firstName}'**
+  String homeGreeting(String firstName);
+
+  /// Home screen (1): the greeting of an account without a first name.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour'**
+  String get homeGreetingNoName;
 }
 
 class _AppLocalizationsDelegate

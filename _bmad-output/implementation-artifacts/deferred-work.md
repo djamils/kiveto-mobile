@@ -89,6 +89,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-portal-api-client.md`
   summary: Capture contract fixtures of the POST responses the normaliser also makes all-required (`POST /auth/otp/verify` for `authenticated`, `invitation_pending` and `registration_required`, `/auth/refresh`, `/auth/otp/request`, a booking 201) and decode them in an integration test — slice 1 (`identity_access`) and slice 4 (`scheduling`) at the latest.
   evidence: Code review (blind-hunter), maybe-false, if true medium: the 18 fixtures are GET responses plus the 401/404/422; the live V3(b) run decoded `requestOtp` 202 and `verifyOtp` 200 `authenticated`, but a branch-dependent body that omits a non-nullable key (e.g. an `invitation_pending` verification without tokens) would only fail at runtime as a decoding `TonikError`. Settled by capturing those responses from the local backend.
+  resolved: slice 1 (`spec-identity-access.md`, 2026-11-03) — `auth.otp.request`, `auth.otp.verify` (authenticated, authenticated with pending invitations, invitation_pending, registration_required, otp_invalid), `auth.otp.resend` 404, `auth.refresh` 200/401, `auth.register` 201/422, `legal.terms.current`, `invitations.lookup` 200/404/410, `invitations.otp`, `invitations.accept` and `accept-by-id` 200 captured live and decoded by the identity_access infrastructure tests; the booking 201 stays with slice 4.
 
 ## Deferred from: spec-app-shell.md (phase 5, 2026-11-03)
 
@@ -99,6 +100,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Add `make test-e2e` and `integration_test/` (the real sign-in flow on an emulator against the local backend) with slice 1 (`identity_access`), and turn the "End-to-end tests on a device" row of CONTRIBUTING.md §5 on.
   evidence: Phase 5 has no business flow to drive end to end (placeholders only); architecture §7 and CONTRIBUTING.md now point at slice 1.
+  update: slice 1 (`spec-identity-access.md`, 2026-11-03) kept it out: the sign-in needs a real OTP read from the backend's worker log, which a device test cannot reach (a dev-only code endpoint or a fixed dev code would be a backend change). The slice's flows were walked by hand on the emulator (notes `notes-identity-access.md`) and run end to end in widget tests on the real HTTP chain with captured answers (`test/widget/app/app_flow_test.dart`). Trigger: before the first store build, or as soon as the backend exposes a dev OTP read-back.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Production deep links: an `autoVerify` intent filter for the production portal host (`/invitation`) in the main Android manifest, and iOS universal links (Associated Domains entitlement `applinks:<host>`, set in Xcode, with the Apple Team ID the backend's `.well-known/apple-app-site-association` needs).
@@ -115,16 +117,19 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Add `shared_preferences` (2.5.6 checked on 2026-11-03; check again) with the slice that persists the active clinic (`client`), and fill `hasConfirmedClinicProvider` from `GET /me` (slice 1).
   evidence: No phase-5 consumer (CLAUDE.md §7); the shell seam `hasConfirmedClinicProvider` stays null (no redirect) until slice 1 overrides it.
+  resolved: slice 1 (`spec-identity-access.md`) — `shared_preferences: 2.5.6` pinned (rechecked on pub.dev 2026-11-03); the active clinic is stored per account; `hasConfirmedClinicProvider` is filled from `GET /me` (`lib/app/bootstrap/feature_overrides.dart`).
 
 ## Deferred from: code review of spec-app-shell.md (2026-11-03)
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Add a reactive session provider (`sessionStatusProvider` in `core/di/`, listening to the `SessionManager` notifier) and make every account-scoped provider of the slices watch it, so that a sign-out, or a sign-in as another account, rebuilds them — slice 1 (`identity_access`).
   evidence: Review (blind-hunter), maybe-false, if true medium: `sessionManagerProvider` is a plain `Provider` returning one `ChangeNotifier`; `ref.watch` on it never fires on sign-in or sign-out (only go_router listens). Phase 5 has no account-scoped provider, so nothing is stale yet; the first ones arrive with slice 1.
+  resolved: slice 1 (`spec-identity-access.md`) — `sessionStatusProvider` in `core/di/core_providers.dart` notifies on every sign-in and sign-out (`SessionManager.generation`), never on a refresh; `meProvider` and `activeClinicProvider` watch it.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Server-side logout: the `identity_access` logout use case calls `POST /auth/logout {refreshToken}` (revokes the refresh family), then `SessionManager.signOut()` whatever the answer; the account page (slice 5) uses it instead of the placeholder's local sign-out.
   evidence: The phase-5 account placeholder's "Se déconnecter" only drops the local tokens (`SessionManager.signOut()`), so the refresh token stays valid on the server for up to 90 days of inactivity.
+  resolved: slice 1 (`spec-identity-access.md`) — `SignOut` (identity_access) calls `POST /auth/logout`, bounded to 5 s, then signs out whatever the answer; the account placeholder's "Se déconnecter" uses it.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Global error handling in `app/bootstrap/`: `FlutterError.onError` / `PlatformDispatcher.instance.onError` (crash reporting) and a fallback screen when `bootstrap()` fails before `runApp` (no `API_BASE_URL` in a release build, D11 flavors).
@@ -135,3 +140,18 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Design the logout request so that a token refresh cannot replay a spent refresh token: with an expired access token, `POST /auth/logout {refreshToken: A}` through `PortalHttp.dio` gets 401, the auth interceptor refreshes (A → B) and retries the same body; send logout with a "do not refresh" request flag (and fall back to a local sign-out), or on `bareDio` with the current pair — slice 1 (`identity_access`).
   evidence: Code review (blind-hunter), maybe-false, if true medium: whether the backend revokes the whole family when given a spent member decides it (guide: "famille du jeton révoquée si elle appartient à l'appelant"); if it does not, B stays valid on the server after a sign-out.
+  resolved: slice 1 (`spec-identity-access.md`) — checked live on the backend: a logout carrying a spent (rotated) refresh token revokes the whole family, successor included (`RevokePortalSessionHandler` finds the token by hash whatever its rotation state); so the logout goes through the plain chain and a refresh + replay still revokes the session (pinned by a `PortalHarness` test).
+
+## Deferred from: spec-identity-access.md (slice 1, 2026-11-03)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-identity-access.md`
+  summary: Give the privacy policy its own link: the terms consent of screens 0, 9 and the pending invitations reads "J'accepte les conditions d'utilisation et la politique de confidentialité", but both links open `GET /legal/terms/current` `url` — the contract has no privacy-policy URL (backend: add one to `CurrentTerms`, or make the terms page hold the policy).
+  evidence: Code review (blind-hunter), verified, medium: `CurrentTerms` has only `version` and `url`; `lib/features/identity_access/presentation/terms_consent.dart` wires both links to it.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-identity-access.md`
+  summary: The dev terms page `http://portal.kiveto.local/cgu` cannot be opened from the emulator (the host does not resolve there; Chrome shows its first-run screen then a DNS error); give the dev environment a reachable terms URL, or rewrite the dev host like the file downloads do.
+  evidence: Emulator walk of slice 1: `url_launcher` opens Chrome with the URL (the intent resolves), the page itself is unreachable in dev only.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-identity-access.md`
+  summary: Sign-in pages and sheets were checked on one 411-dp Android emulator only; check them with large text (accessibility font scale) and on a ~360-dp phone (the welcome screen scrolls once the keyboard is up; the OTP boxes shrink with the width).
+  evidence: Slice 1 widget tests run on the 390 × 844 mockup frame; the walk ran on `Medium_Phone_API_37.0`.

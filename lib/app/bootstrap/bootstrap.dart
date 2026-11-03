@@ -3,6 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:kiveto_mobile/app/bootstrap/app_environment.dart';
 import 'package:kiveto_mobile/app/bootstrap/asset_licenses.dart';
+import 'package:kiveto_mobile/app/bootstrap/feature_overrides.dart';
 import 'package:kiveto_mobile/app/kiveto_app.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/network/api_config.dart';
@@ -13,7 +14,8 @@ import 'package:material_ui/material_ui.dart';
 
 /// Starts the app: licences, French dates, the API config of the
 /// `--dart-define-from-file` values, the device id and the stored session,
-/// read before `runApp` and handed to the providers.
+/// read before `runApp` and handed to the providers; the shell seams
+/// filled by the features ([featureOverrides]).
 ///
 /// No automatic retry of failing providers: a failure shows an
 /// `ErrorView` with its retry button. [readConfig] is a seam for the tests
@@ -41,6 +43,7 @@ Future<void> bootstrap({
         deviceIdProvider.overrideWithValue(deviceId),
         sessionManagerProvider.overrideWithValue(session),
         secureStorageProvider.overrideWithValue(storage),
+        ...featureOverrides(),
       ],
       child: const KivetoApp(),
     ),

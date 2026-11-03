@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kiveto_mobile/app/routing/app_routes.dart';
-import 'package:kiveto_mobile/core/di/core_providers.dart';
+import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
@@ -24,12 +23,6 @@ enum PlaceholderKind {
   /// A full-screen flow over the shell: white, back button.
   fullScreen,
 
-  /// The welcome screen: the brand lockup, and the kit gallery in debug.
-  welcome,
-
-  /// The invitation deep link: says whether a token arrived.
-  invitation,
-
   /// The account tab: its sign-out button.
   account,
 
@@ -39,22 +32,14 @@ enum PlaceholderKind {
 
 /// The placeholder of a screen a later slice builds: its title and "Cet
 /// écran arrive dans une prochaine version."
-class PlaceholderPage extends ConsumerWidget {
-  const new({
-    required this.title,
-    super.key,
-    this.kind = PlaceholderKind.tab,
-    this.invitationToken,
-  });
+class PlaceholderPage extends StatelessWidget {
+  const new({required this.title, super.key, this.kind = PlaceholderKind.tab});
 
   final String title;
   final PlaceholderKind kind;
 
-  /// The token of the invitation link: only its presence is shown.
-  final String? invitationToken;
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final white = switch (kind) {
       PlaceholderKind.tab ||
@@ -62,11 +47,6 @@ class PlaceholderPage extends ConsumerWidget {
       PlaceholderKind.account => false,
       _ => true,
     };
-    final auth = switch (kind) {
-      PlaceholderKind.welcome || PlaceholderKind.invitation => true,
-      _ => false,
-    };
-    final gutter = auth ? KivetoSpace.authGutter : KivetoSpace.gutter;
     final body = Text(l10n.placeholderBody, style: KivetoText.bodyLarge);
     final children = <Widget>[
       ...switch (kind) {
@@ -78,40 +58,6 @@ class PlaceholderPage extends ConsumerWidget {
         PlaceholderKind.pushed || PlaceholderKind.fullScreen => [
           KivetoDetailHeader(title: title, onBack: () => _back(context)),
           const SizedBox(height: KivetoSpace.xl3),
-          body,
-        ],
-        PlaceholderKind.welcome => [
-          const KivetoBrandLockup(),
-          const SizedBox(height: KivetoSpace.xl7),
-          Semantics(
-            header: true,
-            child: Text(title, style: KivetoText.display),
-          ),
-          const SizedBox(height: KivetoSpace.m),
-          body,
-          if (kDebugMode) ...[
-            const SizedBox(height: KivetoSpace.xl5),
-            KivetoTextButton(
-              label: l10n.welcomeKitGalleryLink,
-              onPressed: () => unawaited(context.push(AppRoutes.kitGallery)),
-            ),
-          ],
-        ],
-        PlaceholderKind.invitation => [
-          const KivetoBrandLockup(),
-          const SizedBox(height: KivetoSpace.xl6),
-          Semantics(
-            header: true,
-            child: Text(title, style: KivetoText.displaySmall),
-          ),
-          const SizedBox(height: KivetoSpace.m),
-          Text(
-            invitationToken == null
-                ? l10n.invitationLinkMissing
-                : l10n.invitationLinkReceived,
-            style: KivetoText.bodyLarge.copyWith(color: KivetoColors.ink),
-          ),
-          const SizedBox(height: KivetoSpace.m),
           body,
         ],
         PlaceholderKind.notFound => [
@@ -128,22 +74,17 @@ class PlaceholderPage extends ConsumerWidget {
       },
       if (kind == PlaceholderKind.account) ...[
         const SizedBox(height: KivetoSpace.xl5),
-        KivetoButton.outline(
-          label: l10n.accountSignOut,
-          size: KivetoButtonSize.large,
-          onPressed: () =>
-              unawaited(ref.read(sessionManagerProvider).signOut()),
-        ),
+        const _SignOutButton(),
       ],
     ];
     return Scaffold(
       backgroundColor: white ? KivetoColors.surface : KivetoColors.canvas,
       body: SafeArea(
         child: ListView(
-          padding: EdgeInsets.fromLTRB(
-            gutter,
-            auth ? KivetoSpace.xl7 : KivetoSpace.xl3,
-            gutter,
+          padding: const EdgeInsets.fromLTRB(
+            KivetoSpace.gutter,
+            KivetoSpace.xl3,
+            KivetoSpace.gutter,
             KivetoSpace.xl,
           ),
           children: children,
@@ -159,4 +100,35 @@ class PlaceholderPage extends ConsumerWidget {
       context.go(AppRoutes.home);
     }
   }
+}
+
+/// "Se déconnecter": the logout of identity_access (the server revokes the
+/// session, the app signs out whatever it answers; the router then goes to
+/// the welcome page). Loading while it runs.
+class _SignOutButton extends ConsumerStatefulWidget {
+  const new();
+
+  @override
+  ConsumerState<_SignOutButton> createState() => _SignOutButtonState();
+}
+
+class _SignOutButtonState extends ConsumerState<_SignOutButton> {
+  bool _running = false;
+
+  Future<void> _signOut() async {
+    setState(() => _running = true);
+    try {
+      await ref.read(signOutProvider)();
+    } finally {
+      if (mounted) setState(() => _running = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => KivetoButton.outline(
+    label: AppLocalizations.of(context).accountSignOut,
+    size: KivetoButtonSize.large,
+    loading: _running,
+    onPressed: () => unawaited(_signOut()),
+  );
 }
