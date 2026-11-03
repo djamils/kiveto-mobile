@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"channels","message":"Ces messages sont envoyés dans tous les cas : choisissez au moins un canal.","code":"portal_rule"}],"detail":"channels: Ces messages sont envoyés dans tous les cas : choisissez au moins un canal.","type":"validation_failed","title":"Données invalides."}

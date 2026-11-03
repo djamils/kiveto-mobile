@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"email","message":"Cette adresse e-mail n'est pas valide.","code":"bd79c0ab-ddba-46cc-a703-a7a4b08de310"}],"detail":"email: Cette adresse e-mail n'est pas valide.","type":"validation_failed","title":"Données invalides."}
