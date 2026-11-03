@@ -709,5 +709,216 @@
   "homeGreetingNoName": "Bonjour",
   "@homeGreetingNoName": {
     "description": "Home screen (1): the greeting of an account without a first name."
+  },
+
+  "documentsSubtitle": "Partagés par {clinic}",
+  "@documentsSubtitle": {
+    "description": "Documents screen (5): the subtitle under the title, with the active clinic's name.",
+    "placeholders": {
+      "clinic": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Paris"
+      }
+    }
+  },
+  "documentsFilterGroup": "Filtrer par type",
+  "@documentsFilterGroup": {
+    "description": "Documents screen (5): screen reader label of the group of filter chips."
+  },
+  "documentsFilterAll": "Tous",
+  "@documentsFilterAll": {
+    "description": "Documents screen (5): the filter chip showing every document."
+  },
+  "documentsFilterReports": "Comptes-rendus",
+  "@documentsFilterReports": {
+    "description": "Documents screen (5): the filter chip of the consultation reports."
+  },
+  "documentsFilterPrescriptions": "Ordonnances",
+  "@documentsFilterPrescriptions": {
+    "description": "Documents screen (5): the filter chip of the prescriptions."
+  },
+  "documentsFilterInvoices": "Factures",
+  "@documentsFilterInvoices": {
+    "description": "Documents screen (5): the filter chip of the invoices."
+  },
+  "documentsFilterLabResults": "Résultats",
+  "@documentsFilterLabResults": {
+    "description": "Documents screen (5): the filter chip of the lab results."
+  },
+  "documentsGlyphReport": "CR",
+  "@documentsGlyphReport": {
+    "description": "Documents screen (5): the text glyph of a report's tile (compte-rendu), 2 to 4 characters."
+  },
+  "documentsGlyphPrescription": "Rx",
+  "@documentsGlyphPrescription": {
+    "description": "Documents screen (5): the text glyph of a prescription's tile, 2 to 4 characters."
+  },
+  "documentsGlyphInvoice": "€",
+  "@documentsGlyphInvoice": {
+    "description": "Documents screen (5): the text glyph of an invoice's tile, 1 to 4 characters."
+  },
+  "documentsGlyphLabResult": "Lab",
+  "@documentsGlyphLabResult": {
+    "description": "Documents screen (5): the text glyph of a lab result's tile, 2 to 4 characters."
+  },
+  "documentsGlyphCertificate": "Cert",
+  "@documentsGlyphCertificate": {
+    "description": "Documents screen (5): the text glyph of a certificate's tile, 2 to 4 characters."
+  },
+  "documentsValidUntil": "valable jusqu'au {date}",
+  "@documentsValidUntil": {
+    "description": "Documents screen (5): a prescription's meta, after the pet names (\"Moka · valable jusqu'au 14 janv. 2027\").",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "14 janv. 2027"
+      }
+    }
+  },
+  "documentsPaymentPaid": "Payée",
+  "@documentsPaymentPaid": {
+    "description": "Documents screen (5): an invoice's payment status, paid."
+  },
+  "documentsPaymentUnpaid": "Non payée",
+  "@documentsPaymentUnpaid": {
+    "description": "Documents screen (5): an invoice's payment status, unpaid."
+  },
+  "documentsPaymentPartiallyPaid": "Partiellement payée",
+  "@documentsPaymentPartiallyPaid": {
+    "description": "Documents screen (5): an invoice's payment status, partially paid."
+  },
+  "documentsPaymentCredited": "Avoir",
+  "@documentsPaymentCredited": {
+    "description": "Documents screen (5): an invoice's payment status, credited (a credit note)."
+  },
+  "documentsOpen": "Ouvrir {title}",
+  "@documentsOpen": {
+    "description": "Documents screen (5): screen reader label of a document's download button, which opens it in the app, with the document's title.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Facture PAR-2026-000067"
+      }
+    }
+  },
+  "documentsUnread": "Nouveau",
+  "@documentsUnread": {
+    "description": "Documents screen (5): screen reader label of the dot of a document not opened yet."
+  },
+  "documentsRequestRenewal": "Demander un renouvellement",
+  "@documentsRequestRenewal": {
+    "description": "Documents screen (5) and prescription sheet: the button asking the clinic to renew a prescription (opens screen 17)."
+  },
+  "documentsRenewalRequested": "Renouvellement demandé",
+  "@documentsRenewalRequested": {
+    "description": "Documents screen (5) and prescription sheet: the pill of a renewal request the clinic has not answered yet."
+  },
+  "documentsRenewalDone": "Renouvellement traité",
+  "@documentsRenewalDone": {
+    "description": "Documents screen (5) and prescription sheet: the pill of a renewal request the clinic handled."
+  },
+  "documentsEmptyAllTitle": "Aucun document",
+  "@documentsEmptyAllTitle": {
+    "description": "Documents screen (5): the empty state's title, no filter."
+  },
+  "documentsEmptyReportsTitle": "Aucun compte-rendu",
+  "@documentsEmptyReportsTitle": {
+    "description": "Documents screen (5): the empty state's title, reports filter."
+  },
+  "documentsEmptyPrescriptionsTitle": "Aucune ordonnance",
+  "@documentsEmptyPrescriptionsTitle": {
+    "description": "Documents screen (5): the empty state's title, prescriptions filter."
+  },
+  "documentsEmptyInvoicesTitle": "Aucune facture",
+  "@documentsEmptyInvoicesTitle": {
+    "description": "Documents screen (5): the empty state's title, invoices filter."
+  },
+  "documentsEmptyLabResultsTitle": "Aucun résultat d'analyse",
+  "@documentsEmptyLabResultsTitle": {
+    "description": "Documents screen (5): the empty state's title, lab results filter."
+  },
+  "documentsEmptyBody": "Les documents partagés par {clinic} apparaîtront ici.",
+  "@documentsEmptyBody": {
+    "description": "Documents screen (5): the empty state's body, with the active clinic's name.",
+    "placeholders": {
+      "clinic": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Lyon"
+      }
+    }
+  },
+  "documentsMoreError": "Impossible de charger la suite.",
+  "@documentsMoreError": {
+    "description": "Documents screen (5): under the list, the next page could not be loaded (a retry button follows)."
+  },
+  "documentsLinkGoneTitle": "Documents indisponibles",
+  "@documentsLinkGoneTitle": {
+    "description": "Documents screen (5): 404 on the list, the link with the clinic is no longer active."
+  },
+  "documentsLinkGoneBody": "Votre accès aux documents de cette clinique n'est plus actif.",
+  "@documentsLinkGoneBody": {
+    "description": "Documents screen (5): body of the 404 on the list."
+  },
+  "documentsFileGoneTitle": "Document indisponible",
+  "@documentsFileGoneTitle": {
+    "description": "Document viewer: 404 on the file."
+  },
+  "documentsFileGoneBody": "Ce document a été retiré ou n'est pas encore prêt. Réessayez plus tard.",
+  "@documentsFileGoneBody": {
+    "description": "Document viewer: body of the 404 on the file."
+  },
+  "documentsFileRenderError": "Impossible d'afficher ce document.",
+  "@documentsFileRenderError": {
+    "description": "Document viewer: the file was downloaded but cannot be shown as a PDF."
+  },
+  "documentsPrescriptionTitle": "Ordonnance du {date}",
+  "@documentsPrescriptionTitle": {
+    "description": "Prescription sheet: the title, with the issue date (\"Ordonnance du 22 déc. 2025\").",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "22 déc. 2025"
+      }
+    }
+  },
+  "documentsPrescriptionLine": "Qté {quantity} · {posology}",
+  "@documentsPrescriptionLine": {
+    "description": "Prescription sheet: a line's quantity and posology, as the clinic wrote them.",
+    "placeholders": {
+      "quantity": {
+        "type": "String",
+        "example": "2"
+      },
+      "posology": {
+        "type": "String",
+        "example": "0,1 mg/kg, 1×/j, pendant 60 jours, voie per os"
+      }
+    }
+  },
+  "documentsPrescriptionOpen": "Voir l'ordonnance",
+  "@documentsPrescriptionOpen": {
+    "description": "Prescription sheet: the button opening the prescription's PDF."
+  },
+  "documentsPrescriptionGoneTitle": "Ordonnance indisponible",
+  "@documentsPrescriptionGoneTitle": {
+    "description": "Prescription sheet: 404 on the prescription."
+  },
+  "documentsPrescriptionGoneBody": "Cette ordonnance n'est plus disponible.",
+  "@documentsPrescriptionGoneBody": {
+    "description": "Prescription sheet: body of the 404 on the prescription."
+  },
+  "documentsNamesAnd": "{head} et {last}",
+  "@documentsNamesAnd": {
+    "description": "Documents screen (5): the pets of a document, the first ones joined by commas, then the last one (\"Moka, Oslo et Pistache\").",
+    "placeholders": {
+      "head": {
+        "type": "String",
+        "example": "Moka, Oslo"
+      },
+      "last": {
+        "type": "String",
+        "example": "Pistache"
+      }
+    }
   }
 }

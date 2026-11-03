@@ -981,6 +981,246 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Bonjour'**
   String get homeGreetingNoName;
+
+  /// Documents screen (5): the subtitle under the title, with the active clinic's name.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagés par {clinic}'**
+  String documentsSubtitle(String clinic);
+
+  /// Documents screen (5): screen reader label of the group of filter chips.
+  ///
+  /// In fr, this message translates to:
+  /// **'Filtrer par type'**
+  String get documentsFilterGroup;
+
+  /// Documents screen (5): the filter chip showing every document.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous'**
+  String get documentsFilterAll;
+
+  /// Documents screen (5): the filter chip of the consultation reports.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comptes-rendus'**
+  String get documentsFilterReports;
+
+  /// Documents screen (5): the filter chip of the prescriptions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ordonnances'**
+  String get documentsFilterPrescriptions;
+
+  /// Documents screen (5): the filter chip of the invoices.
+  ///
+  /// In fr, this message translates to:
+  /// **'Factures'**
+  String get documentsFilterInvoices;
+
+  /// Documents screen (5): the filter chip of the lab results.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats'**
+  String get documentsFilterLabResults;
+
+  /// Documents screen (5): the text glyph of a report's tile (compte-rendu), 2 to 4 characters.
+  ///
+  /// In fr, this message translates to:
+  /// **'CR'**
+  String get documentsGlyphReport;
+
+  /// Documents screen (5): the text glyph of a prescription's tile, 2 to 4 characters.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rx'**
+  String get documentsGlyphPrescription;
+
+  /// Documents screen (5): the text glyph of an invoice's tile, 1 to 4 characters.
+  ///
+  /// In fr, this message translates to:
+  /// **'€'**
+  String get documentsGlyphInvoice;
+
+  /// Documents screen (5): the text glyph of a lab result's tile, 2 to 4 characters.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lab'**
+  String get documentsGlyphLabResult;
+
+  /// Documents screen (5): the text glyph of a certificate's tile, 2 to 4 characters.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cert'**
+  String get documentsGlyphCertificate;
+
+  /// Documents screen (5): a prescription's meta, after the pet names ("Moka · valable jusqu'au 14 janv. 2027").
+  ///
+  /// In fr, this message translates to:
+  /// **'valable jusqu\'au {date}'**
+  String documentsValidUntil(String date);
+
+  /// Documents screen (5): an invoice's payment status, paid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payée'**
+  String get documentsPaymentPaid;
+
+  /// Documents screen (5): an invoice's payment status, unpaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non payée'**
+  String get documentsPaymentUnpaid;
+
+  /// Documents screen (5): an invoice's payment status, partially paid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partiellement payée'**
+  String get documentsPaymentPartiallyPaid;
+
+  /// Documents screen (5): an invoice's payment status, credited (a credit note).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avoir'**
+  String get documentsPaymentCredited;
+
+  /// Documents screen (5): screen reader label of a document's download button, which opens it in the app, with the document's title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir {title}'**
+  String documentsOpen(String title);
+
+  /// Documents screen (5): screen reader label of the dot of a document not opened yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau'**
+  String get documentsUnread;
+
+  /// Documents screen (5) and prescription sheet: the button asking the clinic to renew a prescription (opens screen 17).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander un renouvellement'**
+  String get documentsRequestRenewal;
+
+  /// Documents screen (5) and prescription sheet: the pill of a renewal request the clinic has not answered yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renouvellement demandé'**
+  String get documentsRenewalRequested;
+
+  /// Documents screen (5) and prescription sheet: the pill of a renewal request the clinic handled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renouvellement traité'**
+  String get documentsRenewalDone;
+
+  /// Documents screen (5): the empty state's title, no filter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun document'**
+  String get documentsEmptyAllTitle;
+
+  /// Documents screen (5): the empty state's title, reports filter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun compte-rendu'**
+  String get documentsEmptyReportsTitle;
+
+  /// Documents screen (5): the empty state's title, prescriptions filter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune ordonnance'**
+  String get documentsEmptyPrescriptionsTitle;
+
+  /// Documents screen (5): the empty state's title, invoices filter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune facture'**
+  String get documentsEmptyInvoicesTitle;
+
+  /// Documents screen (5): the empty state's title, lab results filter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat d\'analyse'**
+  String get documentsEmptyLabResultsTitle;
+
+  /// Documents screen (5): the empty state's body, with the active clinic's name.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les documents partagés par {clinic} apparaîtront ici.'**
+  String documentsEmptyBody(String clinic);
+
+  /// Documents screen (5): under the list, the next page could not be loaded (a retry button follows).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger la suite.'**
+  String get documentsMoreError;
+
+  /// Documents screen (5): 404 on the list, the link with the clinic is no longer active.
+  ///
+  /// In fr, this message translates to:
+  /// **'Documents indisponibles'**
+  String get documentsLinkGoneTitle;
+
+  /// Documents screen (5): body of the 404 on the list.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès aux documents de cette clinique n\'est plus actif.'**
+  String get documentsLinkGoneBody;
+
+  /// Document viewer: 404 on the file.
+  ///
+  /// In fr, this message translates to:
+  /// **'Document indisponible'**
+  String get documentsFileGoneTitle;
+
+  /// Document viewer: body of the 404 on the file.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce document a été retiré ou n\'est pas encore prêt. Réessayez plus tard.'**
+  String get documentsFileGoneBody;
+
+  /// Document viewer: the file was downloaded but cannot be shown as a PDF.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'afficher ce document.'**
+  String get documentsFileRenderError;
+
+  /// Prescription sheet: the title, with the issue date ("Ordonnance du 22 déc. 2025").
+  ///
+  /// In fr, this message translates to:
+  /// **'Ordonnance du {date}'**
+  String documentsPrescriptionTitle(String date);
+
+  /// Prescription sheet: a line's quantity and posology, as the clinic wrote them.
+  ///
+  /// In fr, this message translates to:
+  /// **'Qté {quantity} · {posology}'**
+  String documentsPrescriptionLine(String quantity, String posology);
+
+  /// Prescription sheet: the button opening the prescription's PDF.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'ordonnance'**
+  String get documentsPrescriptionOpen;
+
+  /// Prescription sheet: 404 on the prescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ordonnance indisponible'**
+  String get documentsPrescriptionGoneTitle;
+
+  /// Prescription sheet: body of the 404 on the prescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette ordonnance n\'est plus disponible.'**
+  String get documentsPrescriptionGoneBody;
+
+  /// Documents screen (5): the pets of a document, the first ones joined by commas, then the last one ("Moka, Oslo et Pistache").
+  ///
+  /// In fr, this message translates to:
+  /// **'{head} et {last}'**
+  String documentsNamesAnd(String head, String last);
 }
 
 class _AppLocalizationsDelegate

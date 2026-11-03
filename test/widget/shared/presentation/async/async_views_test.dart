@@ -210,4 +210,30 @@ void main() {
     expect(find.text('Session expirée'), findsNothing);
     expect(find.text('Reconnectez-vous avec votre numéro.'), findsOneWidget);
   });
+
+  testWidgets('ErrorView: a failure that reached a provider through another '
+      'one (wrapped by Riverpod) keeps its title and glyph', (tester) async {
+    final source = FutureProvider<int>(
+      (ref) => Future.error(const NetworkFailure()),
+    );
+    final dependent = FutureProvider<int>(
+      (ref) => ref.watch(source.selectAsync((value) => value)),
+    );
+    final container = ProviderContainer(retry: (_, _) => null);
+    addTearDown(container.dispose);
+    final error = await container
+        .read(dependent.future)
+        .then<Object>((_) => fail('no error'), onError: (Object e) => e);
+    expect(error, isNot(isA<NetworkFailure>()));
+
+    await pumpKit(tester, ErrorView(error: error));
+
+    expect(failureMessage(l10n, error).$1, 'Pas de connexion');
+    expect(find.text('Pas de connexion'), findsOneWidget);
+    expect(find.text('Une erreur est survenue'), findsNothing);
+    expect(
+      tester.widget<KivetoIcon>(find.byType(KivetoIcon)).glyph,
+      LucideGlyph.wifiOff,
+    );
+  });
 }

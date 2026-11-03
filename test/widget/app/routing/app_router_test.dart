@@ -11,6 +11,7 @@ import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
+import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:material_ui/material_ui.dart';
@@ -475,7 +476,6 @@ void main() {
       final router = container.read(routerProvider);
       for (final (path, title) in [
         (AppRoutes.appointments, 'Rendez-vous'),
-        (AppRoutes.documents, 'Documents'),
         (AppRoutes.questionnaire('a'), 'Avant la consultation'),
         (AppRoutes.cancelAppointment('a'), 'Annuler le rendez-vous'),
         (AppRoutes.reschedule('a'), 'Reporter le rendez-vous'),
@@ -490,8 +490,56 @@ void main() {
         expect(find.text(title), findsWidgets, reason: path);
       }
     });
+
+    testWidgets('/documents is the documents page; its renewal button pushes '
+        'screen 17 over the shell', (tester) async {
+      final backend = FakePortalBackend()
+        ..on('GET', '/api/portal/v1/me', PortalReply.fixture('me.get.200.json'))
+        ..on(
+          'GET',
+          '/api/portal/v1/clinics/$_parisId/documents',
+          PortalReply.fixture(
+            'clinics.paris.documents.prescriptions.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '/api/portal/v1/clinics/$_parisId/pets',
+          PortalReply.fixture('clinics.paris.pets.garnier.get.200.json'),
+        );
+      final container = await pumpKivetoApp(
+        tester,
+        session: await memorySession(pair('A')),
+        backend: backend,
+        initialLocation: AppRoutes.documents,
+      );
+
+      expect(find.byType(DocumentsPage), findsOneWidget);
+      expect(
+        find.text('Partagés par Clinique Vétérinaire de Paris'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Demander un renouvellement').first);
+      await tester.pumpAndSettle();
+
+      // A push: the location stays /documents, the pushed match is last.
+      expect(
+        container
+            .read(routerProvider)
+            .routerDelegate
+            .currentConfiguration
+            .last
+            .matchedLocation,
+        AppRoutes.prescriptionRenewal('01a19a12-8b44-7c87-b043-5d82ad91c574'),
+      );
+      expect(find.text('Demander un renouvellement'), findsOneWidget);
+      expect(find.text('Accueil'), findsNothing);
+    });
   });
 }
+
+const _parisId = '01960000-0000-7000-8000-000000000001';
 
 /// A seam the test changes after the start, like slice 1 after `GET /me`.
 final _clinicSeam = NotifierProvider<_ClinicSeam, bool?>(_ClinicSeam.new);

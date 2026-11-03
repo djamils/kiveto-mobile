@@ -532,4 +532,141 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeGreetingNoName => 'Bonjour';
+
+  @override
+  String documentsSubtitle(String clinic) {
+    return 'Partagés par $clinic';
+  }
+
+  @override
+  String get documentsFilterGroup => 'Filtrer par type';
+
+  @override
+  String get documentsFilterAll => 'Tous';
+
+  @override
+  String get documentsFilterReports => 'Comptes-rendus';
+
+  @override
+  String get documentsFilterPrescriptions => 'Ordonnances';
+
+  @override
+  String get documentsFilterInvoices => 'Factures';
+
+  @override
+  String get documentsFilterLabResults => 'Résultats';
+
+  @override
+  String get documentsGlyphReport => 'CR';
+
+  @override
+  String get documentsGlyphPrescription => 'Rx';
+
+  @override
+  String get documentsGlyphInvoice => '€';
+
+  @override
+  String get documentsGlyphLabResult => 'Lab';
+
+  @override
+  String get documentsGlyphCertificate => 'Cert';
+
+  @override
+  String documentsValidUntil(String date) {
+    return 'valable jusqu\'au $date';
+  }
+
+  @override
+  String get documentsPaymentPaid => 'Payée';
+
+  @override
+  String get documentsPaymentUnpaid => 'Non payée';
+
+  @override
+  String get documentsPaymentPartiallyPaid => 'Partiellement payée';
+
+  @override
+  String get documentsPaymentCredited => 'Avoir';
+
+  @override
+  String documentsOpen(String title) {
+    return 'Ouvrir $title';
+  }
+
+  @override
+  String get documentsUnread => 'Nouveau';
+
+  @override
+  String get documentsRequestRenewal => 'Demander un renouvellement';
+
+  @override
+  String get documentsRenewalRequested => 'Renouvellement demandé';
+
+  @override
+  String get documentsRenewalDone => 'Renouvellement traité';
+
+  @override
+  String get documentsEmptyAllTitle => 'Aucun document';
+
+  @override
+  String get documentsEmptyReportsTitle => 'Aucun compte-rendu';
+
+  @override
+  String get documentsEmptyPrescriptionsTitle => 'Aucune ordonnance';
+
+  @override
+  String get documentsEmptyInvoicesTitle => 'Aucune facture';
+
+  @override
+  String get documentsEmptyLabResultsTitle => 'Aucun résultat d\'analyse';
+
+  @override
+  String documentsEmptyBody(String clinic) {
+    return 'Les documents partagés par $clinic apparaîtront ici.';
+  }
+
+  @override
+  String get documentsMoreError => 'Impossible de charger la suite.';
+
+  @override
+  String get documentsLinkGoneTitle => 'Documents indisponibles';
+
+  @override
+  String get documentsLinkGoneBody =>
+      'Votre accès aux documents de cette clinique n\'est plus actif.';
+
+  @override
+  String get documentsFileGoneTitle => 'Document indisponible';
+
+  @override
+  String get documentsFileGoneBody =>
+      'Ce document a été retiré ou n\'est pas encore prêt. Réessayez plus tard.';
+
+  @override
+  String get documentsFileRenderError => 'Impossible d\'afficher ce document.';
+
+  @override
+  String documentsPrescriptionTitle(String date) {
+    return 'Ordonnance du $date';
+  }
+
+  @override
+  String documentsPrescriptionLine(String quantity, String posology) {
+    return 'Qté $quantity · $posology';
+  }
+
+  @override
+  String get documentsPrescriptionOpen => 'Voir l\'ordonnance';
+
+  @override
+  String get documentsPrescriptionGoneTitle => 'Ordonnance indisponible';
+
+  @override
+  String get documentsPrescriptionGoneBody =>
+      'Cette ordonnance n\'est plus disponible.';
+
+  @override
+  String documentsNamesAnd(String head, String last) {
+    return '$head et $last';
+  }
 }
