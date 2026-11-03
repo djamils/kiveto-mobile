@@ -155,3 +155,21 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-identity-access.md`
   summary: Sign-in pages and sheets were checked on one 411-dp Android emulator only; check them with large text (accessibility font scale) and on a ~360-dp phone (the welcome screen scrolls once the keyboard is up; the OTP boxes shrink with the width).
   evidence: Slice 1 widget tests run on the 390 × 844 mockup frame; the walk ran on `Medium_Phone_API_37.0`.
+
+## Deferred from: spec-document.md (slice 2, 2026-11-03)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Let the owner keep or share a document outside the app (save the PDF, "Ouvrir avec…", share sheet): the in-app viewer (`pdf_file_page.dart`, pdfrx) only shows it.
+  evidence: Out of the slice 2 intent; needs a share/save package (share_plus or the platform's document picker) checked under CLAUDE.md §7.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Screen 17 (slice 6): after `requestRenewal` succeeds, refresh the documents lists (expose a refresh from `features/document/document.dart`, e.g. invalidating `documentListProvider`), so the prescription card and sheet show « Renouvellement demandé » instead of the button.
+  evidence: Code review (blind-hunter), maybe-false until slice 6 exists, if true medium: the renewal route's exit discards the push future (`app_router.dart`) and the lists keep their state until a pull-to-refresh, a clinic or session change.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: pdfrx's native-assets hook downloads the PDFium archive (`bblanchon/pdfium-binaries`, `chromium/8125`) without a checksum on every first build, `flutter test` included; decide whether to vendor or verify it, cache `.dart_tool/hooks_runner/` in the GitHub Actions job (which needs gcc/clang and network), and build iOS once (pdfium_flutter's XCFramework is untested).
+  evidence: Code review (blind-hunter), verified: `pdfium_dart-0.4.1/hook/build.dart` fetches the `.tgz` over HTTPS and only checks the HTTP status; `make ci` on Windows compiled `pdfrx_pdfium_gate` with MSVC and downloaded `pdfium.dll`. CONTRIBUTING §5 now lists the prerequisite.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Design question: invoices show « 68,00 € · Payée · 14 oct. » without the year (mockup 05), so an owner with several years of invoices (Garnier's go back to 2023) cannot tell 2025's from 2026's; show the year when it is not the current one, or always.
+  evidence: Code review (blind-hunter, edge-case hunter), verified; kept as the mockup draws it (the intent asks `dayMonth` for invoices).
