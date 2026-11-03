@@ -517,6 +517,104 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette invitation n\'est plus disponible.';
 
   @override
+  String get identityErrorEmailTaken =>
+      'Cette adresse e-mail est déjà utilisée par un autre compte.';
+
+  @override
+  String get identityErrorEmailInvalid => 'Vérifiez l\'adresse e-mail saisie.';
+
+  @override
+  String get identityEmailAddTitle => 'Ajouter une adresse e-mail';
+
+  @override
+  String get identityEmailVerifyTitle => 'Vérifier mon adresse e-mail';
+
+  @override
+  String get identityEmailChangeTitle => 'Changer d\'adresse e-mail';
+
+  @override
+  String get identityEmailFieldLabel => 'Adresse e-mail';
+
+  @override
+  String identityEmailCodeWillBeSent(String phone) {
+    return 'Pour confirmer, un code va être envoyé au $phone.';
+  }
+
+  @override
+  String get identityAccountRequestCode => 'Recevoir un code';
+
+  @override
+  String identityAccountCodeSentTo(String phone) {
+    return 'Saisissez le code envoyé au $phone.';
+  }
+
+  @override
+  String get identityAccountCodeLegend => 'Code de confirmation';
+
+  @override
+  String get identityAccountResend => 'Renvoyer le code';
+
+  @override
+  String get identityAccountNewCode => 'Recevoir un nouveau code';
+
+  @override
+  String identityAccountResendIn(String time) {
+    return 'Renvoyer le code dans $time';
+  }
+
+  @override
+  String identityEmailCodeSentTo(String email) {
+    return 'Saisissez le code envoyé à $email.';
+  }
+
+  @override
+  String get identityEmailVerifySubmit => 'Vérifier l\'adresse';
+
+  @override
+  String get identityEmailEdit => 'Modifier l\'adresse';
+
+  @override
+  String get identityEmailDoneTitle => 'Adresse e-mail vérifiée';
+
+  @override
+  String identityEmailDoneBody(String email) {
+    return '$email est vérifiée : vous pourrez y recevoir vos codes de connexion.';
+  }
+
+  @override
+  String get identityEmailDone => 'Terminer';
+
+  @override
+  String get identityDeletionTitle => 'Supprimer mon compte ?';
+
+  @override
+  String get identityDeletionWarningDisabled =>
+      'Votre compte est désactivé dès la confirmation : vous ne pourrez plus vous connecter.';
+
+  @override
+  String get identityDeletionWarningErased =>
+      'Vos informations de compte et vos exports sont effacés.';
+
+  @override
+  String get identityDeletionWarningClinics =>
+      'Vos cliniques conservent votre dossier, vos factures et vos ordonnances.';
+
+  @override
+  String identityDeletionCodeWillBeSent(String phone) {
+    return 'Un code de confirmation va être envoyé au $phone.';
+  }
+
+  @override
+  String get identityDeletionKeep => 'Garder mon compte';
+
+  @override
+  String get identityDeletionConfirm => 'Supprimer mon compte';
+
+  @override
+  String get identityDeletionDone =>
+      'Votre demande de suppression est enregistrée : votre compte est désactivé.';
+
+  @override
   String homeGreeting(String firstName) {
     return 'Bonjour $firstName';
   }
@@ -589,6 +687,275 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get clientClinicActive => 'Active';
+
+  @override
+  String get accountProfileNoAddress => 'Aucune adresse renseignée';
+
+  @override
+  String get accountProfileEdit => 'Modifier';
+
+  @override
+  String get accountEmailAdd => 'Ajouter une adresse e-mail';
+
+  @override
+  String get accountEmailVerify => 'Vérifier mon adresse e-mail';
+
+  @override
+  String get accountEmailChange => 'Changer d\'adresse e-mail';
+
+  @override
+  String get accountEmailUnverified => 'À vérifier';
+
+  @override
+  String get accountClinicsTitle => 'Mes cliniques';
+
+  @override
+  String get accountClinicsAdd => 'Ajouter une clinique';
+
+  @override
+  String get accountClinicsEmpty =>
+      'Aucune clinique rattachée pour l\'instant.';
+
+  @override
+  String accountClinicLinkedOn(String date) {
+    return 'rattachée le $date';
+  }
+
+  @override
+  String get accountClinicPendingMeta =>
+      'En attente de confirmation par la clinique';
+
+  @override
+  String get accountClinicPending => 'En attente';
+
+  @override
+  String get accountConsentsTitle => 'Consentements';
+
+  @override
+  String accountConsentsDescription(String clinic) {
+    return 'Pour $clinic. Modifiable à tout moment.';
+  }
+
+  @override
+  String accountConsentGrantedOn(String date) {
+    return 'Accordé le $date.';
+  }
+
+  @override
+  String get accountConsentAppointmentRemindersTitle =>
+      'Confirmations et rappels de RDV';
+
+  @override
+  String get accountConsentAppointmentRemindersBody =>
+      'Confirmations, rappels et changements de vos rendez-vous.';
+
+  @override
+  String get accountConsentVaccinationRemindersTitle => 'Rappels de soins';
+
+  @override
+  String get accountConsentVaccinationRemindersBody =>
+      'Vaccins, antiparasitaires, contrôles.';
+
+  @override
+  String get accountConsentMarketingTitle => 'Actualités de la clinique';
+
+  @override
+  String get accountConsentMarketingBody =>
+      'Conseils saisonniers, horaires, nouveautés.';
+
+  @override
+  String get accountConsentClinicalDocumentsTitle => 'Documents médicaux';
+
+  @override
+  String get accountConsentClinicalDocumentsBody =>
+      'Avis de nouveaux comptes rendus, ordonnances et résultats. Toujours envoyés : choisissez au moins un canal.';
+
+  @override
+  String get accountConsentBillingTitle => 'Factures';
+
+  @override
+  String get accountConsentBillingBody =>
+      'Avis de factures et de paiements. Toujours envoyés : choisissez au moins un canal.';
+
+  @override
+  String get accountConsentChannelSms => 'SMS';
+
+  @override
+  String get accountConsentChannelEmail => 'Email';
+
+  @override
+  String get accountConsentsHistoryLink => 'Historique de mes consentements';
+
+  @override
+  String get accountConsentsUnavailableTitle => 'Consentements indisponibles';
+
+  @override
+  String get accountConsentsUnavailableBody =>
+      'Les consentements de cette clinique ne sont pas disponibles pour l\'instant.';
+
+  @override
+  String get accountConsentKeepOneChannel =>
+      'Ces messages sont envoyés dans tous les cas : gardez au moins un canal.';
+
+  @override
+  String get accountConsentConflict =>
+      'Vos consentements ont changé entre-temps : vérifiez-les, puis réessayez.';
+
+  @override
+  String get accountHistoryTitle => 'Historique de mes consentements';
+
+  @override
+  String accountHistoryRow(String kind, String channel) {
+    return '$kind · $channel';
+  }
+
+  @override
+  String accountHistoryGranted(String date, String author) {
+    return 'Accordé le $date · $author';
+  }
+
+  @override
+  String accountHistoryWithdrawn(String date, String author) {
+    return 'Retiré le $date · $author';
+  }
+
+  @override
+  String accountHistoryGrantedApproximate(String date, String author) {
+    return 'Accordé au plus tard le $date · $author';
+  }
+
+  @override
+  String accountHistoryWithdrawnApproximate(String date, String author) {
+    return 'Retiré au plus tard le $date · $author';
+  }
+
+  @override
+  String accountHistoryChanged(String date, String author) {
+    return '$date · $author';
+  }
+
+  @override
+  String get accountHistoryEmpty => 'Aucun changement enregistré.';
+
+  @override
+  String get accountHistoryMore => 'Afficher plus';
+
+  @override
+  String get accountDataTitle => 'Mes données';
+
+  @override
+  String get accountDataExport => 'Exporter mes données';
+
+  @override
+  String get accountDataDelete => 'Demander la suppression de mon compte';
+
+  @override
+  String get accountDataInvoicesNote =>
+      'Les factures restent conservées par la clinique selon ses obligations légales.';
+
+  @override
+  String get accountProfileSheetTitle => 'Modifier mon profil';
+
+  @override
+  String get accountProfileFirstName => 'Prénom';
+
+  @override
+  String get accountProfileLastName => 'Nom';
+
+  @override
+  String get accountProfileStreet => 'Adresse';
+
+  @override
+  String get accountProfilePostalCode => 'Code postal';
+
+  @override
+  String get accountProfileCity => 'Ville';
+
+  @override
+  String get accountProfileFootnote =>
+      'Ces informations ne modifient que votre profil Kiveto, pas les dossiers de vos cliniques. L\'adresse peut être modifiée, pas supprimée.';
+
+  @override
+  String get accountProfileSave => 'Enregistrer';
+
+  @override
+  String get accountProfileSaved => 'Profil enregistré.';
+
+  @override
+  String get accountProfileFirstNameError =>
+      'Saisissez votre prénom (60 caractères au plus).';
+
+  @override
+  String get accountProfileLastNameError =>
+      'Saisissez votre nom (60 caractères au plus).';
+
+  @override
+  String get accountProfileStreetError =>
+      'Saisissez la rue (255 caractères au plus).';
+
+  @override
+  String get accountProfileCityError =>
+      'Saisissez la ville (255 caractères au plus).';
+
+  @override
+  String get accountProfilePostalCodeError =>
+      'Le code postal comporte 20 caractères au plus.';
+
+  @override
+  String get accountExportTitle => 'Exporter mes données';
+
+  @override
+  String get accountExportSubtitle =>
+      'Un fichier ZIP avec votre compte, vos cliniques, vos rendez-vous et la liste de vos documents, disponible 48 h.';
+
+  @override
+  String accountExportRow(String date) {
+    return 'Export du $date';
+  }
+
+  @override
+  String get accountExportPending => 'En préparation';
+
+  @override
+  String get accountExportReady => 'Prêt';
+
+  @override
+  String get accountExportFailed => 'Échec';
+
+  @override
+  String get accountExportExpired => 'Expiré';
+
+  @override
+  String accountExportAvailableUntil(String date, String time) {
+    return 'Disponible jusqu\'au $date à $time';
+  }
+
+  @override
+  String get accountExportDownload => 'Télécharger';
+
+  @override
+  String get accountExportRequest => 'Demander un export';
+
+  @override
+  String get accountExportRequested =>
+      'Export demandé : il sera prêt dans quelques minutes.';
+
+  @override
+  String get accountExportRateLimited =>
+      'Vous avez déjà demandé un export ces dernières 24 heures.';
+
+  @override
+  String get accountExportEmpty => 'Aucun export pour l\'instant.';
+
+  @override
+  String get accountExportRefresh => 'Actualiser';
+
+  @override
+  String get accountExportDownloadFailed =>
+      'Impossible de télécharger cet export.';
+
+  @override
+  String get accountExportGone => 'Cet export n\'est plus disponible.';
 
   @override
   String get petSwitcherLabel => 'Animal';

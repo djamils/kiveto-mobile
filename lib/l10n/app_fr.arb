@@ -683,6 +683,150 @@
   "@identityErrorInvitationInvalid": {
     "description": "Pending invitations screen: 404 invitation_invalid, the invitation was removed from the list."
   },
+  "identityErrorEmailTaken": "Cette adresse e-mail est déjà utilisée par un autre compte.",
+  "@identityErrorEmailTaken": {
+    "description": "E-mail change sheet: 422 email_taken, another account verified this address."
+  },
+  "identityErrorEmailInvalid": "Vérifiez l'adresse e-mail saisie.",
+  "@identityErrorEmailInvalid": {
+    "description": "E-mail change sheet: 422 validation_failed on the e-mail, shown on the address field."
+  },
+  "identityEmailAddTitle": "Ajouter une adresse e-mail",
+  "@identityEmailAddTitle": {
+    "description": "E-mail change sheet: its title when the account has no e-mail."
+  },
+  "identityEmailVerifyTitle": "Vérifier mon adresse e-mail",
+  "@identityEmailVerifyTitle": {
+    "description": "E-mail change sheet: its title when the account's e-mail is not verified."
+  },
+  "identityEmailChangeTitle": "Changer d'adresse e-mail",
+  "@identityEmailChangeTitle": {
+    "description": "E-mail change sheet: its title when the account's e-mail is verified."
+  },
+  "identityEmailFieldLabel": "Adresse e-mail",
+  "@identityEmailFieldLabel": {
+    "description": "E-mail change sheet, step 1: label of the address field."
+  },
+  "identityEmailCodeWillBeSent": "Pour confirmer, un code va être envoyé au {phone}.",
+  "@identityEmailCodeWillBeSent": {
+    "description": "E-mail change sheet, step 1: the SMS code confirming the change goes to the account's phone (masked as the server sends it).",
+    "placeholders": {
+      "phone": {
+        "type": "String",
+        "example": "+33 6 •• •• •• 78"
+      }
+    }
+  },
+  "identityAccountRequestCode": "Recevoir un code",
+  "@identityAccountRequestCode": {
+    "description": "E-mail change and account deletion sheets: asks for the SMS code."
+  },
+  "identityAccountCodeSentTo": "Saisissez le code envoyé au {phone}.",
+  "@identityAccountCodeSentTo": {
+    "description": "E-mail change and account deletion sheets: the SMS code went to the account's phone (masked as the server sends it).",
+    "placeholders": {
+      "phone": {
+        "type": "String",
+        "example": "+33 6 •• •• •• 78"
+      }
+    }
+  },
+  "identityAccountCodeLegend": "Code de confirmation",
+  "@identityAccountCodeLegend": {
+    "description": "E-mail change and account deletion sheets: legend of the code boxes."
+  },
+  "identityAccountResend": "Renvoyer le code",
+  "@identityAccountResend": {
+    "description": "E-mail change and account deletion sheets: sends a new SMS code."
+  },
+  "identityAccountNewCode": "Recevoir un nouveau code",
+  "@identityAccountNewCode": {
+    "description": "Account deletion sheet, step 2: the code expired, had too many attempts or is unknown; asks for a new code by SMS (a new challenge)."
+  },
+  "identityAccountResendIn": "Renvoyer le code dans {time}",
+  "@identityAccountResendIn": {
+    "description": "E-mail change and account deletion sheets: the disabled resend button during the countdown (m:ss).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "0:24"
+      }
+    }
+  },
+  "identityEmailCodeSentTo": "Saisissez le code envoyé à {email}.",
+  "@identityEmailCodeSentTo": {
+    "description": "E-mail change sheet, step 3: the code went to the new address.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "zoe@example.com"
+      }
+    }
+  },
+  "identityEmailVerifySubmit": "Vérifier l'adresse",
+  "@identityEmailVerifySubmit": {
+    "description": "E-mail change sheet, step 3: checks the code received at the new address."
+  },
+  "identityEmailEdit": "Modifier l'adresse",
+  "@identityEmailEdit": {
+    "description": "E-mail change sheet: back to the address field (a new SMS code is needed)."
+  },
+  "identityEmailDoneTitle": "Adresse e-mail vérifiée",
+  "@identityEmailDoneTitle": {
+    "description": "E-mail change sheet: title of the success state."
+  },
+  "identityEmailDoneBody": "{email} est vérifiée : vous pourrez y recevoir vos codes de connexion.",
+  "@identityEmailDoneBody": {
+    "description": "E-mail change sheet: body of the success state.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "zoe@example.com"
+      }
+    }
+  },
+  "identityEmailDone": "Terminer",
+  "@identityEmailDone": {
+    "description": "E-mail change sheet: closes the success state."
+  },
+  "identityDeletionTitle": "Supprimer mon compte ?",
+  "@identityDeletionTitle": {
+    "description": "Account deletion sheet: its title."
+  },
+  "identityDeletionWarningDisabled": "Votre compte est désactivé dès la confirmation : vous ne pourrez plus vous connecter.",
+  "@identityDeletionWarningDisabled": {
+    "description": "Account deletion sheet: first line of the danger callout."
+  },
+  "identityDeletionWarningErased": "Vos informations de compte et vos exports sont effacés.",
+  "@identityDeletionWarningErased": {
+    "description": "Account deletion sheet: second line of the danger callout."
+  },
+  "identityDeletionWarningClinics": "Vos cliniques conservent votre dossier, vos factures et vos ordonnances.",
+  "@identityDeletionWarningClinics": {
+    "description": "Account deletion sheet: third line of the danger callout."
+  },
+  "identityDeletionCodeWillBeSent": "Un code de confirmation va être envoyé au {phone}.",
+  "@identityDeletionCodeWillBeSent": {
+    "description": "Account deletion sheet, step 1: the SMS code confirming the deletion goes to the account's phone (masked as the server sends it).",
+    "placeholders": {
+      "phone": {
+        "type": "String",
+        "example": "+33 6 •• •• •• 78"
+      }
+    }
+  },
+  "identityDeletionKeep": "Garder mon compte",
+  "@identityDeletionKeep": {
+    "description": "Account deletion sheet: closes the sheet, nothing deleted."
+  },
+  "identityDeletionConfirm": "Supprimer mon compte",
+  "@identityDeletionConfirm": {
+    "description": "Account deletion sheet, step 2: sends the deletion (enabled once the 6 digits are typed)."
+  },
+  "identityDeletionDone": "Votre demande de suppression est enregistrée : votre compte est désactivé.",
+  "@identityDeletionDone": {
+    "description": "After the account deletion: the SnackBar shown on the welcome screen."
+  },
 
   "homeGreeting": "Bonjour {firstName}",
   "@homeGreeting": {
@@ -805,7 +949,402 @@
   },
   "clientClinicActive": "Active",
   "@clientClinicActive": {
-    "description": "Clinic switcher sheet: the pill of the active clinic."
+    "description": "Clinic switcher sheet and account screen (6): the pill of the active clinic."
+  },
+
+  "accountProfileNoAddress": "Aucune adresse renseignée",
+  "@accountProfileNoAddress": {
+    "description": "Account screen (6), profile card: the account has no postal address."
+  },
+  "accountProfileEdit": "Modifier",
+  "@accountProfileEdit": {
+    "description": "Account screen (6), profile card: opens the profile form."
+  },
+  "accountEmailAdd": "Ajouter une adresse e-mail",
+  "@accountEmailAdd": {
+    "description": "Account screen (6), profile card: the e-mail row when the account has none."
+  },
+  "accountEmailVerify": "Vérifier mon adresse e-mail",
+  "@accountEmailVerify": {
+    "description": "Account screen (6), profile card: the e-mail row when the e-mail is not verified."
+  },
+  "accountEmailChange": "Changer d'adresse e-mail",
+  "@accountEmailChange": {
+    "description": "Account screen (6), profile card: the e-mail row when the e-mail is verified."
+  },
+  "accountEmailUnverified": "À vérifier",
+  "@accountEmailUnverified": {
+    "description": "Account screen (6), profile card: the pill of an e-mail not verified yet."
+  },
+  "accountClinicsTitle": "Mes cliniques",
+  "@accountClinicsTitle": {
+    "description": "Account screen (6): title of the clinics section."
+  },
+  "accountClinicsAdd": "Ajouter une clinique",
+  "@accountClinicsAdd": {
+    "description": "Account screen (6): link of the clinics section to the clinic search."
+  },
+  "accountClinicsEmpty": "Aucune clinique rattachée pour l'instant.",
+  "@accountClinicsEmpty": {
+    "description": "Account screen (6): the account has no clinic."
+  },
+  "accountClinicLinkedOn": "rattachée le {date}",
+  "@accountClinicLinkedOn": {
+    "description": "Account screen (6), a clinic row: when the link was made (day and short month), the last part of the meta line.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "2 sept."
+      }
+    }
+  },
+  "accountClinicPendingMeta": "En attente de confirmation par la clinique",
+  "@accountClinicPendingMeta": {
+    "description": "Account screen (6), a clinic row: meta line of a link the clinic has not confirmed yet."
+  },
+  "accountClinicPending": "En attente",
+  "@accountClinicPending": {
+    "description": "Account screen (6), a clinic row: the pill of a link the clinic has not confirmed yet."
+  },
+  "accountConsentsTitle": "Consentements",
+  "@accountConsentsTitle": {
+    "description": "Account screen (6): title of the consents section."
+  },
+  "accountConsentsDescription": "Pour {clinic}. Modifiable à tout moment.",
+  "@accountConsentsDescription": {
+    "description": "Account screen (6): the consents are those of the active clinic.",
+    "placeholders": {
+      "clinic": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Paris"
+      }
+    }
+  },
+  "accountConsentGrantedOn": "Accordé le {date}.",
+  "@accountConsentGrantedOn": {
+    "description": "Account screen (6), a consent: appended to its description when it is granted.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "2 sept. 2026"
+      }
+    }
+  },
+  "accountConsentAppointmentRemindersTitle": "Confirmations et rappels de RDV",
+  "@accountConsentAppointmentRemindersTitle": {
+    "description": "Account screen (6): the consent of kind appointment_reminders."
+  },
+  "accountConsentAppointmentRemindersBody": "Confirmations, rappels et changements de vos rendez-vous.",
+  "@accountConsentAppointmentRemindersBody": {
+    "description": "Account screen (6): description of the consent of kind appointment_reminders."
+  },
+  "accountConsentVaccinationRemindersTitle": "Rappels de soins",
+  "@accountConsentVaccinationRemindersTitle": {
+    "description": "Account screen (6): the consent of kind vaccination_reminders."
+  },
+  "accountConsentVaccinationRemindersBody": "Vaccins, antiparasitaires, contrôles.",
+  "@accountConsentVaccinationRemindersBody": {
+    "description": "Account screen (6): description of the consent of kind vaccination_reminders."
+  },
+  "accountConsentMarketingTitle": "Actualités de la clinique",
+  "@accountConsentMarketingTitle": {
+    "description": "Account screen (6): the consent of kind marketing."
+  },
+  "accountConsentMarketingBody": "Conseils saisonniers, horaires, nouveautés.",
+  "@accountConsentMarketingBody": {
+    "description": "Account screen (6): description of the consent of kind marketing."
+  },
+  "accountConsentClinicalDocumentsTitle": "Documents médicaux",
+  "@accountConsentClinicalDocumentsTitle": {
+    "description": "Account screen (6): the consent of kind clinical_documents."
+  },
+  "accountConsentClinicalDocumentsBody": "Avis de nouveaux comptes rendus, ordonnances et résultats. Toujours envoyés : choisissez au moins un canal.",
+  "@accountConsentClinicalDocumentsBody": {
+    "description": "Account screen (6): description of the consent of kind clinical_documents (sent anyway: the consent picks the channels)."
+  },
+  "accountConsentBillingTitle": "Factures",
+  "@accountConsentBillingTitle": {
+    "description": "Account screen (6): the consent of kind billing."
+  },
+  "accountConsentBillingBody": "Avis de factures et de paiements. Toujours envoyés : choisissez au moins un canal.",
+  "@accountConsentBillingBody": {
+    "description": "Account screen (6): description of the consent of kind billing (sent anyway: the consent picks the channels)."
+  },
+  "accountConsentChannelSms": "SMS",
+  "@accountConsentChannelSms": {
+    "description": "Account screen (6) and consent history: the SMS channel."
+  },
+  "accountConsentChannelEmail": "Email",
+  "@accountConsentChannelEmail": {
+    "description": "Account screen (6) and consent history: the e-mail channel."
+  },
+  "accountConsentsHistoryLink": "Historique de mes consentements",
+  "@accountConsentsHistoryLink": {
+    "description": "Account screen (6): opens the consent history of the active clinic."
+  },
+  "accountConsentsUnavailableTitle": "Consentements indisponibles",
+  "@accountConsentsUnavailableTitle": {
+    "description": "Account screen (6): 404 on the consents of the active clinic."
+  },
+  "accountConsentsUnavailableBody": "Les consentements de cette clinique ne sont pas disponibles pour l'instant.",
+  "@accountConsentsUnavailableBody": {
+    "description": "Account screen (6): body of the 404 on the consents."
+  },
+  "accountConsentKeepOneChannel": "Ces messages sont envoyés dans tous les cas : gardez au moins un canal.",
+  "@accountConsentKeepOneChannel": {
+    "description": "Account screen (6): SnackBar when the server refused to withdraw the last channel of a consent sent anyway (422)."
+  },
+  "accountConsentConflict": "Vos consentements ont changé entre-temps : vérifiez-les, puis réessayez.",
+  "@accountConsentConflict": {
+    "description": "Account screen (6): SnackBar of a 409 conflict on a consent change (the consents were reloaded)."
+  },
+  "accountHistoryTitle": "Historique de mes consentements",
+  "@accountHistoryTitle": {
+    "description": "Consent history sheet: its title (its subtitle is the clinic's name)."
+  },
+  "accountHistoryRow": "{kind} · {channel}",
+  "@accountHistoryRow": {
+    "description": "Consent history sheet: a change, its consent and channel.",
+    "placeholders": {
+      "kind": {
+        "type": "String",
+        "example": "Factures"
+      },
+      "channel": {
+        "type": "String",
+        "example": "SMS"
+      }
+    }
+  },
+  "accountHistoryGranted": "Accordé le {date} · {author}",
+  "@accountHistoryGranted": {
+    "description": "Consent history sheet: a channel granted, when and by whom.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "28 oct. 2026"
+      },
+      "author": {
+        "type": "String",
+        "example": "La clinique"
+      }
+    }
+  },
+  "accountHistoryWithdrawn": "Retiré le {date} · {author}",
+  "@accountHistoryWithdrawn": {
+    "description": "Consent history sheet: a channel withdrawn, when and by whom.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "28 oct. 2026"
+      },
+      "author": {
+        "type": "String",
+        "example": "Zoé Essai"
+      }
+    }
+  },
+  "accountHistoryGrantedApproximate": "Accordé au plus tard le {date} · {author}",
+  "@accountHistoryGrantedApproximate": {
+    "description": "Consent history sheet: a channel granted at an approximate date (the consents taken over when the clinic joined).",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "1 juil. 2020"
+      },
+      "author": {
+        "type": "String",
+        "example": "Reprise"
+      }
+    }
+  },
+  "accountHistoryWithdrawnApproximate": "Retiré au plus tard le {date} · {author}",
+  "@accountHistoryWithdrawnApproximate": {
+    "description": "Consent history sheet: a channel withdrawn at an approximate date.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "1 juil. 2020"
+      },
+      "author": {
+        "type": "String",
+        "example": "Reprise"
+      }
+    }
+  },
+  "accountHistoryChanged": "{date} · {author}",
+  "@accountHistoryChanged": {
+    "description": "Consent history sheet: a change whose action (neither granted nor withdrawn) this app does not know, when and by whom.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "28 oct. 2026"
+      },
+      "author": {
+        "type": "String",
+        "example": "La clinique"
+      }
+    }
+  },
+  "accountHistoryEmpty": "Aucun changement enregistré.",
+  "@accountHistoryEmpty": {
+    "description": "Consent history sheet: no change recorded."
+  },
+  "accountHistoryMore": "Afficher plus",
+  "@accountHistoryMore": {
+    "description": "Consent history sheet: reads the next page."
+  },
+  "accountDataTitle": "Mes données",
+  "@accountDataTitle": {
+    "description": "Account screen (6): title of the data section."
+  },
+  "accountDataExport": "Exporter mes données",
+  "@accountDataExport": {
+    "description": "Account screen (6): opens the data export sheet."
+  },
+  "accountDataDelete": "Demander la suppression de mon compte",
+  "@accountDataDelete": {
+    "description": "Account screen (6): opens the account deletion sheet."
+  },
+  "accountDataInvoicesNote": "Les factures restent conservées par la clinique selon ses obligations légales.",
+  "@accountDataInvoicesNote": {
+    "description": "Account screen (6): caption under the data section."
+  },
+  "accountProfileSheetTitle": "Modifier mon profil",
+  "@accountProfileSheetTitle": {
+    "description": "Profile sheet: its title."
+  },
+  "accountProfileFirstName": "Prénom",
+  "@accountProfileFirstName": {
+    "description": "Profile sheet: label of the first name field."
+  },
+  "accountProfileLastName": "Nom",
+  "@accountProfileLastName": {
+    "description": "Profile sheet: label of the last name field."
+  },
+  "accountProfileStreet": "Adresse",
+  "@accountProfileStreet": {
+    "description": "Profile sheet: label of the street field."
+  },
+  "accountProfilePostalCode": "Code postal",
+  "@accountProfilePostalCode": {
+    "description": "Profile sheet: label of the postal code field."
+  },
+  "accountProfileCity": "Ville",
+  "@accountProfileCity": {
+    "description": "Profile sheet: label of the city field."
+  },
+  "accountProfileFootnote": "Ces informations ne modifient que votre profil Kiveto, pas les dossiers de vos cliniques. L'adresse peut être modifiée, pas supprimée.",
+  "@accountProfileFootnote": {
+    "description": "Profile sheet: footnote under the fields."
+  },
+  "accountProfileSave": "Enregistrer",
+  "@accountProfileSave": {
+    "description": "Profile sheet: sends the changes."
+  },
+  "accountProfileSaved": "Profil enregistré.",
+  "@accountProfileSaved": {
+    "description": "Account screen (6): SnackBar once the profile is saved."
+  },
+  "accountProfileFirstNameError": "Saisissez votre prénom (60 caractères au plus).",
+  "@accountProfileFirstNameError": {
+    "description": "Profile sheet: the server refused the first name (422)."
+  },
+  "accountProfileLastNameError": "Saisissez votre nom (60 caractères au plus).",
+  "@accountProfileLastNameError": {
+    "description": "Profile sheet: the server refused the last name (422)."
+  },
+  "accountProfileStreetError": "Saisissez la rue (255 caractères au plus).",
+  "@accountProfileStreetError": {
+    "description": "Profile sheet: the server refused the street (422)."
+  },
+  "accountProfileCityError": "Saisissez la ville (255 caractères au plus).",
+  "@accountProfileCityError": {
+    "description": "Profile sheet: the server refused the city (422)."
+  },
+  "accountProfilePostalCodeError": "Le code postal comporte 20 caractères au plus.",
+  "@accountProfilePostalCodeError": {
+    "description": "Profile sheet: the server refused the postal code (422)."
+  },
+  "accountExportTitle": "Exporter mes données",
+  "@accountExportTitle": {
+    "description": "Data export sheet: its title."
+  },
+  "accountExportSubtitle": "Un fichier ZIP avec votre compte, vos cliniques, vos rendez-vous et la liste de vos documents, disponible 48 h.",
+  "@accountExportSubtitle": {
+    "description": "Data export sheet: what an export holds."
+  },
+  "accountExportRow": "Export du {date}",
+  "@accountExportRow": {
+    "description": "Data export sheet: an export, by the day it was asked for.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "3 nov. 2026"
+      }
+    }
+  },
+  "accountExportPending": "En préparation",
+  "@accountExportPending": {
+    "description": "Data export sheet: the pill of an export being built."
+  },
+  "accountExportReady": "Prêt",
+  "@accountExportReady": {
+    "description": "Data export sheet: the pill of an export ready to download."
+  },
+  "accountExportFailed": "Échec",
+  "@accountExportFailed": {
+    "description": "Data export sheet: the pill of an export whose build failed."
+  },
+  "accountExportExpired": "Expiré",
+  "@accountExportExpired": {
+    "description": "Data export sheet: the pill of an export no longer available."
+  },
+  "accountExportAvailableUntil": "Disponible jusqu'au {date} à {time}",
+  "@accountExportAvailableUntil": {
+    "description": "Data export sheet: until when a ready export can be downloaded.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "5 nov."
+      },
+      "time": {
+        "type": "String",
+        "example": "22:50"
+      }
+    }
+  },
+  "accountExportDownload": "Télécharger",
+  "@accountExportDownload": {
+    "description": "Data export sheet: downloads a ready export and hands it to the share sheet."
+  },
+  "accountExportRequest": "Demander un export",
+  "@accountExportRequest": {
+    "description": "Data export sheet: asks for a new export."
+  },
+  "accountExportRequested": "Export demandé : il sera prêt dans quelques minutes.",
+  "@accountExportRequested": {
+    "description": "Data export sheet: the new export is being built."
+  },
+  "accountExportRateLimited": "Vous avez déjà demandé un export ces dernières 24 heures.",
+  "@accountExportRateLimited": {
+    "description": "Data export sheet: 429 export_rate_limited."
+  },
+  "accountExportEmpty": "Aucun export pour l'instant.",
+  "@accountExportEmpty": {
+    "description": "Data export sheet: no export yet."
+  },
+  "accountExportRefresh": "Actualiser",
+  "@accountExportRefresh": {
+    "description": "Data export sheet: reloads the list while an export is being built."
+  },
+  "accountExportDownloadFailed": "Impossible de télécharger cet export.",
+  "@accountExportDownloadFailed": {
+    "description": "Data export sheet: the download failed."
+  },
+  "accountExportGone": "Cet export n'est plus disponible.",
+  "@accountExportGone": {
+    "description": "Data export sheet: the export is gone (404 on its file); the list is reloaded."
   },
 
   "petSwitcherLabel": "Animal",

@@ -12,6 +12,7 @@ import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/client/di.dart';
 import 'package:kiveto_mobile/features/client/domain/active_clinic_store.dart';
 import 'package:kiveto_mobile/features/client/domain/me_repository.dart';
+import 'package:kiveto_mobile/features/client/domain/profile_update.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 
@@ -58,6 +59,10 @@ final class _Repository implements MeRepository {
     if (failure case final ApiFailure failure) throw failure;
     return _me(account);
   }
+
+  @override
+  Future<Account> updateProfile(ProfileUpdate update) =>
+      throw UnimplementedError('not used by these tests');
 }
 
 /// A store whose reads answer what was stored when they started, once

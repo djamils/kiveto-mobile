@@ -1,11 +1,13 @@
 // PortalMeRepository on the captures (Girard with Paris and Lyon, a new
-// account without clinic); the preferences store of the active clinic.
+// account without clinic, Essai's profile patch and its refused fields);
+// the preferences store of the active clinic.
 
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/features/client/domain/me.dart';
+import 'package:kiveto_mobile/features/client/domain/profile_update.dart';
 import 'package:kiveto_mobile/features/client/infrastructure/portal_me_repository.dart';
 import 'package:kiveto_mobile/features/client/infrastructure/preferences_active_clinic_store.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
@@ -143,6 +145,106 @@ void main() {
       );
 
       await expectLater(repository.me(), throwsA(isA<UnauthorizedFailure>()));
+    });
+
+    group('updateProfile', () {
+      Map<String, Object?> body(PortalRequest request) =>
+          jsonDecode(utf8.decode(request.body)) as Map<String, Object?>;
+
+      test('Essai (capture): a merge patch with the names and the address; '
+          'the account it answers', () async {
+        harness.backend.on(
+          'PATCH',
+          _me,
+          PortalReply.fixture('me.patch.200.json'),
+        );
+
+        final account = await repository.updateProfile(
+          ProfileUpdate.fromForm(
+            firstName: 'Zoé',
+            lastName: 'Essai',
+            streetLine1: '12 rue des Lices',
+            postalCode: '13006',
+            city: 'Marseille',
+          ),
+        );
+
+        expect(account.id, '01a1a363-4839-75be-ab2c-b36720c2542b');
+        expect(account.firstName, 'Zoé');
+        expect(account.lastName, 'Essai');
+        expect(account.email, isNull);
+        expect(account.emailVerified, isFalse);
+        expect(account.maskedPhone, '+33 6 •• •• •• 40');
+        final address = account.address!;
+        expect(address.line1, '12 rue des Lices');
+        expect(address.line2, isNull);
+        expect(address.postalCode, '13006');
+        expect(address.city, 'Marseille');
+        expect(address.country, 'FR');
+        final request = harness.backend.requestsTo(_me).single;
+        expect(request.method, 'PATCH');
+        expect(request.contentType, 'application/merge-patch+json');
+        expect(body(request), {
+          'firstName': 'Zoé',
+          'lastName': 'Essai',
+          'address': {
+            'streetLine1': '12 rue des Lices',
+            'postalCode': '13006',
+            'city': 'Marseille',
+            'countryCode': 'FR',
+          },
+        });
+      });
+
+      test('without an address: the key is left out (unchanged); an account '
+          'answered without address', () async {
+        final answer = jsonDecode(
+          File('$portalFixtures/me.patch.200.json').readAsStringSync(),
+        ) as Map<String, Object?>;
+        answer['address'] = null;
+        harness.backend.on('PATCH', _me, PortalReply.json(jsonEncode(answer)));
+
+        final account = await repository.updateProfile(
+          const ProfileUpdate(firstName: 'Julien', lastName: 'Girard'),
+        );
+
+        expect(account.address, isNull);
+        expect(body(harness.backend.requests.single), {
+          'firstName': 'Julien',
+          'lastName': 'Girard',
+        });
+      });
+
+      test(
+        'refused fields (capture): a ValidationFailure naming them',
+        () async {
+          harness.backend.on(
+            'PATCH',
+            _me,
+            PortalReply.fixture('me.patch.fields.422.json', status: 422),
+          );
+
+          final failure = await repository
+              .updateProfile(
+                ProfileUpdate.fromForm(
+                  firstName: '',
+                  lastName: 'Essai',
+                  streetLine1: '',
+                  postalCode: '13006',
+                  city: '',
+                ),
+              )
+              .then<Object?>((_) => null, onError: (Object error) => error);
+
+          expect(failure, isA<ValidationFailure>());
+          expect(
+            (failure! as ValidationFailure).violations.map(
+              (violation) => violation.propertyPath,
+            ),
+            ['firstName', 'address.streetLine1', 'address.city'],
+          );
+        },
+      );
     });
   });
 

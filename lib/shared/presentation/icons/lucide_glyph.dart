@@ -81,8 +81,9 @@ final class LucidePolyline extends LucideElement {
 }
 
 /// The icons of the app: the 17 Lucide outlines of the mockup (some are
-/// the mockup's simplified variants, kept as drawn) and 4 more for the
-/// states the mockup does not draw. Lucide is ISC-licensed
+/// the mockup's simplified variants, kept as drawn) and 5 more for the
+/// states and rows the mockup does not draw (`mail`: the e-mail row of
+/// screen 6). Lucide is ISC-licensed
 /// (`assets/licenses/lucide.txt`, registered at startup).
 enum LucideGlyph {
   chevronDown([LucidePath('m6 9 6 6 6-6')]),
@@ -160,7 +161,11 @@ enum LucideGlyph {
       '0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',
     ),
   ]),
-  clock([LucideCircle(12, 12, 10), LucidePath('M12 6v6l4 2')]);
+  clock([LucideCircle(12, 12, 10), LucidePath('M12 6v6l4 2')]),
+  mail([
+    LucideRect(2, 4, 20, 16, rx: 2),
+    LucidePath('m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7'),
+  ]);
 
   new(this.elements);
 

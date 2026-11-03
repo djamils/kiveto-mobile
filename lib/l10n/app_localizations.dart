@@ -952,6 +952,168 @@ abstract class AppLocalizations {
   /// **'Cette invitation n\'est plus disponible.'**
   String get identityErrorInvitationInvalid;
 
+  /// E-mail change sheet: 422 email_taken, another account verified this address.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette adresse e-mail est déjà utilisée par un autre compte.'**
+  String get identityErrorEmailTaken;
+
+  /// E-mail change sheet: 422 validation_failed on the e-mail, shown on the address field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez l\'adresse e-mail saisie.'**
+  String get identityErrorEmailInvalid;
+
+  /// E-mail change sheet: its title when the account has no e-mail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse e-mail'**
+  String get identityEmailAddTitle;
+
+  /// E-mail change sheet: its title when the account's e-mail is not verified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon adresse e-mail'**
+  String get identityEmailVerifyTitle;
+
+  /// E-mail change sheet: its title when the account's e-mail is verified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer d\'adresse e-mail'**
+  String get identityEmailChangeTitle;
+
+  /// E-mail change sheet, step 1: label of the address field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail'**
+  String get identityEmailFieldLabel;
+
+  /// E-mail change sheet, step 1: the SMS code confirming the change goes to the account's phone (masked as the server sends it).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour confirmer, un code va être envoyé au {phone}.'**
+  String identityEmailCodeWillBeSent(String phone);
+
+  /// E-mail change and account deletion sheets: asks for the SMS code.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir un code'**
+  String get identityAccountRequestCode;
+
+  /// E-mail change and account deletion sheets: the SMS code went to the account's phone (masked as the server sends it).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le code envoyé au {phone}.'**
+  String identityAccountCodeSentTo(String phone);
+
+  /// E-mail change and account deletion sheets: legend of the code boxes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de confirmation'**
+  String get identityAccountCodeLegend;
+
+  /// E-mail change and account deletion sheets: sends a new SMS code.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code'**
+  String get identityAccountResend;
+
+  /// Account deletion sheet, step 2: the code expired, had too many attempts or is unknown; asks for a new code by SMS (a new challenge).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir un nouveau code'**
+  String get identityAccountNewCode;
+
+  /// E-mail change and account deletion sheets: the disabled resend button during the countdown (m:ss).
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code dans {time}'**
+  String identityAccountResendIn(String time);
+
+  /// E-mail change sheet, step 3: the code went to the new address.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le code envoyé à {email}.'**
+  String identityEmailCodeSentTo(String email);
+
+  /// E-mail change sheet, step 3: checks the code received at the new address.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier l\'adresse'**
+  String get identityEmailVerifySubmit;
+
+  /// E-mail change sheet: back to the address field (a new SMS code is needed).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'adresse'**
+  String get identityEmailEdit;
+
+  /// E-mail change sheet: title of the success state.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail vérifiée'**
+  String get identityEmailDoneTitle;
+
+  /// E-mail change sheet: body of the success state.
+  ///
+  /// In fr, this message translates to:
+  /// **'{email} est vérifiée : vous pourrez y recevoir vos codes de connexion.'**
+  String identityEmailDoneBody(String email);
+
+  /// E-mail change sheet: closes the success state.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer'**
+  String get identityEmailDone;
+
+  /// Account deletion sheet: its title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte ?'**
+  String get identityDeletionTitle;
+
+  /// Account deletion sheet: first line of the danger callout.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte est désactivé dès la confirmation : vous ne pourrez plus vous connecter.'**
+  String get identityDeletionWarningDisabled;
+
+  /// Account deletion sheet: second line of the danger callout.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos informations de compte et vos exports sont effacés.'**
+  String get identityDeletionWarningErased;
+
+  /// Account deletion sheet: third line of the danger callout.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos cliniques conservent votre dossier, vos factures et vos ordonnances.'**
+  String get identityDeletionWarningClinics;
+
+  /// Account deletion sheet, step 1: the SMS code confirming the deletion goes to the account's phone (masked as the server sends it).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un code de confirmation va être envoyé au {phone}.'**
+  String identityDeletionCodeWillBeSent(String phone);
+
+  /// Account deletion sheet: closes the sheet, nothing deleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder mon compte'**
+  String get identityDeletionKeep;
+
+  /// Account deletion sheet, step 2: sends the deletion (enabled once the 6 digits are typed).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte'**
+  String get identityDeletionConfirm;
+
+  /// After the account deletion: the SnackBar shown on the welcome screen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande de suppression est enregistrée : votre compte est désactivé.'**
+  String get identityDeletionDone;
+
   /// Home screen (1): the greeting with the account's first name.
   ///
   /// In fr, this message translates to:
@@ -1072,11 +1234,461 @@ abstract class AppLocalizations {
   /// **'Changer de clinique'**
   String get clientClinicSwitcherTitle;
 
-  /// Clinic switcher sheet: the pill of the active clinic.
+  /// Clinic switcher sheet and account screen (6): the pill of the active clinic.
   ///
   /// In fr, this message translates to:
   /// **'Active'**
   String get clientClinicActive;
+
+  /// Account screen (6), profile card: the account has no postal address.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune adresse renseignée'**
+  String get accountProfileNoAddress;
+
+  /// Account screen (6), profile card: opens the profile form.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get accountProfileEdit;
+
+  /// Account screen (6), profile card: the e-mail row when the account has none.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse e-mail'**
+  String get accountEmailAdd;
+
+  /// Account screen (6), profile card: the e-mail row when the e-mail is not verified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon adresse e-mail'**
+  String get accountEmailVerify;
+
+  /// Account screen (6), profile card: the e-mail row when the e-mail is verified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer d\'adresse e-mail'**
+  String get accountEmailChange;
+
+  /// Account screen (6), profile card: the pill of an e-mail not verified yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'À vérifier'**
+  String get accountEmailUnverified;
+
+  /// Account screen (6): title of the clinics section.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes cliniques'**
+  String get accountClinicsTitle;
+
+  /// Account screen (6): link of the clinics section to the clinic search.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une clinique'**
+  String get accountClinicsAdd;
+
+  /// Account screen (6): the account has no clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune clinique rattachée pour l\'instant.'**
+  String get accountClinicsEmpty;
+
+  /// Account screen (6), a clinic row: when the link was made (day and short month), the last part of the meta line.
+  ///
+  /// In fr, this message translates to:
+  /// **'rattachée le {date}'**
+  String accountClinicLinkedOn(String date);
+
+  /// Account screen (6), a clinic row: meta line of a link the clinic has not confirmed yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de confirmation par la clinique'**
+  String get accountClinicPendingMeta;
+
+  /// Account screen (6), a clinic row: the pill of a link the clinic has not confirmed yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get accountClinicPending;
+
+  /// Account screen (6): title of the consents section.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consentements'**
+  String get accountConsentsTitle;
+
+  /// Account screen (6): the consents are those of the active clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour {clinic}. Modifiable à tout moment.'**
+  String accountConsentsDescription(String clinic);
+
+  /// Account screen (6), a consent: appended to its description when it is granted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accordé le {date}.'**
+  String accountConsentGrantedOn(String date);
+
+  /// Account screen (6): the consent of kind appointment_reminders.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmations et rappels de RDV'**
+  String get accountConsentAppointmentRemindersTitle;
+
+  /// Account screen (6): description of the consent of kind appointment_reminders.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmations, rappels et changements de vos rendez-vous.'**
+  String get accountConsentAppointmentRemindersBody;
+
+  /// Account screen (6): the consent of kind vaccination_reminders.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappels de soins'**
+  String get accountConsentVaccinationRemindersTitle;
+
+  /// Account screen (6): description of the consent of kind vaccination_reminders.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vaccins, antiparasitaires, contrôles.'**
+  String get accountConsentVaccinationRemindersBody;
+
+  /// Account screen (6): the consent of kind marketing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualités de la clinique'**
+  String get accountConsentMarketingTitle;
+
+  /// Account screen (6): description of the consent of kind marketing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conseils saisonniers, horaires, nouveautés.'**
+  String get accountConsentMarketingBody;
+
+  /// Account screen (6): the consent of kind clinical_documents.
+  ///
+  /// In fr, this message translates to:
+  /// **'Documents médicaux'**
+  String get accountConsentClinicalDocumentsTitle;
+
+  /// Account screen (6): description of the consent of kind clinical_documents (sent anyway: the consent picks the channels).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis de nouveaux comptes rendus, ordonnances et résultats. Toujours envoyés : choisissez au moins un canal.'**
+  String get accountConsentClinicalDocumentsBody;
+
+  /// Account screen (6): the consent of kind billing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Factures'**
+  String get accountConsentBillingTitle;
+
+  /// Account screen (6): description of the consent of kind billing (sent anyway: the consent picks the channels).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis de factures et de paiements. Toujours envoyés : choisissez au moins un canal.'**
+  String get accountConsentBillingBody;
+
+  /// Account screen (6) and consent history: the SMS channel.
+  ///
+  /// In fr, this message translates to:
+  /// **'SMS'**
+  String get accountConsentChannelSms;
+
+  /// Account screen (6) and consent history: the e-mail channel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email'**
+  String get accountConsentChannelEmail;
+
+  /// Account screen (6): opens the consent history of the active clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique de mes consentements'**
+  String get accountConsentsHistoryLink;
+
+  /// Account screen (6): 404 on the consents of the active clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consentements indisponibles'**
+  String get accountConsentsUnavailableTitle;
+
+  /// Account screen (6): body of the 404 on the consents.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les consentements de cette clinique ne sont pas disponibles pour l\'instant.'**
+  String get accountConsentsUnavailableBody;
+
+  /// Account screen (6): SnackBar when the server refused to withdraw the last channel of a consent sent anyway (422).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces messages sont envoyés dans tous les cas : gardez au moins un canal.'**
+  String get accountConsentKeepOneChannel;
+
+  /// Account screen (6): SnackBar of a 409 conflict on a consent change (the consents were reloaded).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos consentements ont changé entre-temps : vérifiez-les, puis réessayez.'**
+  String get accountConsentConflict;
+
+  /// Consent history sheet: its title (its subtitle is the clinic's name).
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique de mes consentements'**
+  String get accountHistoryTitle;
+
+  /// Consent history sheet: a change, its consent and channel.
+  ///
+  /// In fr, this message translates to:
+  /// **'{kind} · {channel}'**
+  String accountHistoryRow(String kind, String channel);
+
+  /// Consent history sheet: a channel granted, when and by whom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accordé le {date} · {author}'**
+  String accountHistoryGranted(String date, String author);
+
+  /// Consent history sheet: a channel withdrawn, when and by whom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retiré le {date} · {author}'**
+  String accountHistoryWithdrawn(String date, String author);
+
+  /// Consent history sheet: a channel granted at an approximate date (the consents taken over when the clinic joined).
+  ///
+  /// In fr, this message translates to:
+  /// **'Accordé au plus tard le {date} · {author}'**
+  String accountHistoryGrantedApproximate(String date, String author);
+
+  /// Consent history sheet: a channel withdrawn at an approximate date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retiré au plus tard le {date} · {author}'**
+  String accountHistoryWithdrawnApproximate(String date, String author);
+
+  /// Consent history sheet: a change whose action (neither granted nor withdrawn) this app does not know, when and by whom.
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · {author}'**
+  String accountHistoryChanged(String date, String author);
+
+  /// Consent history sheet: no change recorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun changement enregistré.'**
+  String get accountHistoryEmpty;
+
+  /// Consent history sheet: reads the next page.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher plus'**
+  String get accountHistoryMore;
+
+  /// Account screen (6): title of the data section.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes données'**
+  String get accountDataTitle;
+
+  /// Account screen (6): opens the data export sheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter mes données'**
+  String get accountDataExport;
+
+  /// Account screen (6): opens the account deletion sheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander la suppression de mon compte'**
+  String get accountDataDelete;
+
+  /// Account screen (6): caption under the data section.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les factures restent conservées par la clinique selon ses obligations légales.'**
+  String get accountDataInvoicesNote;
+
+  /// Profile sheet: its title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier mon profil'**
+  String get accountProfileSheetTitle;
+
+  /// Profile sheet: label of the first name field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get accountProfileFirstName;
+
+  /// Profile sheet: label of the last name field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get accountProfileLastName;
+
+  /// Profile sheet: label of the street field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get accountProfileStreet;
+
+  /// Profile sheet: label of the postal code field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code postal'**
+  String get accountProfilePostalCode;
+
+  /// Profile sheet: label of the city field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville'**
+  String get accountProfileCity;
+
+  /// Profile sheet: footnote under the fields.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces informations ne modifient que votre profil Kiveto, pas les dossiers de vos cliniques. L\'adresse peut être modifiée, pas supprimée.'**
+  String get accountProfileFootnote;
+
+  /// Profile sheet: sends the changes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get accountProfileSave;
+
+  /// Account screen (6): SnackBar once the profile is saved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil enregistré.'**
+  String get accountProfileSaved;
+
+  /// Profile sheet: the server refused the first name (422).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez votre prénom (60 caractères au plus).'**
+  String get accountProfileFirstNameError;
+
+  /// Profile sheet: the server refused the last name (422).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez votre nom (60 caractères au plus).'**
+  String get accountProfileLastNameError;
+
+  /// Profile sheet: the server refused the street (422).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez la rue (255 caractères au plus).'**
+  String get accountProfileStreetError;
+
+  /// Profile sheet: the server refused the city (422).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez la ville (255 caractères au plus).'**
+  String get accountProfileCityError;
+
+  /// Profile sheet: the server refused the postal code (422).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code postal comporte 20 caractères au plus.'**
+  String get accountProfilePostalCodeError;
+
+  /// Data export sheet: its title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter mes données'**
+  String get accountExportTitle;
+
+  /// Data export sheet: what an export holds.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un fichier ZIP avec votre compte, vos cliniques, vos rendez-vous et la liste de vos documents, disponible 48 h.'**
+  String get accountExportSubtitle;
+
+  /// Data export sheet: an export, by the day it was asked for.
+  ///
+  /// In fr, this message translates to:
+  /// **'Export du {date}'**
+  String accountExportRow(String date);
+
+  /// Data export sheet: the pill of an export being built.
+  ///
+  /// In fr, this message translates to:
+  /// **'En préparation'**
+  String get accountExportPending;
+
+  /// Data export sheet: the pill of an export ready to download.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prêt'**
+  String get accountExportReady;
+
+  /// Data export sheet: the pill of an export whose build failed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échec'**
+  String get accountExportFailed;
+
+  /// Data export sheet: the pill of an export no longer available.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expiré'**
+  String get accountExportExpired;
+
+  /// Data export sheet: until when a ready export can be downloaded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible jusqu\'au {date} à {time}'**
+  String accountExportAvailableUntil(String date, String time);
+
+  /// Data export sheet: downloads a ready export and hands it to the share sheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Télécharger'**
+  String get accountExportDownload;
+
+  /// Data export sheet: asks for a new export.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander un export'**
+  String get accountExportRequest;
+
+  /// Data export sheet: the new export is being built.
+  ///
+  /// In fr, this message translates to:
+  /// **'Export demandé : il sera prêt dans quelques minutes.'**
+  String get accountExportRequested;
+
+  /// Data export sheet: 429 export_rate_limited.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà demandé un export ces dernières 24 heures.'**
+  String get accountExportRateLimited;
+
+  /// Data export sheet: no export yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun export pour l\'instant.'**
+  String get accountExportEmpty;
+
+  /// Data export sheet: reloads the list while an export is being built.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualiser'**
+  String get accountExportRefresh;
+
+  /// Data export sheet: the download failed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de télécharger cet export.'**
+  String get accountExportDownloadFailed;
+
+  /// Data export sheet: the export is gone (404 on its file); the list is reloaded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet export n\'est plus disponible.'**
+  String get accountExportGone;
 
   /// Pet screen (2): screen reader label of the pet switcher.
   ///

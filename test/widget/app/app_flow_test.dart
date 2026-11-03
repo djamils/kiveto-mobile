@@ -14,6 +14,7 @@ import 'package:kiveto_mobile/app/routing/app_routes.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
+import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
@@ -38,6 +39,23 @@ String _location(ProviderContainer container) => container
     .currentConfiguration
     .uri
     .toString();
+
+/// Scrolls the account screen (6) down to « Se déconnecter » and taps it.
+Future<void> _tapSignOut(WidgetTester tester) async {
+  final button = find.text('Se déconnecter');
+  await tester.scrollUntilVisible(
+    button,
+    300,
+    scrollable: find
+        .descendant(
+          of: find.byType(AccountPage),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(button);
+}
 
 /// The routes of a sign-in by code whose verification answers [verify].
 FakePortalBackend _signInBackend(PortalReply verify, {String me = 'me.get'}) =>
@@ -478,7 +496,7 @@ void main() {
         initialLocation: AppRoutes.account,
       );
 
-      await tester.tap(find.text('Se déconnecter'));
+      await _tapSignOut(tester);
       await tester.pumpAndSettle();
 
       expect(backend.requestsTo(_refresh), hasLength(1));
@@ -518,7 +536,7 @@ void main() {
           initialLocation: AppRoutes.account,
         );
 
-        await tester.tap(find.text('Se déconnecter'));
+        await _tapSignOut(tester);
         await tester.pumpAndSettle();
 
         expect(session.status, SessionStatus.signedOut);
@@ -538,7 +556,7 @@ void main() {
         initialLocation: AppRoutes.account,
       );
 
-      await tester.tap(find.text('Se déconnecter'));
+      await _tapSignOut(tester);
       await tester.pump();
 
       expect(
@@ -553,5 +571,65 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(WelcomePage), findsOneWidget);
     });
+  });
+
+  testWidgets('the account deletion (screen 6): the 202 closes the session, '
+      'no logout is sent, the welcome page shows the confirmation', (
+    tester,
+  ) async {
+    final backend = FakePortalBackend()
+      ..on('GET', _me, PortalReply.fixture('me.get.200.json'))
+      ..on(
+        'POST',
+        '$api/me/deletion-request/otp',
+        PortalReply.fixture(
+          'me.deletion-request.otp.post.202.json',
+          status: 202,
+        ),
+      )
+      ..on('POST', '$api/me/deletion-request', PortalReply.empty(202));
+    final session = await memorySession(pair('A'));
+    final container = await pumpKivetoApp(
+      tester,
+      session: session,
+      backend: backend,
+      initialLocation: AppRoutes.account,
+    );
+
+    final row = find.text('Demander la suppression de mon compte');
+    await tester.scrollUntilVisible(
+      row,
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byType(AccountPage),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Recevoir un code'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '123456');
+    await tester.pumpAndSettle();
+    expect(backend.requestsTo('$api/me/deletion-request'), isEmpty);
+
+    await tester.tap(find.widgetWithText(KivetoButton, 'Supprimer mon compte'));
+    await tester.pumpAndSettle();
+
+    expect(session.status, SessionStatus.signedOut);
+    expect(backend.requestsTo('$api/me/deletion-request'), hasLength(1));
+    expect(backend.requestsTo(_logout), isEmpty);
+    expect(_location(container), AppRoutes.welcome);
+    expect(find.byType(WelcomePage), findsOneWidget);
+    expect(
+      find.text(
+        'Votre demande de suppression est enregistrée : votre compte '
+        'est désactivé.',
+      ),
+      findsOneWidget,
+    );
   });
 }

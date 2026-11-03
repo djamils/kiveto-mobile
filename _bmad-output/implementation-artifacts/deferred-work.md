@@ -217,6 +217,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
   summary: Merge the backend branch `feature/portal-me-clinic-contact` (commit `aa35f2c4`, adds the clinic's `phone` and `address { line, postalCode, city }` to `GET /me` `clinics[]`) into the backend's master, then re-run `make api-sync` on the merged commit if the SHA changes: `contracts/SOURCE` pins `aa35f2c4`, which no backend master contains yet.
   evidence: Contract sync `3bd69e2` (its message says the branch is not merged); the booking screens 13 (the emergency « Appeler ») and 14 (the clinic's address) read these fields.
+  resolved: 2026-11-03 — merged into the backend's master as 8cf96439 and pushed by the orchestrator; aa35f2c4 is reachable from it, so contracts/SOURCE stays valid.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
   summary: A slot whose offset is `+00:00` (a clinic on UTC, e.g. Lisbon or London in winter) would be sent as `…T10:00:00.000Z`: `OffsetDateTime.from(slot.instant, offset: Duration.zero)` is `isUtc`, and tonik's `toTimeZonedIso8601String` then writes `DateTime.toIso8601String()` (fraction and `Z`), the form the backend refused during the generator spike. Every clinic of the demo data is on Europe/Paris (`+01:00` / `+02:00`); check the backend's parsing of `Z` and `.000`, or send `+00:00` another way, before a UTC clinic books.
@@ -237,3 +238,17 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
   summary: The real share sheet and dialer hand-offs (`calendarSharerProvider` on share_plus, `phoneDialerProvider` on url_launcher) never run in a test: every test overrides the seams, so a dropped `mimeType` or `fileNameOverrides` would not fail `make ci`.
   evidence: Code review (verification-gap layer, intent auditor), low: the repo keeps every platform plugin behind a provider seam with no platform-channel mocks, and `SharePlatform` is not exported by share_plus; a test needs share_plus_platform_interface as a dev dependency, or channel and path_provider mocks. Checked on the Android emulator instead (the share sheet with the `.ics`).
+
+## Deferred from: spec-client-account.md (slice 5, 2026-11-04)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
+  summary: The real share_plus closure of `dataExportSharerProvider` (mime type `application/zip`, the `kiveto-export.zip` fallback name) never runs in a test: every test overrides the seam. Close it together with slice 4's `calendarSharerProvider` entry (one `SharePlatform` fake).
+  evidence: Build review (verification-gap layer), low: `account_sheets_test.dart` only asserts the seam is a function; checked on the Android emulator instead.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
+  summary: On iPad the export's share sheet needs an origin rect: `dataExportSharerProvider` calls `SharePlus.instance.share` without `sharePositionOrigin`, so « Télécharger » would end in « Impossible de télécharger cet export. » there; pass the tapped button's rect through this seam and the calendar one when iOS is built.
+  evidence: Build review (edge-case hunter), verified, medium: share_plus requires `sharePositionOrigin` on iPad and the Runner targets iPhone and iPad; iOS is out of this effort's scope.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
+  summary: A deleted (or signed-out) account leaves its `client.activeClinic.<accountId>` key in the platform preferences: `ActiveClinicStore` has no removal and `DeleteAccount` only closes the session; a cleanup needs a seam from identity_access to client (identity_access cannot import client).
+  evidence: Build review (blind hunter), verified, low, pre-existing since slice 1 (its hand-over lists the per-account keys as never cleaned); the key holds a clinic id, not a secret.

@@ -2,13 +2,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/features/identity_access/application/accept_invitation_by_link.dart';
 import 'package:kiveto_mobile/features/identity_access/application/accept_pending_invitation.dart';
+import 'package:kiveto_mobile/features/identity_access/application/delete_account.dart';
 import 'package:kiveto_mobile/features/identity_access/application/register_account.dart';
 import 'package:kiveto_mobile/features/identity_access/application/sign_in_with_code.dart';
 import 'package:kiveto_mobile/features/identity_access/application/sign_out.dart';
+import 'package:kiveto_mobile/features/identity_access/domain/account_security_repository.dart';
 import 'package:kiveto_mobile/features/identity_access/domain/auth_repository.dart';
 import 'package:kiveto_mobile/features/identity_access/domain/invitation_repository.dart';
 import 'package:kiveto_mobile/features/identity_access/domain/session_store.dart';
 import 'package:kiveto_mobile/features/identity_access/domain/terms_repository.dart';
+import 'package:kiveto_mobile/features/identity_access/infrastructure/portal_account_security_repository.dart';
 import 'package:kiveto_mobile/features/identity_access/infrastructure/portal_auth_repository.dart';
 import 'package:kiveto_mobile/features/identity_access/infrastructure/portal_invitation_repository.dart';
 import 'package:kiveto_mobile/features/identity_access/infrastructure/portal_terms_repository.dart';
@@ -17,7 +20,8 @@ import 'package:kiveto_mobile/features/identity_access/infrastructure/session_ma
 // The bindings of identity_access: its contracts on the Portal API and the
 // app's session, and its use cases. The presentation reads the
 // repositories directly for what only reads or sends (no pass-through use
-// case: code request and resend, invitation lookup and code, terms).
+// case: code request and resend, invitation lookup and code, terms, the
+// e-mail change).
 
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => PortalAuthRepository(
@@ -35,6 +39,13 @@ final invitationRepositoryProvider = Provider<InvitationRepository>(
 
 final termsRepositoryProvider = Provider<TermsRepository>(
   (ref) => PortalTermsRepository(
+    ref.watch(portalServerProvider),
+    ref.watch(apiFailureMapperProvider),
+  ),
+);
+
+final accountSecurityRepositoryProvider = Provider<AccountSecurityRepository>(
+  (ref) => PortalAccountSecurityRepository(
     ref.watch(portalServerProvider),
     ref.watch(apiFailureMapperProvider),
   ),
@@ -76,6 +87,15 @@ final registerAccountProvider = Provider<RegisterAccount>(
 final signOutProvider = Provider<SignOut>(
   (ref) => SignOut(
     ref.watch(authRepositoryProvider),
+    ref.watch(sessionStoreProvider),
+  ),
+);
+
+/// The account's deletion:
+/// `ref.read(deleteAccountProvider)(challengeId: …, code: …)`.
+final deleteAccountProvider = Provider<DeleteAccount>(
+  (ref) => DeleteAccount(
+    ref.watch(accountSecurityRepositoryProvider),
     ref.watch(sessionStoreProvider),
   ),
 );
