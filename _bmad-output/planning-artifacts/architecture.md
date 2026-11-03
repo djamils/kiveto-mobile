@@ -156,6 +156,29 @@ optional too). No command / query / event buses and no generic
 errors are sealed failures handled by pattern matching. Riverpod is both
 the state holder and the dependency injection; tests override providers.
 
+Conventions of slice 1 (`feature/identity-access`), for every slice:
+
+- **Account-scoped state.** `SessionManager.generation` counts the
+  sessions: a sign-in, an invitation acceptance, a registration and a
+  sign-out that ends a session change it, a token refresh does not.
+  `sessionStatusProvider` (`core/di/`) notifies on each change, a sign-in
+  over a signed-in session included. Every provider that belongs to the
+  account (`meProvider`, the active clinic…) watches it, and is read
+  through `AsyncData` patterns or `AsyncValueView`, never `.value`: while
+  it reloads for another session, `.value` still holds the previous
+  account.
+- **One deliberate exception to rule 3:** `core/di/core_providers.dart`
+  re-exports `SessionStatus` (`show SessionStatus`) from `core/security/`,
+  so that the presentation compares the status without importing
+  `core/security/`; nothing else of `core/security/` reaches it.
+- **Navigation from a feature.** Features never import `app/`: a page
+  takes its exits as `void Function(BuildContext)` callbacks, built by
+  `app/routing/app_router.dart` on `AppRoutes`.
+- **Shell seams.** `featureOverrides()` (`app/bootstrap/`) fills
+  `hasConfirmedClinicProvider`, `accountInitialsProvider` and
+  `unreadDocumentsCountProvider` from the features' providers, through
+  `AsyncData` patterns (unknown while `GET /me` loads).
+
 ## 4. Sharing the OpenAPI contract
 
 - `contracts/portal.v1.yaml` is a byte copy of the backend file (`git show
@@ -261,9 +284,18 @@ flutter_localizations from the SDK. go_router 18 is built on material_ui
 (the Material library published out of the SDK): the app imports
 `package:material_ui/material_ui.dart`, never
 `package:flutter/material.dart` (one `MaterialApp`, one `Theme`, one
-`MaterialLocalizations`). shared_preferences is deferred to the slice that
-persists the active clinic (no phase-5 consumer). The other rows are added
-by later phases, checked again then.
+`MaterialLocalizations`). shared_preferences was deferred to the slice that
+persists the active clinic (no phase-5 consumer). Pinned in slice 1
+(`feature/identity-access`; checked on pub.dev on 2026-11-03, both latest,
+published by flutter.dev, Dart ≥ 3.11, resolution checked with
+`fvm flutter pub add --dry-run`, pinned exactly): shared_preferences 2.5.6
+(the active clinic per account, `SharedPreferencesAsync`) and url_launcher
+6.3.3 (the terms page); they bring their platform implementations
+(shared_preferences_android 2.5.4, _foundation 2.6.1, _linux 2.4.1, _web
+2.4.3, _windows 2.4.1, _platform_interface 2.4.2; url_launcher_android
+6.3.33, _ios 6.4.2, _linux 3.2.3, _macos 3.2.6, _web 2.4.3, _windows 3.1.6,
+_platform_interface 2.3.2) and file 7.0.1. The other rows are added by
+later phases, checked again then.
 
 | Role | Choice | Version | Why |
 |---|---|---|---|
@@ -277,7 +309,8 @@ by later phases, checked again then.
 | API client generator | tonik (`tool/api_generator/`, dev dependency) | 0.11.1 (pinned, lock committed) | D3: reads OpenAPI 3.2, keeps `date-time` offsets, `nameOverrides`, no build_runner (§4) |
 | API client runtime | tonik_util | 0.11.1 (pinned) | `TonikResult`, `OffsetDateTime`, `Date`, `ServerConfig`, used by the generated package and by `infrastructure/` |
 | Tokens | flutter_secure_storage | 11.2.0 (pinned) | Keychain / Keystore; minSdk 24 = template default; also the device id |
-| Preferences | shared_preferences | 2.5.6 (not added yet) | Active clinic: added by the slice that persists it |
+| Preferences | shared_preferences | 2.5.6 (pinned) | Active clinic, per account (`client.activeClinic.<accountId>`); slice 1 |
+| External links | url_launcher | 6.3.3 (pinned) | The terms page of the sign-in screens (`<queries>` VIEW https on Android 11+); slice 1 |
 | Localisation | flutter_localizations + gen-l10n (ARB), intl | SDK, 0.20.3 (pinned) | The contract returns codes; labels are translated in the app; French dates and amounts |
 | Tests | flutter_test, integration_test, mocktail | SDK, 1.0.5 (pinned) | No goldens in `make ci` |
 | Tooling | `tool/` (package `kiveto_tool`): device picker, coverage gate, contract commands, contract normaliser | — | SDK libraries only, except `yaml` 3.1.4 (pinned) used by `tool/lib/contract_normalizer.dart` alone; tested at 100% itself (§8) |
@@ -320,7 +353,7 @@ kiveto-mobile/
 ├── test/{unit,widget,integration,architecture,tool,scripts}/
 ├── test/support/               # shared test helpers: portal_api/ fake backend, fixtures/portal_api/ contract JSON
 ├── assets/{fonts,licenses}/     # DM Sans (variable) and its OFL, the Lucide licence
-├── integration_test/           # slice 1 (make test-e2e)
+├── integration_test/           # deferred (make test-e2e)
 └── android/  ios/              # applicationId / bundle id app.kiveto.portal
 ```
 
@@ -382,7 +415,7 @@ Portability rules:
 | `make test-coverage` | unit, widget, integration and tool suites with `--coverage --coverage-package=kiveto_mobile --coverage-package=kiveto_tool` into `coverage/lcov.info` (empty when no test) |
 | `make coverage-gate` | `tool/coverage_gate.dart` (§8), its report shown live |
 | `make test-scripts` | the plain-bash checks of `test/scripts/` (scripts, hooks, thin Dart entry points), one line per case |
-| `make test-e2e` | slice 1 (`identity_access`) |
+| `make test-e2e` | deferred (not built by slice 1) |
 | `make api-sync REF=`, `api-generate`, `api-check` | Contract (§4), `scripts/api.sh` over `tool/portal_api.dart` and `tool/normalize_contract.dart`. `api-sync`: `REF` required and checked, `KIVETO_BACKEND_DIR` (default `../kiveto`) must exist, both before any `fvm` call; copy and `SOURCE`, then the generate steps. `api-generate`: normalises into `build/kiveto_portal_api`, resolves the generator (`pub get --enforce-lockfile` in `tool/api_generator/`), only then removes the package, runs tonik, stamps, `pub get` of the app; a failure leaves the committed client in place until tonik runs, and its message says how to go back (`git checkout -- packages/kiveto_portal_api && git clean -fdq -- packages/kiveto_portal_api`, with `contracts` too after `api-sync`) — it restores nothing itself. `api-check`: its report shown live. Options `REF` (an inherited one is ignored, like `PLATFORM`) and `KIVETO_BACKEND_DIR` (honoured from the environment). |
 | `make install-fvm` | Opt-in, current user only, from the official source; prints the `PATH` line instead of editing it (D10) |
 | `make clean`, `make reset` | `flutter clean` + stamps; reset = clean + install |
@@ -547,7 +580,7 @@ the `AGENTS.md` block once there is code, imported from `CLAUDE.md` with
 | 3 | `chore/quality-gates` | Analyzer config, architecture tests, coverage gate, hooks, `make ci`, GitHub Actions (Claude hooks deferred, D14) | **V2:** one injected violation per rule fails `make ci` with a clear message; riverpod_lint diagnostics fail `dart analyze` |
 | 4 | `chore/portal-api-client` | Generator spike, `api-sync` / `api-generate` / `api-check`, generated package | **V3:** the client decodes `GET /me` from the local backend (demo phone +33612345678); a YAML drift fails `api-check`. Passed on Windows (2026-11-03): one OTP sign-in, then `GET /me` and the home, pets, upcoming appointments and documents of both clinics decoded live with no failure (offsets `+01:00` / `+02:00` kept, `Date` birth dates); a line appended to the copy made `make api-check` and `make ci` fail at `api-check` with both messages, `git checkout` restored it; the contract fixtures decode in `make ci`. macOS run pending |
 | 5 | `feature/app-shell` | `core/{network,security,errors,di}`: Dio, dev Host header, auth interceptor with one refresh, token storage, problem+json → failures, `Idempotency-Key`, `X-Device-Id`; `shared/`: `Clock`, value objects, UI kit; `app/`: bootstrap, router + `/invitation` deep link, theme from the mockup; French l10n | **V4:** N concurrent 401s trigger one refresh; 100% coverage. Passed on Windows (2026-11-03): `test/unit/core/network/auth_interceptor_test.dart` runs 5 concurrent `AccountApi.getMe` on the real `PortalHttp` chain and generated client: one `POST /auth/refresh` (body: the refresh token of A), 5 retries with `Bearer B`, session and storage on B; the other refresh outcomes (refused → signed out, unavailable → session kept), the retry keeping its `Idempotency-Key` and body, a newer pair opened during the refresh; the coverage gate reports `shared/domain`, `core/network`, `core/security`, `core/errors` at 100%. On the Android emulator: the welcome placeholder in DM Sans (600/700 drawn by the `wght` axis, not emboldened), the kit gallery's `GET /legal/terms/current → 200` from the local backend through the dev `Host` header, a fake session → the shell (restored after a restart), the `/invitation#t=` deep link, the K badge launcher icon. iOS not built. Known limit of the `QueuedInterceptor` design: its error queue advances only when a handler completes, so the N retries after one refresh run one after another, and any other error of the authenticated Dio waits behind an in-flight retry (only around a refresh, every ~15 min); a plain `Interceptor` with a `Completer` single flight would lift it |
-| 6 | `feature/identity-access` | Slice 1 (`identity_access`): OTP sign-in, invitation, terms, empty home | **V5:** real flow on an emulator against the local backend |
+| 6 | `feature/identity-access` | Slice 1 (`identity_access`): OTP sign-in, invitation, terms, registration, logout; minimal `client` (`GET /me`, active clinic); `sessionStatusProvider`; home placeholder | **V5:** real flow on an emulator against the local backend. Passed on Windows (2026-11-03), Android emulator against the local backend: the demo account signed in (wrong then right code), restarted signed in, signed out (`POST /auth/logout`); a number with two pending invitations accepted one by one; an invitation link (`http://portal.kiveto.local/invitation#t=…` VIEW intent) accepted with its code; `PERRIN_TOKEN` expired, warm signed in and cold signed out; the revoked-link account sent to `/clinics`; a new number registered and sent to `/clinics`; a landline refused (`phone_not_supported`). `integration_test/` deferred (the OTP is only in the backend's worker log) |
 | 7+ | `document` → `patient` + `consultation` + `home` → `scheduling` → `client` → requests → `clinic_listing` | Slices 2 to 7, in the contract's order | `make ci` green and a device demo per slice |
 
 ## 12. Risks
