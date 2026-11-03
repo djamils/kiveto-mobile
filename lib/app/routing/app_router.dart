@@ -13,6 +13,7 @@ import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/home/home.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart';
+import 'package:kiveto_mobile/features/scheduling/scheduling.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -87,12 +88,60 @@ void _pushQuestionnaire(BuildContext context, String appointmentId) =>
 void _pushBooking(BuildContext context) =>
     unawaited(context.push(AppRoutes.bookingPet));
 
+/// The names of the booking wizard's routes (go_router names a page
+/// after its route): the pages popped when the wizard closes.
+const _bookingPet = 'bookingPet';
+const _bookingMotif = 'bookingMotif';
+const _bookingSlot = 'bookingSlot';
+const _bookingConfirm = 'bookingConfirm';
+const Set<String> _bookingRoutes = {
+  _bookingPet,
+  _bookingMotif,
+  _bookingSlot,
+  _bookingConfirm,
+};
+
+/// Closes the booking wizard: every booking page is popped, back where it
+/// was opened (the home, the Rendez-vous tab); reached directly (nothing
+/// under it), the home.
+void _closeBooking(BuildContext context) {
+  final router = GoRouter.of(context);
+  var opened = true;
+  Navigator.of(context, rootNavigator: true).popUntil((route) {
+    if (!_bookingRoutes.contains(route.settings.name)) return true;
+    if (route.isFirst) opened = false;
+    return route.isFirst;
+  });
+  if (!opened) router.go(AppRoutes.home);
+}
+
+/// Back to the booking step [name]: the steps above it are popped.
+void _backToBookingStep(BuildContext context, String name) =>
+    Navigator.of(context, rootNavigator: true).popUntil(
+      (route) =>
+          route.settings.name == name ||
+          route.isFirst ||
+          !_bookingRoutes.contains(route.settings.name),
+    );
+
+void _pushReschedule(BuildContext context, String appointmentId) =>
+    unawaited(context.push(AppRoutes.reschedule(appointmentId)));
+
 /// Back from a page of a tab: pops what was pushed on it, else the home.
 void _backOrHome(BuildContext context) {
   if (context.canPop()) {
     context.pop();
   } else {
     context.go(AppRoutes.home);
+  }
+}
+
+/// Back from a page over the Rendez-vous tab: pops it, else the tab.
+void _backOrAppointments(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(AppRoutes.appointments);
   }
 }
 
@@ -201,21 +250,26 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
         ),
         StatefulShellBranch(
           routes: [
-            _page(
-              AppRoutes.appointments,
-              (l10n) => l10n.screenAppointmentsTitle,
+            GoRoute(
+              path: AppRoutes.appointments,
+              builder: (context, state) => const AppointmentsPage(
+                onBook: _pushBooking,
+                onReschedule: _pushReschedule,
+                onFillQuestionnaire: _pushQuestionnaire,
+              ),
               routes: [
                 fullScreen(
                   ':appointmentId/questionnaire',
                   (l10n) => l10n.screenQuestionnaireTitle,
                 ),
-                fullScreen(
-                  ':appointmentId/cancel',
-                  (l10n) => l10n.screenCancelAppointmentTitle,
-                ),
-                fullScreen(
-                  ':appointmentId/reschedule',
-                  (l10n) => l10n.screenRescheduleTitle,
+                GoRoute(
+                  path: ':appointmentId/reschedule',
+                  parentNavigatorKey: root,
+                  builder: (context, state) => ReschedulePage(
+                    appointmentId: state.pathParameters['appointmentId']!,
+                    onBack: _backOrAppointments,
+                    onDone: _goAppointments,
+                  ),
                 ),
               ],
             ),
@@ -250,12 +304,55 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
         ),
       ],
     ),
-    fullScreen(AppRoutes.bookingPet, (l10n) => l10n.screenBookingPetTitle),
-    fullScreen(AppRoutes.bookingMotif, (l10n) => l10n.screenBookingMotifTitle),
-    fullScreen(AppRoutes.bookingSlot, (l10n) => l10n.screenBookingSlotTitle),
-    fullScreen(
-      AppRoutes.bookingConfirm,
-      (l10n) => l10n.screenBookingConfirmTitle,
+    // The booking wizard (12 → 13 → 3 → 14), over the shell; its pages
+    // share one draft (scheduling's wizard notifier).
+    GoRoute(
+      name: _bookingPet,
+      path: AppRoutes.bookingPet,
+      parentNavigatorKey: root,
+      builder: (context, state) => BookingPetPage(
+        onContinue: (context) =>
+            unawaited(context.push(AppRoutes.bookingMotif)),
+        onClose: _closeBooking,
+      ),
+    ),
+    GoRoute(
+      name: _bookingMotif,
+      path: AppRoutes.bookingMotif,
+      parentNavigatorKey: root,
+      builder: (context, state) => BookingMotifPage(
+        onContinue: (context) => unawaited(context.push(AppRoutes.bookingSlot)),
+        onBack: (context) => _backToBookingStep(context, _bookingPet),
+        onClose: _closeBooking,
+      ),
+    ),
+    GoRoute(
+      name: _bookingSlot,
+      path: AppRoutes.bookingSlot,
+      parentNavigatorKey: root,
+      builder: (context, state) => BookingSlotPage(
+        onContinue: (context) =>
+            unawaited(context.push(AppRoutes.bookingConfirm)),
+        onEditPet: (context) => _backToBookingStep(context, _bookingPet),
+        onEditMotif: (context) => _backToBookingStep(context, _bookingMotif),
+        onBack: (context) => _backToBookingStep(context, _bookingMotif),
+        onClose: _closeBooking,
+      ),
+    ),
+    GoRoute(
+      name: _bookingConfirm,
+      path: AppRoutes.bookingConfirm,
+      parentNavigatorKey: root,
+      builder: (context, state) => BookingConfirmPage(
+        onDone: _goHome,
+        onFillQuestionnaire: (context, appointmentId) =>
+            context.go(AppRoutes.questionnaire(appointmentId)),
+        onEditSlot: (context) => _backToBookingStep(context, _bookingSlot),
+        onSlotTaken: (context) => _backToBookingStep(context, _bookingSlot),
+        onEditPet: (context) => _backToBookingStep(context, _bookingPet),
+        onBack: (context) => _backToBookingStep(context, _bookingSlot),
+        onClose: _closeBooking,
+      ),
     ),
     fullScreen(
       '/clinic-listings/:listingId',

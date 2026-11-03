@@ -161,6 +161,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
   summary: Let the owner keep or share a document outside the app (save the PDF, "Ouvrir avec…", share sheet): the in-app viewer (`pdf_file_page.dart`, pdfrx) only shows it.
   evidence: Out of the slice 2 intent; needs a share/save package (share_plus or the platform's document picker) checked under CLAUDE.md §7.
+  update: 2026-11-03 — slice 4 (`spec-scheduling.md`) pinned `share_plus: 13.3.1` for the `.ics` of an appointment (`calendarSharerProvider`, architecture §5); the same package could hand a document's `PortalFile` to the share sheet (« Ouvrir avec… », save to Files / Drive).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
   summary: Screen 17 (slice 6): after `requestRenewal` succeeds, refresh the documents lists (expose a refresh from `features/document/document.dart`, e.g. invalidating `documentListProvider`), so the prescription card and sheet show « Renouvellement demandé » instead of the button.
@@ -201,6 +202,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-patient-home.md`
   summary: Merge the backend branch `fix/portal-care-item-booked-status` (commit `bcb8d8b1`, adds `booked` to the `CareItem` and `HomeCareItemView` status enums of `openapi/portal.v1.yaml`) into the backend's master, then re-run `make api-sync` on the merged commit if the SHA changes: `contracts/SOURCE` pins `bcb8d8b1`, which no backend master contains yet.
   evidence: Code review (blind-hunter, acceptance auditor), verified: the agent's `git merge --no-ff` into the backend's local master was refused by the permission system (needs the user's go-ahead); the branch passed the backend's `make ci` (8302 tests). If the branch is squashed or rebased, the pin must move.
+  resolved: 2026-11-03 — the orchestrator merged the branch into the backend's local master on the user's go-ahead (merge `f6ed3fca`); `bcb8d8b1` is reachable from it, so the pin stayed valid until slice 4 moved it to `aa35f2c4` (branch `feature/portal-me-clinic-contact`, see slice 4's entries).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-patient-home.md`
   summary: « Today » for the care countdowns, ages and the year rule is the device's local date (`deviceToday`), while the server decides the care status on the clinic's local date (`ClinicLink.timezone`, e.g. `Europe/Paris`); an owner in another zone near midnight sees « Demain » for an item the server says is due today. Computing the clinic's date needs time-zone data (e.g. the `timezone` package, checked under CLAUDE.md §7).
@@ -209,3 +211,29 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-patient-home.md`
   summary: A clinic switch whose `shared_preferences` write failed reverts to the stored (or first) clinic at the next `/me` reload (pull-to-refresh), because `ActiveClinicNotifier.build` re-reads the store; keep the session's choice in the notifier and prefer it over the store.
   evidence: Code review (edge-case hunter), verified, low, pre-existing (slice 1's `ActiveClinicNotifier.select` only logs the failed write).
+
+## Deferred from: spec-scheduling.md (slice 4, 2026-11-03)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
+  summary: Merge the backend branch `feature/portal-me-clinic-contact` (commit `aa35f2c4`, adds the clinic's `phone` and `address { line, postalCode, city }` to `GET /me` `clinics[]`) into the backend's master, then re-run `make api-sync` on the merged commit if the SHA changes: `contracts/SOURCE` pins `aa35f2c4`, which no backend master contains yet.
+  evidence: Contract sync `3bd69e2` (its message says the branch is not merged); the booking screens 13 (the emergency « Appeler ») and 14 (the clinic's address) read these fields.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
+  summary: A slot whose offset is `+00:00` (a clinic on UTC, e.g. Lisbon or London in winter) would be sent as `…T10:00:00.000Z`: `OffsetDateTime.from(slot.instant, offset: Duration.zero)` is `isUtc`, and tonik's `toTimeZonedIso8601String` then writes `DateTime.toIso8601String()` (fraction and `Z`), the form the backend refused during the generator spike. Every clinic of the demo data is on Europe/Paris (`+01:00` / `+02:00`); check the backend's parsing of `Z` and `.000`, or send `+00:00` another way, before a UTC clinic books.
+  evidence: Build (slice 4), read from `tonik_util` 0.11.1 (`OffsetDateTime.isUtc`, `DateTimeEncodingExtension.toTimeZonedIso8601String`); not exercised by a capture.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
+  summary: The availability window starts on the device's date (`deviceToday`), like the other « today » of the app (slice 3's entry above): an owner whose device is a day behind the clinic gets `422 validation_failed` on `from` and the app asks once more from the next day; an owner a day ahead misses the clinic's today. Computing the clinic's date needs time-zone data.
+  evidence: Spec (Design Notes, « Slot picker »); `availabilityProvider` retries once with `from + 1` on a `from` violation (`clinics.paris.booking.availability.past.get.422.json`).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
+  summary: Without the strict 2xx chain, the generated client cannot decode a `422` problem body that carries no `violations` (`idempotency_key_reused`, `appointment_not_modifiable`…) as its typed `…Response422` (the schema's `ConstraintViolation.violations` is required): it answers a decoding `TonikError`. The app always runs the strict chain (the failure is read from the Dio response), so nothing shows; a backend proposal is to declare the 422 bodies as `oneOf` problem / validation, or to make `violations` optional.
+  evidence: Build (slice 4): `test/integration/portal_api_contract_test.dart` reads both captures on the strict chain for that reason.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
+  summary: On iPad the calendar share sheet needs an origin rect: `calendarSharerProvider` calls `SharePlus.instance.share` without `sharePositionOrigin`, so « Ajouter à mon calendrier » would end in the failure SnackBar there; pass the tapped widget's rect through the seam when iOS is built.
+  evidence: Code review (blind hunter), verified, medium: the Runner targets iPhone and iPad (`TARGETED_DEVICE_FAMILY = "1,2"`) and share_plus requires `sharePositionOrigin` on iPad; iOS is out of slice 4's scope (never built).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
+  summary: The real share sheet and dialer hand-offs (`calendarSharerProvider` on share_plus, `phoneDialerProvider` on url_launcher) never run in a test: every test overrides the seams, so a dropped `mimeType` or `fileNameOverrides` would not fail `make ci`.
+  evidence: Code review (verification-gap layer, intent auditor), low: the repo keeps every platform plugin behind a provider seam with no platform-channel mocks, and `SharePlatform` is not exported by share_plus; a test needs share_plus_platform_interface as a dev dependency, or channel and path_provider mocks. Checked on the Android emulator instead (the share sheet with the `.ics`).

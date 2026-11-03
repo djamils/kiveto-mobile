@@ -102,6 +102,7 @@ class WizardHeader extends StatelessWidget {
     required this.onClose,
     super.key,
     this.total = 4,
+    this.overTitle,
   });
 
   final int step;
@@ -112,6 +113,10 @@ class WizardHeader extends StatelessWidget {
   final String title;
   final VoidCallback onBack;
   final VoidCallback onClose;
+
+  /// A widget between the progress bars and the title, 10 above the
+  /// title (the clinic chip of screen 12).
+  final Widget? overTitle;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -146,6 +151,10 @@ class WizardHeader extends StatelessWidget {
         ],
       ),
       const SizedBox(height: KivetoSpace.xl3),
+      if (overTitle case final overTitle?) ...[
+        Align(alignment: AlignmentDirectional.centerStart, child: overTitle),
+        const SizedBox(height: KivetoSpace.m),
+      ],
       Semantics(header: true, child: Text(title, style: KivetoText.flowTitle)),
     ],
   );

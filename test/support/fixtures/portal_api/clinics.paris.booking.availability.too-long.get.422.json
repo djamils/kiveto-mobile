@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"to","message":"La période demandée ne peut pas dépasser 14 jours.","code":"portal_rule"}],"detail":"to: La période demandée ne peut pas dépasser 14 jours.","type":"validation_failed","title":"Données invalides."}

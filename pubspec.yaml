@@ -83,6 +83,16 @@ dependencies:
   # 3.5.0. Rejected: pdfx, which re-exports photo_view 0.15.0 (unmaintained
   # since 2024-04), which imports flutter/material.dart.
   pdfrx: 2.11.0
+  # Slice 4 (scheduling): « Ajouter à mon calendrier » hands the `.ics` of
+  # an appointment to the OS share sheet (ACTION_SEND on Android: Drive,
+  # Gmail, Messages, Bluetooth; iOS's sheet offers « Ajouter au
+  # calendrier ») — the Android emulator has no `text/calendar` VIEW
+  # handler (Google Calendar does not import `.ics`). Checked on pub.dev on
+  # 2026-11-03 and pinned exactly: latest, published 2026-10-01 by
+  # fluttercommunity.dev, Flutter Favorite, Dart >= 3.10 / Flutter >=
+  # 3.38.1; `fvm flutter pub add --dry-run share_plus:13.3.1` resolves,
+  # adding share_plus_platform_interface 7.2.0 and cross_file 0.3.5+5.
+  share_plus: 13.3.1
   # Slice 1 (identity_access, client), versions checked on pub.dev on
   # 2026-11-03 (both latest, flutter.dev, Dart >= 3.11, resolution checked
   # with `fvm flutter pub add --dry-run`) and pinned exactly:

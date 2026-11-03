@@ -32,8 +32,7 @@ abstract final class AppRoutes {
   static const bookingConfirm = '/booking/confirm'; // 14
   static String questionnaire(String appointmentId) =>
       '/appointments/${_id(appointmentId)}/questionnaire'; // 15
-  static String cancelAppointment(String appointmentId) =>
-      '/appointments/${_id(appointmentId)}/cancel'; // 16
+  // 16, the cancellation, is a sheet over 4 (no route).
   static String reschedule(String appointmentId) =>
       '/appointments/${_id(appointmentId)}/reschedule'; // 3, reused
   static String prescriptionRenewal(String prescriptionId) =>

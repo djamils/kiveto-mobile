@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"from","message":"La date de début ne peut pas être dans le passé.","code":"portal_rule"}],"detail":"from: La date de début ne peut pas être dans le passé.","type":"validation_failed","title":"Données invalides."}

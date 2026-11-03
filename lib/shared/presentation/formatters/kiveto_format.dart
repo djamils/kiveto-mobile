@@ -38,6 +38,47 @@ abstract final class KivetoFormat {
   static String numericDate(LocalDate date) =>
       DateFormat('dd/MM/y', _locale).format(_utc(date));
 
+  /// `Lundi 9 novembre` (pass a [ClinicInstant]'s `date`: the clinic's
+  /// day).
+  static String dayLong(LocalDate date) =>
+      _capitalize(DateFormat('EEEE d MMMM', _locale).format(_utc(date)));
+
+  /// `Lun. 9 nov.`, or `lun. 9 nov.` inside a sentence (not
+  /// [capitalized]).
+  static String dayShort(LocalDate date, {bool capitalized = true}) {
+    final text = DateFormat('EEE d MMM', _locale).format(_utc(date));
+    return capitalized ? _capitalize(text) : text;
+  }
+
+  /// `Lun`: the day of the week of a day picker, without its dot.
+  static String weekdayShort(LocalDate date) {
+    final weekday = DateFormat('EEE', _locale).format(_utc(date));
+    return _capitalize(
+      weekday.endsWith('.')
+          ? weekday.substring(0, weekday.length - 1)
+          : weekday,
+    );
+  }
+
+  /// `nov.`: the month of a date tile.
+  static String monthShort(LocalDate date) =>
+      DateFormat('MMM', _locale).format(_utc(date));
+
+  /// The months a run of days covers: `Novembre 2026`, `Novembre –
+  /// décembre 2026`, `Décembre 2026 – janvier 2027`.
+  static String monthRange(LocalDate first, LocalDate last) {
+    String month(LocalDate date) =>
+        DateFormat('LLLL', _locale).format(_utc(date));
+    if (first.year != last.year) {
+      return '${_capitalize(month(first))} ${first.year} – '
+          '${month(last)} ${last.year}';
+    }
+    if (first.month != last.month) {
+      return '${_capitalize(month(first))} – ${month(last)} ${last.year}';
+    }
+    return '${_capitalize(month(first))} ${first.year}';
+  }
+
   /// `10:30`
   static String time(ClinicInstant instant) =>
       DateFormat('HH:mm', _locale).format(_wallClock(instant));

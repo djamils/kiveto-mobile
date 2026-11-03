@@ -19,7 +19,8 @@ features) replaces the feature list of §2 and the `core/` split of §3 and
 D3 decided (tonik 0.11.1), §4 and §5–§8 describe the contract tooling as
 built, §11 records milestone V3. Updated on 2026-11-03 by phase 5: §5 lists
 the app foundation's dependencies (material_ui among them), §6 and §8 the
-app files as built, §11 records milestone V4.
+app files as built, §11 records milestone V4. Updated on 2026-11-03 by
+slice 4 (scheduling): §5 lists share_plus (the share sheet of the `.ics`).
 
 ## 1. Context
 
@@ -299,8 +300,13 @@ published by flutter.dev, Dart ≥ 3.11, resolution checked with
 (shared_preferences_android 2.5.4, _foundation 2.6.1, _linux 2.4.1, _web
 2.4.3, _windows 2.4.1, _platform_interface 2.4.2; url_launcher_android
 6.3.33, _ios 6.4.2, _linux 3.2.3, _macos 3.2.6, _web 2.4.3, _windows 3.1.6,
-_platform_interface 2.3.2) and file 7.0.1. The other rows are added by
-later phases, checked again then.
+_platform_interface 2.3.2) and file 7.0.1. Pinned in slice 4
+(`feature/scheduling`; checked on pub.dev on 2026-11-03: latest, published
+2026-10-01 by fluttercommunity.dev, Flutter Favorite, Dart ≥ 3.10 /
+Flutter ≥ 3.38.1, resolution checked with `fvm flutter pub add --dry-run`,
+pinned exactly): share_plus 13.3.1, which brings
+share_plus_platform_interface 7.2.0 and cross_file 0.3.5+5. The other rows
+are added by later phases, checked again then.
 
 | Role | Choice | Version | Why |
 |---|---|---|---|
@@ -315,7 +321,8 @@ later phases, checked again then.
 | API client runtime | tonik_util | 0.11.1 (pinned) | `TonikResult`, `OffsetDateTime`, `Date`, `ServerConfig`, used by the generated package and by `infrastructure/` |
 | Tokens | flutter_secure_storage | 11.2.0 (pinned) | Keychain / Keystore; minSdk 24 = template default; also the device id |
 | Preferences | shared_preferences | 2.5.6 (pinned) | Active clinic, per account (`client.activeClinic.<accountId>`); slice 1 |
-| External links | url_launcher | 6.3.3 (pinned) | The terms page of the sign-in screens (`launchUrl` only: no `<queries>` entry, which only `canLaunchUrl` needs); slice 1 |
+| External links | url_launcher | 6.3.3 (pinned) | The terms page of the sign-in screens (`launchUrl` only: no `<queries>` entry, which only `canLaunchUrl` needs); slice 1. The clinic's `tel:` link of the booking (13); slice 4 |
+| Share sheet | share_plus | 13.3.1 (pinned) | « Ajouter à mon calendrier » hands the appointment's `.ics` to the OS share sheet as one `text/calendar` file: Android has no `text/calendar` VIEW handler on the emulator (Google Calendar does not import `.ics`), its ACTION_SEND sheet does (Drive, Gmail, Messages, Bluetooth), iOS's sheet offers « Ajouter au calendrier »; slice 4 |
 | Localisation | flutter_localizations + gen-l10n (ARB), intl | SDK, 0.20.3 (pinned) | The contract returns codes; labels are translated in the app; French dates and amounts |
 | Tests | flutter_test, integration_test, mocktail | SDK, 1.0.5 (pinned) | No goldens in `make ci` |
 | Tooling | `tool/` (package `kiveto_tool`): device picker, coverage gate, contract commands, contract normaliser | — | SDK libraries only, except `yaml` 3.1.4 (pinned) used by `tool/lib/contract_normalizer.dart` alone; tested at 100% itself (§8) |

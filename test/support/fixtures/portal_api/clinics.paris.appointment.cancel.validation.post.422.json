@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"reason","message":"Motif d'annulation obligatoire.","code":"c1051bb4-d103-4f74-8988-acbcafc7fdc3"}],"detail":"reason: Motif d'annulation obligatoire.","type":"validation_failed","title":"Données invalides."}
