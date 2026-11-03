@@ -39,22 +39,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get screenWelcomeTitle => 'Bienvenue';
-
-  @override
   String get screenSignInCodeTitle => 'Entrez le code reçu';
 
   @override
   String get screenRegisterTitle => 'Créez votre compte';
-
-  @override
-  String get screenOnboardingInvitationsTitle => 'Vos invitations';
-
-  @override
-  String get screenInvitationTitle => 'Activez votre espace';
-
-  @override
-  String get screenHomeTitle => 'Accueil';
 
   @override
   String get screenClinicsTitle => 'Trouver une clinique';

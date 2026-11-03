@@ -72,11 +72,18 @@ class _CodePageState extends ConsumerState<CodePage> {
     super.dispose();
   }
 
-  void _back() => widget.onRestart(context);
+  /// Back to the welcome page; not while a verification runs (its answer
+  /// decides where the user goes).
+  void _back() {
+    if (!_verifying) widget.onRestart(context);
+  }
 
   Future<void> _verify(String code) async {
     final flow = ref.read(signInFlowProvider);
-    if (flow == null || _verifying || code.length != 6) return;
+    // Not while a resend replaces the challenge.
+    if (flow == null || _verifying || _resending || code.length != 6) {
+      return;
+    }
     final l10n = AppLocalizations.of(context);
     setState(() {
       _verifying = true;
@@ -325,7 +332,7 @@ class _CodePageState extends ConsumerState<CodePage> {
                 child: KivetoButton.primary(
                   label: l10n.identityCodeSubmit,
                   loading: _verifying,
-                  onPressed: _code.text.length == 6
+                  onPressed: _code.text.length == 6 && !_resending
                       ? () => unawaited(_verify(_code.text))
                       : null,
                 ),

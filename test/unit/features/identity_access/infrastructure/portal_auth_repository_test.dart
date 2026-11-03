@@ -5,6 +5,7 @@
 // the replay carrying the same body).
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/features/identity_access/domain/otp_challenge.dart';
@@ -28,6 +29,12 @@ const _logout = '$api/auth/logout';
 
 Map<String, Object?> _body(PortalRequest request) =>
     jsonDecode(utf8.decode(request.body)) as Map<String, Object?>;
+
+/// The [key] of the capture [fixture].
+String _captured(String fixture, String key) =>
+    (jsonDecode(File('$portalFixtures/$fixture').readAsStringSync())
+            as Map<String, Object?>)[key]!
+        as String;
 
 /// A verification answer: the `authenticated` capture with [changes].
 PortalReply _verified(Map<String, Object?> changes) => PortalReply.json(
@@ -158,6 +165,15 @@ void main() {
       );
 
       final authenticated = verification as AuthenticatedVerification;
+      const capture = 'auth.otp.verify.authenticated.post.200.json';
+      expect(
+        authenticated.tokens.accessToken,
+        _captured(capture, 'accessToken'),
+      );
+      expect(
+        authenticated.tokens.refreshToken,
+        _captured(capture, 'refreshToken'),
+      );
       expect(authenticated.tokens.refreshToken, startsWith('0tlWl3NB'));
       expect(
         authenticated.tokens.accessTokenExpiresAt,
@@ -389,6 +405,10 @@ void main() {
 
       final tokens = await repository.register(request);
 
+      expect(
+        tokens.accessToken,
+        _captured('auth.register.post.201.json', 'accessToken'),
+      );
       expect(
         tokens.refreshToken,
         'dCuSyfWyzqWw8I_9nmv8QWZFXNgpFxQvKEVpjjBUSug',

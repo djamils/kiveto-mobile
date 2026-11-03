@@ -60,15 +60,17 @@ final class _Repository implements MeRepository {
   }
 }
 
-/// A store whose reads wait for [gate].
+/// A store whose reads answer what was stored when they started, once
+/// [gate] opens (a slow read that a write overtakes).
 final class _GatedStore implements ActiveClinicStore {
   final gate = Completer<void>();
   final choices = <String, String>{};
 
   @override
   Future<String?> read(String accountId) async {
+    final stored = choices[accountId];
     await gate.future;
-    return choices[accountId];
+    return stored;
   }
 
   @override

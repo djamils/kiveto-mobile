@@ -136,12 +136,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Documents, 1 nouveau} other{Documents, {count} nouveaux}}'**
   String navDocumentsUnread(int count);
 
-  /// Title of the welcome screen (7).
-  ///
-  /// In fr, this message translates to:
-  /// **'Bienvenue'**
-  String get screenWelcomeTitle;
-
   /// Title of the code entry screen (8).
   ///
   /// In fr, this message translates to:
@@ -153,24 +147,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Créez votre compte'**
   String get screenRegisterTitle;
-
-  /// Title of the pending invitations screen, after a sign-in with pending invitations.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vos invitations'**
-  String get screenOnboardingInvitationsTitle;
-
-  /// Title of the invitation activation screen (0), opened from the invitation link.
-  ///
-  /// In fr, this message translates to:
-  /// **'Activez votre espace'**
-  String get screenInvitationTitle;
-
-  /// Title of the home screen (1).
-  ///
-  /// In fr, this message translates to:
-  /// **'Accueil'**
-  String get screenHomeTitle;
 
   /// Title of the clinic search screen (10).
   ///

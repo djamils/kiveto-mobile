@@ -170,7 +170,12 @@ Conventions of slice 1 (`feature/identity-access`), for every slice:
 - **One deliberate exception to rule 3:** `core/di/core_providers.dart`
   re-exports `SessionStatus` (`show SessionStatus`) from `core/security/`,
   so that the presentation compares the status without importing
-  `core/security/`; nothing else of `core/security/` reaches it.
+  `core/security/`. The rule checks import directives only:
+  `sessionManagerProvider` (`core/di/`) still hands the `SessionManager`
+  to whoever reads it, so by convention the presentation never reads it
+  (the session changes through the features' use cases, e.g.
+  identity_access's `signOutProvider`); a stricter check would be a rule on
+  identifiers, not imports.
 - **Navigation from a feature.** Features never import `app/`: a page
   takes its exits as `void Function(BuildContext)` callbacks, built by
   `app/routing/app_router.dart` on `AppRoutes`.
@@ -310,7 +315,7 @@ later phases, checked again then.
 | API client runtime | tonik_util | 0.11.1 (pinned) | `TonikResult`, `OffsetDateTime`, `Date`, `ServerConfig`, used by the generated package and by `infrastructure/` |
 | Tokens | flutter_secure_storage | 11.2.0 (pinned) | Keychain / Keystore; minSdk 24 = template default; also the device id |
 | Preferences | shared_preferences | 2.5.6 (pinned) | Active clinic, per account (`client.activeClinic.<accountId>`); slice 1 |
-| External links | url_launcher | 6.3.3 (pinned) | The terms page of the sign-in screens (`<queries>` VIEW https on Android 11+); slice 1 |
+| External links | url_launcher | 6.3.3 (pinned) | The terms page of the sign-in screens (`launchUrl` only: no `<queries>` entry, which only `canLaunchUrl` needs); slice 1 |
 | Localisation | flutter_localizations + gen-l10n (ARB), intl | SDK, 0.20.3 (pinned) | The contract returns codes; labels are translated in the app; French dates and amounts |
 | Tests | flutter_test, integration_test, mocktail | SDK, 1.0.5 (pinned) | No goldens in `make ci` |
 | Tooling | `tool/` (package `kiveto_tool`): device picker, coverage gate, contract commands, contract normaliser | — | SDK libraries only, except `yaml` 3.1.4 (pinned) used by `tool/lib/contract_normalizer.dart` alone; tested at 100% itself (§8) |

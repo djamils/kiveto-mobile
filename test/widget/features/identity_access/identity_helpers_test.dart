@@ -343,4 +343,30 @@ void main() {
     container.read(signInFlowProvider.notifier).clear();
     expect(container.read(signInFlowProvider), isNull);
   });
+
+  test('the onboarding: an invitation removed after an acceptance keeps the '
+      'success line', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    const paris = PendingInvitation(id: 'paris', clinicName: 'Paris');
+    const lyon = PendingInvitation(id: 'lyon', clinicName: 'Lyon');
+    const nantes = PendingInvitation(id: 'nantes', clinicName: 'Nantes');
+    final onboarding = container.read(onboardingProvider.notifier)
+      ..start(
+        grant: OnboardingGrant(token: 'onb', expiresAt: DateTime.utc(2026)),
+        invitations: const [paris, lyon, nantes],
+        signedIn: false,
+      )
+      ..accepted(lyon)
+      ..remove('nantes');
+
+    final state = container.read(onboardingProvider)!;
+    expect(state.invitations, [paris]);
+    expect(state.signedIn, isTrue);
+    expect(state.acceptedClinicName, 'Lyon');
+    expect(state.grant.token, 'onb');
+
+    onboarding.clear();
+    expect(container.read(onboardingProvider), isNull);
+  });
 }

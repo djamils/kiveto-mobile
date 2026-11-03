@@ -199,6 +199,92 @@ void main() {
     expect(backend.requestsTo(_verify), hasLength(1));
   });
 
+  testWidgets('while verifying: back, "Modifier" and the system back stay, '
+      'and neither resend is offered (countdown over)', (tester) async {
+    final answer = Completer<PortalReply>();
+    final clock = FixedClock(testNow);
+    final backend = FakePortalBackend()
+      ..onRequest('POST', _verify, (_) => answer.future);
+    final (_, exits, _) = await _pump(tester, backend: backend, clock: clock);
+    clock.instant = DateTime.utc(2026, 11, 3, 10, 23, 10);
+    await tester.pump(const Duration(seconds: 1));
+
+    await tester.enterText(find.byType(TextField), '123456');
+    await tester.pump();
+
+    final resends = tester.widgetList<KivetoTextButton>(
+      find.byType(KivetoTextButton),
+    );
+    expect(resends.map((button) => button.label), [
+      'Renvoyer le SMS',
+      'Recevoir le code par email',
+    ]);
+    expect(resends.every((button) => button.onPressed == null), isTrue);
+
+    await tester.tap(find.byType(KivetoIconButton));
+    await tester.tapOnText(find.textRange.ofSubstring('Modifier'));
+    await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
+    await tester.pump();
+    expect(exits.taken, isEmpty);
+
+    answer.complete(problem('otp_invalid', 422));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(KivetoIconButton));
+    expect(exits.taken, ['restart']);
+  });
+
+  testWidgets('while a resend runs: no verification, "Valider" disabled', (
+    tester,
+  ) async {
+    final resent = Completer<PortalReply>();
+    final clock = FixedClock(testNow);
+    final backend = FakePortalBackend()
+      ..onRequest('POST', _resend, (_) => resent.future)
+      ..on(
+        'POST',
+        _verify,
+        PortalReply.fixture(
+          'auth.otp.verify.otp-invalid.post.422.json',
+          status: 422,
+        ),
+      );
+    await _pump(tester, backend: backend, clock: clock);
+    clock.instant = DateTime.utc(2026, 11, 3, 10, 23, 10);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Renvoyer le SMS'));
+    await tester.pump();
+
+    // The 6th digit completes the code: no verification during the resend.
+    await tester.enterText(find.byType(TextField), '123456');
+    await tester.pump();
+
+    expect(backend.requestsTo(_verify), isEmpty);
+    expect(
+      tester
+          .widget<KivetoButton>(find.widgetWithText(KivetoButton, 'Valider'))
+          .onPressed,
+      isNull,
+    );
+
+    resent.complete(
+      PortalReply.json(
+        jsonEncode({
+          'challengeId': _challenge,
+          'expiresAt': '2026-11-03T10:33:10+00:00',
+          'resendAvailableAt': '2026-11-03T10:23:40+00:00',
+        }),
+        status: 202,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<KivetoButton>(find.widgetWithText(KivetoButton, 'Valider'))
+          .onPressed,
+      isNotNull,
+    );
+  });
+
   testWidgets('signed in with pending invitations: the session opens, then '
       'the invitations (signed-in variant)', (tester) async {
     final backend = FakePortalBackend()

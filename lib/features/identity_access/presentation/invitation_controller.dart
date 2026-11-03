@@ -128,22 +128,20 @@ final class InvitationController extends Notifier<InvitationState> {
       final challenge = await ref
           .read(invitationRepositoryProvider)
           .requestCode(token);
-      // The page may have moved on meanwhile (another link, a closed
-      // invitation): only a ready state takes the answer.
+      // The page may have left (the state is gone), or moved on (another
+      // link, a closed invitation): only a ready state takes the answer.
+      if (!ref.mounted || _token != token) return;
       final current = state;
-      if (!ref.mounted || _token != token || current is! InvitationReady) {
-        return;
-      }
+      if (current is! InvitationReady) return;
       state = current.copyWith(
         challenge: challenge,
         sendingCode: false,
         resent: resent,
       );
     } on Object catch (error) {
+      if (!ref.mounted || _token != token) return;
       final current = state;
-      if (!ref.mounted || _token != token || current is! InvitationReady) {
-        return;
-      }
+      if (current is! InvitationReady) return;
       state =
           _closedBy(error) ??
           current.copyWith(sendingCode: false, codeError: error);
@@ -177,8 +175,9 @@ final class InvitationController extends Notifier<InvitationState> {
       );
       return true;
     } on Object catch (error) {
+      if (!ref.mounted || _token != token) return false;
       final current = state;
-      if (ref.mounted && _token == token && current is InvitationReady) {
+      if (current is InvitationReady) {
         state =
             _closedBy(error) ??
             current.copyWith(accepting: false, acceptError: error);

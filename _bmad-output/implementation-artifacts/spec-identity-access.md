@@ -232,3 +232,34 @@ Status: done (2026-11-03). Baseline `a22f81f8ff0314c873e7b5aa366134b5e66ddda2`.
 - Walk tweaks: the onboarding CTA reads "Accepter cette invitation" once signed in, "Plus tard" centred; the accepted line reads "Invitation acceptée : {clinic}." (no gendered agreement).
 
 **Residual risks.** iOS not built; the dev terms URL unreachable on the emulator; the logout's server revocation after a refresh relies on the backend behaviour checked live (comment + harness test on the client side); `integration_test/` deferred.
+
+### Review Findings
+
+bmad-code-review of `master...feature/identity-access` (2026-11-03, layers: blind-hunter, edge-case-hunter, verification-gap, acceptance-auditor; 42 findings).
+
+- [x] [Review][Patch] Invitation page: the loading and load-failed states have no exit (reached by `go` or a deep link; back leaves the app) — add the closed states' exit (sign in / back home) under the error view [lib/features/identity_access/presentation/invitation_page.dart:129]
+- [x] [Review][Patch] Invitation controller reads `state` before checking `ref.mounted` after its awaits (code request and refused acceptance): leaving the page mid-request throws out of an unawaited future [lib/features/identity_access/presentation/invitation_controller.dart:133]
+- [x] [Review][Patch] Code page: back / "Modifier" during a verification, and a verification started during a resend, race the challenge — ignore back while verifying, refuse verify (and disable "Valider") while resending [lib/features/identity_access/presentation/code_page.dart:75]
+- [x] [Review][Patch] `Onboarding.remove` drops `acceptedClinicName`: the success line disappears after a later `invitation_invalid` [lib/features/identity_access/presentation/flows.dart:118]
+- [x] [Review][Patch] Tests: the `select` race test cannot fail (the gated store reads after `select` wrote); the terms-reload CTA guard, resend-during-verify, the warm second invitation link and the access-token mapping (verify, register, accept by id) are untested [test/widget/features/client/client_providers_test.dart:64]
+- [x] [Review][Patch] Hand-written test bodies copy a real-domain email (`antoine.roussel@gmail.com`) — use `example.com` outside the exact captures [test/widget/features/identity_access/invitation_page_test.dart:46]
+- [x] [Review][Patch] architecture.md §3 says "nothing else of `core/security/` reaches" the presentation, but `sessionManagerProvider` (core/di) hands it the `SessionManager` — correct the wording [_bmad-output/planning-artifacts/architecture.md:170]
+- [x] [Review][Patch] The main manifest's `<queries>` https entry serves no call (`canLaunchUrl` is never used; `launchUrl` starts the intent) — remove it and its doc mentions [android/app/src/main/AndroidManifest.xml:53]
+- [x] [Review][Patch] Four ARB keys only the retired placeholders used (`screenWelcomeTitle`, `screenOnboardingInvitationsTitle`, `screenInvitationTitle`, `screenHomeTitle`) — delete them [lib/l10n/app_fr.arb:40]
+- [x] [Review][Patch] deferred-work.md: a blank line splits the last resolved entry, and the new heading follows it without a blank line [_bmad-output/implementation-artifacts/deferred-work.md:141]
+- [x] [Review][Defer] The "politique de confidentialité" link opens the terms URL [lib/features/identity_access/presentation/terms_consent.dart:43] — deferred: needs a privacy URL in `CurrentTerms` (backend contract), already in deferred-work.md; the copy stays the mockup's until the user decides.
+
+Rejected:
+- `low` Pasting another listed territory's international number with +33 selected keeps the wrong digits — the user picks the prefix first (sheet), the server answers `phone_not_supported`; a country switch from the formatter adds behaviour for a rare paste.
+- `low` Rate-limit delays shown only in minutes ("60 min") — readable; hours need a second plural form for a rare daily quota. (Its claim that register's 429 shows no delay is false: the generic `errorRateLimitedBody` carries the minutes.)
+- `low` Register violation paths and the resend 202 are not live captures — `me.patch.422.json` shows API Platform's plain `firstName` paths; a mismatch would still show the server message in the general callout.
+- `low` (×3) The spec's Design Notes and e2e trigger wording drift from the code (7 → 8 by `go`, walk copy) — fixing them edits the spec under review; the drift is recorded in the Auto Run Result and the hand-over note.
+- `low` V5 evidence (screenshots) lives in the notes folder — the effort's brief puts them there; the walk is described in the spec, CONTRIBUTING §0 and architecture §11.
+- `low` `client.activeClinic.<accountId>` keys are never removed — account UUIDs only, one per account that signed in on the device; a retention rule is a product choice for slice 5 (account screen).
+- `low` A new link opened while the previous acceptance is in flight goes home — the first acceptance succeeded and opened its session; rare.
+- `low` (carried) Onboarding "Se reconnecter" while signed in lands on `/home`; a non-`ApiFailure` logout error surfaces after the local sign-out.
+- `false` Back on the register page / "Revenir à l'accueil" during an in-flight request lands signed in — the request the user sent succeeded; being signed in is its outcome.
+- `low` The active clinic chosen with a failed store write reverts on a `/me` rebuild — needs a store failure, then a rebuild before restart; an in-memory override adds state for a rare path.
+- `low` The 5 s logout bound can leave the refresh family unrevoked on a slow network with an expired access token — the tokens are gone from the device; only a stolen copy could use them; a responsive sign-out was chosen (recorded in the hand-over note).
+
+Code review outcome: 0 decision-needed, 10 patch (all applied: `make ci` green in 2 min 59 s after them), 1 defer (already recorded), 13 rejected (above). Story status stays `done`.

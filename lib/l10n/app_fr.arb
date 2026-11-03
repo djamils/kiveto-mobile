@@ -37,10 +37,6 @@
     }
   },
 
-  "screenWelcomeTitle": "Bienvenue",
-  "@screenWelcomeTitle": {
-    "description": "Title of the welcome screen (7)."
-  },
   "screenSignInCodeTitle": "Entrez le code reçu",
   "@screenSignInCodeTitle": {
     "description": "Title of the code entry screen (8)."
@@ -48,18 +44,6 @@
   "screenRegisterTitle": "Créez votre compte",
   "@screenRegisterTitle": {
     "description": "Title of the registration screen (9)."
-  },
-  "screenOnboardingInvitationsTitle": "Vos invitations",
-  "@screenOnboardingInvitationsTitle": {
-    "description": "Title of the pending invitations screen, after a sign-in with pending invitations."
-  },
-  "screenInvitationTitle": "Activez votre espace",
-  "@screenInvitationTitle": {
-    "description": "Title of the invitation activation screen (0), opened from the invitation link."
-  },
-  "screenHomeTitle": "Accueil",
-  "@screenHomeTitle": {
-    "description": "Title of the home screen (1)."
   },
   "screenClinicsTitle": "Trouver une clinique",
   "@screenClinicsTitle": {

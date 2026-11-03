@@ -126,9 +126,11 @@ class _InvitationPageState extends ConsumerState<InvitationPage> {
       );
     }
     return switch (ref.watch(invitationControllerProvider)) {
-      InvitationLoading() => const Scaffold(
-        backgroundColor: KivetoColors.surface,
-        body: LoadingView(),
+      InvitationLoading() => _WaitingView(
+        signedIn: signedIn,
+        onDone: widget.onDone,
+        onSignIn: widget.onSignIn,
+        child: const LoadingView(),
       ),
       InvitationClosed(:final reason) => _ClosedView(
         reason: reason,
@@ -136,11 +138,11 @@ class _InvitationPageState extends ConsumerState<InvitationPage> {
         onDone: widget.onDone,
         onSignIn: widget.onSignIn,
       ),
-      InvitationLoadFailed(:final error) => Scaffold(
-        backgroundColor: KivetoColors.surface,
-        body: SafeArea(
-          child: ErrorView(error: error, onRetry: _retry),
-        ),
+      InvitationLoadFailed(:final error) => _WaitingView(
+        signedIn: signedIn,
+        onDone: widget.onDone,
+        onSignIn: widget.onSignIn,
+        child: ErrorView(error: error, onRetry: _retry),
       ),
       final InvitationReady ready => _form(context, ready, signedIn),
     };
@@ -463,6 +465,54 @@ class _ClosedView extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The link being read, or that could not be read: [child], and under it
+/// the way out of the closed links (the page is reached by a link: no
+/// back).
+class _WaitingView extends StatelessWidget {
+  const new({
+    required this.child,
+    required this.signedIn,
+    required this.onDone,
+    required this.onSignIn,
+  });
+
+  final Widget child;
+  final bool signedIn;
+  final void Function(BuildContext context) onDone;
+  final void Function(BuildContext context) onSignIn;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      backgroundColor: KivetoColors.surface,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: child),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                KivetoSpace.authGutter,
+                0,
+                KivetoSpace.authGutter,
+                kivetoBottomPadding(context, 28),
+              ),
+              child: KivetoLinkButton(
+                label: signedIn
+                    ? l10n.identityBackHome
+                    : l10n.identityInvitationSignIn,
+                onPressed: () => signedIn ? onDone(context) : onSignIn(context),
               ),
             ),
           ],

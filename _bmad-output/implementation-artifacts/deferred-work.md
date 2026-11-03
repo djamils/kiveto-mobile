@@ -140,8 +140,8 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Design the logout request so that a token refresh cannot replay a spent refresh token: with an expired access token, `POST /auth/logout {refreshToken: A}` through `PortalHttp.dio` gets 401, the auth interceptor refreshes (A → B) and retries the same body; send logout with a "do not refresh" request flag (and fall back to a local sign-out), or on `bareDio` with the current pair — slice 1 (`identity_access`).
   evidence: Code review (blind-hunter), maybe-false, if true medium: whether the backend revokes the whole family when given a spent member decides it (guide: "famille du jeton révoquée si elle appartient à l'appelant"); if it does not, B stays valid on the server after a sign-out.
-
   resolved: slice 1 (`spec-identity-access.md`) — checked live on the backend: a logout carrying a spent (rotated) refresh token revokes the whole family, successor included (`RevokePortalSessionHandler` finds the token by hash whatever its rotation state); so the logout goes through the plain chain and a refresh + replay still revokes the session (pinned by a `PortalHarness` test).
+
 ## Deferred from: spec-identity-access.md (slice 1, 2026-11-03)
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-identity-access.md`

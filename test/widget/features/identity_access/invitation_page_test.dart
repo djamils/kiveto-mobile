@@ -13,6 +13,7 @@ import 'package:kiveto_mobile/core/network/portal_http.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/features/identity_access/presentation/invitation_controller.dart';
 import 'package:kiveto_mobile/features/identity_access/presentation/invitation_page.dart';
+import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:material_ui/material_ui.dart';
@@ -48,7 +49,7 @@ PortalReply _accepted() => PortalReply.json(
       'id': 'acc',
       'firstName': 'Antoine',
       'lastName': 'Roussel',
-      'email': 'antoine.roussel@gmail.com',
+      'email': 'antoine.roussel@example.com',
       'emailVerified': false,
       'maskedPhone': '+33 6 •• •• •• 55',
       'address': null,
@@ -254,6 +255,8 @@ void main() {
 
   group('the controller: an answer arriving after the invitation closed is '
       'dropped', () {
+    late ProviderSubscription<InvitationState> listening;
+
     Future<(ProviderContainer, FakePortalBackend)> start() async {
       final backend = FakePortalBackend();
       final session = await memorySession();
@@ -275,7 +278,7 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.listen(invitationControllerProvider, (_, _) {});
+      listening = container.listen(invitationControllerProvider, (_, _) {});
       return (container, backend);
     }
 
@@ -351,6 +354,113 @@ void main() {
         isA<InvitationClosed>(),
       );
     });
+
+    for (final answer in [
+      PortalReply.fixture('invitations.otp.post.202.json', status: 202),
+      problem('otp_rate_limited', 429),
+    ]) {
+      test('the page left while the code request runs (${answer.status}): '
+          'the answer is dropped', () async {
+        final (container, backend) = await start();
+        final code = Completer<PortalReply>();
+        backend
+          ..on(
+            'POST',
+            _lookup,
+            PortalReply.fixture('invitations.lookup.post.200.json'),
+          )
+          ..onRequest('POST', _otp, (_) => code.future);
+        final opening = container
+            .read(invitationControllerProvider.notifier)
+            .open(_token);
+        await pumpEventQueue();
+
+        listening.close();
+        await pumpEventQueue();
+        expect(container.exists(invitationControllerProvider), isFalse);
+        code.complete(answer);
+
+        await expectLater(opening, completes);
+      });
+    }
+
+    test('the page left while the acceptance runs: the refusal is '
+        'dropped', () async {
+      final (container, backend) = await start();
+      final accept = Completer<PortalReply>();
+      backend
+        ..on(
+          'POST',
+          _lookup,
+          PortalReply.fixture('invitations.lookup.post.200.json'),
+        )
+        ..on('POST', _otp, _code())
+        ..onRequest('POST', _accept, (_) => accept.future);
+      final controller = container.read(invitationControllerProvider.notifier);
+      await controller.open(_token);
+      final accepting = controller.accept(
+        code: '123456',
+        termsVersion: '2026-10-29',
+      );
+      await pumpEventQueue();
+
+      listening.close();
+      await pumpEventQueue();
+      expect(container.exists(invitationControllerProvider), isFalse);
+      accept.complete(problem('otp_invalid', 422));
+
+      expect(await accepting, isFalse);
+    });
+  });
+
+  group('the link being read, or unreadable: a way out (no back on a '
+      'page reached by a link)', () {
+    for (final signedIn in [false, true]) {
+      final (label, exit) = signedIn
+          ? ("Revenir à l'accueil", 'home')
+          : ('Se connecter avec mon numéro', 'sign-in');
+
+      testWidgets('loading, ${signedIn ? 'signed in' : 'signed out'}: '
+          '"$label"', (tester) async {
+        final lookup = Completer<PortalReply>();
+        final backend = _backend()
+          ..onRequest('POST', _lookup, (_) => lookup.future);
+        final exits = <String>[];
+        await pumpPage(
+          tester,
+          InvitationPage(
+            token: _token,
+            onDone: (_) => exits.add('home'),
+            onSignIn: (_) => exits.add('sign-in'),
+          ),
+          session: await memorySession(signedIn ? pair('A') : null),
+          backend: backend,
+          settle: false,
+        );
+        await tester.pump();
+
+        expect(find.byType(LoadingView), findsOneWidget);
+        await tester.tap(find.widgetWithText(KivetoLinkButton, label));
+        expect(exits, [exit]);
+
+        lookup.complete(problem('invitation_invalid', 404));
+        await tester.pumpAndSettle();
+      });
+
+      testWidgets('unreadable, ${signedIn ? 'signed in' : 'signed out'}: '
+          'the retry and "$label"', (tester) async {
+        final (exits, _) = await _pump(
+          tester,
+          backend: _backend(lookup: problem('service_unavailable', 503)),
+          signedIn: signedIn,
+        );
+
+        expect(find.text('Service indisponible'), findsOneWidget);
+        expect(find.text('Réessayer'), findsOneWidget);
+        await tester.tap(find.widgetWithText(KivetoLinkButton, label));
+        expect(exits, [exit]);
+      });
+    }
   });
 
   testWidgets('no pet, no email: the generic title, no email field', (
@@ -511,16 +621,30 @@ void main() {
     expect(_codeError(tester), isNull);
   });
 
-  testWidgets('terms_outdated: reloaded, unchecked, the message', (
+  testWidgets('terms_outdated: reloaded, unchecked, the message; no '
+      'acceptance until the new terms are loaded, then with their version', (
     tester,
   ) async {
-    final backend = _backend(
-      accept: PortalReply.fixture(
-        'auth.register.terms-outdated.post.422.json',
-        status: 422,
-      ),
-    );
-    await _pump(tester, backend: backend);
+    final reloaded = Completer<PortalReply>();
+    var termsCalls = 0;
+    var accepts = 0;
+    final backend = _backend()
+      ..onRequest('GET', _terms, (_) async {
+        termsCalls++;
+        return termsCalls == 1
+            ? PortalReply.fixture('legal.terms.current.get.200.json')
+            : await reloaded.future;
+      })
+      ..onRequest('POST', _accept, (_) {
+        accepts++;
+        return accepts == 1
+            ? PortalReply.fixture(
+                'auth.register.terms-outdated.post.422.json',
+                status: 422,
+              )
+            : _accepted();
+      });
+    final (exits, _) = await _pump(tester, backend: backend);
 
     await _typeCode(tester, '123456');
     await _acceptTerms(tester);
@@ -535,8 +659,29 @@ void main() {
       tester.widget<KivetoCheckbox>(find.byType(KivetoCheckbox)).value,
       isFalse,
     );
-    expect(backend.requestsTo(_terms), hasLength(2));
+    expect(termsCalls, 2);
     expect(_codeError(tester), isNull);
+
+    // Ticked again while the new terms load: the button waits.
+    await _acceptTerms(tester);
+    expect(_cta(tester).onPressed, isNull);
+
+    reloaded.complete(
+      PortalReply.json(
+        '{"version":"2026-11-01","url":"http://portal.kiveto.local/cgu"}',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(_cta(tester).onPressed, isNotNull);
+    await _activate(tester);
+    await pumpBriefly(tester);
+
+    expect(
+      (jsonDecode(utf8.decode(backend.requestsTo(_accept).last.body))
+          as Map<String, Object?>)['termsVersion'],
+      '2026-11-01',
+    );
+    expect(exits, ['home']);
   });
 
   testWidgets('a quota on the code request: shown with the resend control, '

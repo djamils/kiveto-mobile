@@ -13,6 +13,7 @@ import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
@@ -248,6 +249,61 @@ void main() {
         expect(lookup.uri.toString(), isNot(contains('abc')));
       });
     }
+
+    testWidgets('a second invitation link while the first is shown: the '
+        'same page reads the new token', (tester) async {
+      final backend = FakePortalBackend()
+        ..onRequest(
+          'POST',
+          '/api/portal/v1/invitations/lookup',
+          (request) => utf8.decode(request.body) == '{"token":"PERRIN_TOKEN"}'
+              ? PortalReply.fixture(
+                  'invitations.lookup.expired.post.410.json',
+                  status: 410,
+                )
+              : PortalReply.fixture('invitations.lookup.post.200.json'),
+        )
+        ..on(
+          'POST',
+          '/api/portal/v1/invitations/otp',
+          PortalReply.fixture('invitations.otp.post.202.json', status: 202),
+        )
+        ..on(
+          'GET',
+          '/api/portal/v1/legal/terms/current',
+          PortalReply.fixture('legal.terms.current.get.200.json'),
+        );
+      final container = await pumpKivetoApp(
+        tester,
+        backend: backend,
+        initialLocation: '/invitation#t=PERRIN_TOKEN',
+      );
+      expect(find.text('Invitation expirée'), findsOneWidget);
+      final page = tester.state<State>(find.byType(InvitationPage));
+
+      container.read(routerProvider).go('/invitation#t=ROUSSEL_TOKEN');
+      await tester.pumpAndSettle();
+
+      // The same page (go_router keys it by path), updated with the token.
+      expect(tester.state<State>(find.byType(InvitationPage)), same(page));
+
+      expect(find.text('Invitation expirée'), findsNothing);
+      expect(
+        find.text('Invitation : Clinique Vétérinaire de Paris'),
+        findsOneWidget,
+      );
+      final lookups = backend.requestsTo('/api/portal/v1/invitations/lookup');
+      expect(lookups.map((request) => utf8.decode(request.body)), [
+        '{"token":"PERRIN_TOKEN"}',
+        '{"token":"ROUSSEL_TOKEN"}',
+      ]);
+      expect(
+        utf8.decode(
+          backend.requestsTo('/api/portal/v1/invitations/otp').single.body,
+        ),
+        '{"token":"ROUSSEL_TOKEN"}',
+      );
+    });
 
     testWidgets('/invitation without a fragment: the invalid link state', (
       tester,

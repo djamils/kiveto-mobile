@@ -1,6 +1,7 @@
 // Screen 9: the verified number, the names, the optional email, the terms;
 // the registration and its refusals.
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,10 @@ import '../../../support/portal_api/portal_http_harness.dart';
 
 const _register = '$api/auth/register';
 const _terms = '$api/legal/terms/current';
+
+/// The current terms after a change.
+const _newTerms =
+    '{"version":"2026-11-01","url":"http://portal.kiveto.local/cgu"}';
 
 final _grant = RegistrationGrant(
   token: 'reg',
@@ -293,13 +298,27 @@ void main() {
   }
 
   testWidgets('terms_outdated (capture): the terms reloaded, the box '
-      'unchecked, the message', (tester) async {
-    final backend = _backend(
-      PortalReply.fixture(
-        'auth.register.terms-outdated.post.422.json',
-        status: 422,
-      ),
-    );
+      'unchecked, the message; no registration until the new terms are '
+      'loaded, then with their version', (tester) async {
+    final reloaded = Completer<PortalReply>();
+    var termsCalls = 0;
+    var registers = 0;
+    final backend = FakePortalBackend()
+      ..onRequest('GET', _terms, (_) async {
+        termsCalls++;
+        return termsCalls == 1
+            ? PortalReply.fixture('legal.terms.current.get.200.json')
+            : await reloaded.future;
+      })
+      ..onRequest('POST', _register, (_) {
+        registers++;
+        return registers == 1
+            ? PortalReply.fixture(
+                'auth.register.terms-outdated.post.422.json',
+                status: 422,
+              )
+            : PortalReply.fixture('auth.register.post.201.json', status: 201);
+      });
     await _pump(tester, backend: backend);
 
     await _fill(tester);
@@ -317,8 +336,27 @@ void main() {
       tester.widget<KivetoCheckbox>(find.byType(KivetoCheckbox)).value,
       isFalse,
     );
-    expect(backend.requestsTo(_terms), hasLength(2));
+    expect(termsCalls, 2);
     expect(find.text('Recommencer'), findsNothing);
+
+    // Ticked again while the new terms load: the button waits.
+    await _accept(tester);
+    expect(
+      tester.widget<KivetoCheckbox>(find.byType(KivetoCheckbox)).value,
+      isTrue,
+    );
+    expect(_cta(tester).onPressed, isNull);
+
+    reloaded.complete(PortalReply.json(_newTerms));
+    await tester.pumpAndSettle();
+    expect(_cta(tester).onPressed, isNotNull);
+    await _submit(tester);
+
+    expect(
+      (jsonDecode(utf8.decode(backend.requestsTo(_register).last.body))
+          as Map<String, Object?>)['termsVersion'],
+      '2026-11-01',
+    );
   });
 
   for (final (reply, message) in [

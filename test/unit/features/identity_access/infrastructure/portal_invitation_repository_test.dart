@@ -3,6 +3,7 @@
 // the two acceptances; the link token only in request bodies.
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/features/identity_access/domain/otp_verification.dart';
@@ -23,6 +24,12 @@ const _token = 'ROUSSEL_TOKEN';
 Map<String, Object?> _body(PortalRequest request) =>
     jsonDecode(utf8.decode(request.body)) as Map<String, Object?>;
 
+/// The [key] of the capture [fixture].
+String _captured(String fixture, String key) =>
+    (jsonDecode(File('$portalFixtures/$fixture').readAsStringSync())
+            as Map<String, Object?>)[key]!
+        as String;
+
 /// A 200 acceptance shaped like `auth.register.post.201.json` (the live
 /// acceptance captures consume an invitation).
 PortalReply _accepted() => PortalReply.json(
@@ -35,7 +42,7 @@ PortalReply _accepted() => PortalReply.json(
       'id': '01a19a10-d011-70c8-8daf-26e4db824374',
       'firstName': 'Antoine',
       'lastName': 'Roussel',
-      'email': 'antoine.roussel@gmail.com',
+      'email': 'antoine.roussel@example.com',
       'emailVerified': false,
       'maskedPhone': '+33 6 •• •• •• 55',
       'address': null,
@@ -215,7 +222,9 @@ void main() {
         termsVersion: '2026-10-29',
       );
 
-      expect(tokens.refreshToken, isNotEmpty);
+      const capture = 'invitations.accept.post.200.json';
+      expect(tokens.accessToken, _captured(capture, 'accessToken'));
+      expect(tokens.refreshToken, _captured(capture, 'refreshToken'));
       expect(tokens.accessTokenExpiresAt, DateTime.utc(2026, 11, 3, 12, 3, 42));
       expect(
         tokens.refreshTokenExpiresAt,
@@ -262,6 +271,7 @@ void main() {
         termsVersion: '2026-10-29',
       );
 
+      expect(tokens.accessToken, 'A');
       expect(tokens.refreshToken, 'refresh-A');
       expect(
         tokens.refreshTokenExpiresAt,
@@ -286,6 +296,9 @@ void main() {
         termsVersion: '2026-10-29',
       );
 
+      const capture = 'invitations.accept-by-id.post.200.json';
+      expect(tokens.accessToken, _captured(capture, 'accessToken'));
+      expect(tokens.refreshToken, _captured(capture, 'refreshToken'));
       expect(tokens.accessTokenExpiresAt, DateTime.utc(2026, 11, 3, 12, 3, 56));
       expect(tokens.accessTokenExpiresAt!.isUtc, isTrue);
     });

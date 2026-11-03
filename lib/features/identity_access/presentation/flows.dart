@@ -125,6 +125,7 @@ final class Onboarding extends Notifier<OnboardingState?> {
           if (other.id != id) other,
       ],
       signedIn: current.signedIn,
+      acceptedClinicName: current.acceptedClinicName,
     );
   }
 

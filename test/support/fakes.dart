@@ -191,7 +191,8 @@ Future<ProviderContainer> pumpKivetoApp(
 /// like [pumpKivetoApp]'s (the real HTTP chain on [backend], the [clock],
 /// [session] signed out by default), without router: the feature pages
 /// take their exits as callbacks. [prepare] runs on the container before
-/// the page is built (a flow's state). Returns the container.
+/// the page is built (a flow's state). Without [settle], one frame only
+/// (a page that shows a spinner). Returns the container.
 Future<ProviderContainer> pumpPage(
   WidgetTester tester,
   Widget page, {
@@ -200,6 +201,7 @@ Future<ProviderContainer> pumpPage(
   Clock? clock,
   List<Override> overrides = const [],
   void Function(ProviderContainer container)? prepare,
+  bool settle = true,
 }) async {
   await initializeDateFormatting('fr_FR');
   tester.view
@@ -243,7 +245,7 @@ Future<ProviderContainer> pumpPage(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) await tester.pumpAndSettle();
   return container;
 }
 

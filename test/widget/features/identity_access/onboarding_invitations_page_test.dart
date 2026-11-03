@@ -2,6 +2,7 @@
 // a choice; signed out (the first acceptance creates the account) or in
 // ("Plus tard"); the refusals.
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,10 @@ import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 
 const _terms = '$api/legal/terms/current';
+
+/// The current terms after a change.
+const _newTerms =
+    '{"version":"2026-11-01","url":"http://portal.kiveto.local/cgu"}';
 String _accept(String id) => '$api/invitations/$id/accept';
 
 const _paris = PendingInvitation(
@@ -252,17 +257,32 @@ void main() {
   });
 
   testWidgets('terms_outdated: the terms reloaded, the box unchecked, the '
-      'message', (tester) async {
-    final backend = _backend()
-      ..on(
-        'POST',
-        _accept('paris'),
-        PortalReply.fixture(
-          'auth.register.terms-outdated.post.422.json',
-          status: 422,
-        ),
-      );
-    await _pump(tester, backend: backend, invitations: [_paris]);
+      'message; no acceptance until the new terms are loaded, then with '
+      'their version', (tester) async {
+    final reloaded = Completer<PortalReply>();
+    var termsCalls = 0;
+    var accepts = 0;
+    final backend = FakePortalBackend()
+      ..onRequest('GET', _terms, (_) async {
+        termsCalls++;
+        return termsCalls == 1
+            ? PortalReply.fixture('legal.terms.current.get.200.json')
+            : await reloaded.future;
+      })
+      ..onRequest('POST', _accept('paris'), (_) {
+        accepts++;
+        return accepts == 1
+            ? PortalReply.fixture(
+                'auth.register.terms-outdated.post.422.json',
+                status: 422,
+              )
+            : _accepted();
+      });
+    final (_, exits, _) = await _pump(
+      tester,
+      backend: backend,
+      invitations: [_paris],
+    );
 
     await _acceptTerms(tester);
     await tester.tap(find.text('Activer mon espace'));
@@ -276,8 +296,25 @@ void main() {
       tester.widget<KivetoCheckbox>(find.byType(KivetoCheckbox)).value,
       isFalse,
     );
-    expect(backend.requestsTo(_terms), hasLength(2));
+    expect(termsCalls, 2);
     expect(find.text('Se reconnecter'), findsNothing);
+
+    // Ticked again while the new terms load: the button waits.
+    await _acceptTerms(tester);
+    expect(_cta(tester).onPressed, isNull);
+
+    reloaded.complete(PortalReply.json(_newTerms));
+    await tester.pumpAndSettle();
+    expect(_cta(tester).onPressed, isNotNull);
+    await tester.tap(find.text('Activer mon espace'));
+    await pumpBriefly(tester);
+
+    expect(
+      (jsonDecode(utf8.decode(backend.requestsTo(_accept('paris')).last.body))
+          as Map<String, Object?>)['termsVersion'],
+      '2026-11-01',
+    );
+    expect(exits, ['home']);
   });
 
   testWidgets('a disabled account: the message', (tester) async {
