@@ -11,6 +11,7 @@ import 'package:kiveto_mobile/features/document/presentation/prescription_sheet.
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
+import 'package:kiveto_mobile/shared/domain/document_kind.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';

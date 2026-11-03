@@ -1,5 +1,7 @@
 import 'package:kiveto_mobile/features/document/domain/document.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
+import 'package:kiveto_mobile/shared/domain/document_kind.dart';
+import 'package:kiveto_mobile/shared/domain/payment_status.dart';
 import 'package:kiveto_mobile/shared/presentation/formatters/kiveto_format.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 
@@ -57,6 +59,19 @@ String? paymentLabel(AppLocalizations l10n, PaymentStatus status) =>
       PaymentStatus.partiallyPaid => l10n.documentsPaymentPartiallyPaid,
       PaymentStatus.credited => l10n.documentsPaymentCredited,
       PaymentStatus.unknown => null,
+    };
+
+/// The name of a kind of document (the chips of a pet's history):
+/// « Compte-rendu », « Ordonnance »…; « Document » for a kind this app does
+/// not know.
+String documentKindName(AppLocalizations l10n, DocumentKind kind) =>
+    switch (kind) {
+      DocumentKind.report => l10n.documentsKindReport,
+      DocumentKind.prescription => l10n.documentsKindPrescription,
+      DocumentKind.invoice => l10n.documentsKindInvoice,
+      DocumentKind.labResult => l10n.documentsKindLabResult,
+      DocumentKind.certificate => l10n.documentsKindCertificate,
+      DocumentKind.unknown => l10n.documentsKindUnknown,
     };
 
 /// The colours and text glyph of a document's tile (mockup 05); a kind

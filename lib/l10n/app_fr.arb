@@ -49,14 +49,6 @@
   "@screenClinicsTitle": {
     "description": "Title of the clinic search screen (10)."
   },
-  "screenPetsTitle": "Mes animaux",
-  "@screenPetsTitle": {
-    "description": "Title of the pets tab."
-  },
-  "screenPetTitle": "Fiche animal",
-  "@screenPetTitle": {
-    "description": "Title of the pet sheet (2)."
-  },
   "screenAppointmentsTitle": "Rendez-vous",
   "@screenAppointmentsTitle": {
     "description": "Title of the appointments screen (4)."
@@ -710,6 +702,376 @@
   "@homeGreetingNoName": {
     "description": "Home screen (1): the greeting of an account without a first name."
   },
+  "homeClinicSwitcherLabel": "Changer de clinique, actuellement {name}",
+  "@homeClinicSwitcherLabel": {
+    "description": "Home screen (1): screen reader label of the active clinic's name, which opens the clinic switcher.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Paris"
+      }
+    }
+  },
+  "homeNextAppointmentTitle": "Prochain rendez-vous",
+  "@homeNextAppointmentTitle": {
+    "description": "Home screen (1): the overline of the next appointment card (shown in upper case)."
+  },
+  "homeAppointmentConfirmed": "Confirmé",
+  "@homeAppointmentConfirmed": {
+    "description": "Home screen (1): the pill of a confirmed next appointment."
+  },
+  "homeAppointmentPending": "En attente",
+  "@homeAppointmentPending": {
+    "description": "Home screen (1): the pill of a next appointment the clinic has not confirmed yet."
+  },
+  "homeAppointmentPetMotif": "{pet} — {motif}",
+  "@homeAppointmentPetMotif": {
+    "description": "Home screen (1): the pet and the motif of the next appointment (the practitioner follows after \" · \").",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      },
+      "motif": {
+        "type": "String",
+        "example": "Vaccination annuelle"
+      }
+    }
+  },
+  "homeFillQuestionnaire": "Remplir le questionnaire",
+  "@homeFillQuestionnaire": {
+    "description": "Home screen (1): the button of the next appointment card opening its questionnaire (screen 15)."
+  },
+  "homeManageAppointments": "Gérer",
+  "@homeManageAppointments": {
+    "description": "Home screen (1): the button of the next appointment card opening the appointments tab."
+  },
+  "homePetsTitle": "Mes animaux",
+  "@homePetsTitle": {
+    "description": "Home screen (1): the title of the pets section."
+  },
+  "homeCareTitle": "À prévoir",
+  "@homeCareTitle": {
+    "description": "Home screen (1): the title of the care due dates section."
+  },
+  "homeCareCaption": "Échéances de soins",
+  "@homeCareCaption": {
+    "description": "Home screen (1): the caption next to the title of the care due dates section."
+  },
+  "homeCareItemTitle": "{pet} — {label}",
+  "@homeCareItemTitle": {
+    "description": "Home screen (1): a care due date: the pet, then the care.",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Oscar"
+      },
+      "label": {
+        "type": "String",
+        "example": "Vermifugation"
+      }
+    }
+  },
+  "homeCareDue": "Avant le {date}",
+  "@homeCareDue": {
+    "description": "Home screen (1): the due date of a care item.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "18 nov."
+      }
+    }
+  },
+  "homeBook": "Prendre rendez-vous",
+  "@homeBook": {
+    "description": "Home screen (1): the button starting a booking (screen 12)."
+  },
+  "homeDocumentsTitle": "Derniers documents",
+  "@homeDocumentsTitle": {
+    "description": "Home screen (1): the title of the latest documents section."
+  },
+  "homeDocumentsSeeAll": "Tout voir",
+  "@homeDocumentsSeeAll": {
+    "description": "Home screen (1): the link opening the documents tab."
+  },
+  "homeClinicGoneTitle": "Clinique indisponible",
+  "@homeClinicGoneTitle": {
+    "description": "Home screen (1): 404 on the home, the link with the clinic is gone."
+  },
+  "homeClinicGoneBody": "Votre accès à cette clinique n'est plus actif.",
+  "@homeClinicGoneBody": {
+    "description": "Home screen (1): body of the 404 on the home."
+  },
+
+  "clientClinicSwitcherTitle": "Changer de clinique",
+  "@clientClinicSwitcherTitle": {
+    "description": "Clinic switcher sheet: its title."
+  },
+  "clientClinicActive": "Active",
+  "@clientClinicActive": {
+    "description": "Clinic switcher sheet: the pill of the active clinic."
+  },
+
+  "petSwitcherLabel": "Animal",
+  "@petSwitcherLabel": {
+    "description": "Pet screen (2): screen reader label of the pet switcher."
+  },
+  "petSpeciesDog": "Chien",
+  "@petSpeciesDog": {
+    "description": "A species: dog."
+  },
+  "petSpeciesCat": "Chat",
+  "@petSpeciesCat": {
+    "description": "A species: cat."
+  },
+  "petSpeciesNac": "NAC",
+  "@petSpeciesNac": {
+    "description": "A species: \"nouveaux animaux de compagnie\" (rabbits, birds, reptiles…)."
+  },
+  "petSpeciesOther": "Autre",
+  "@petSpeciesOther": {
+    "description": "A species: another one."
+  },
+  "petSexMale": "Mâle",
+  "@petSexMale": {
+    "description": "Pet screen (2): a male, not neutered or not known."
+  },
+  "petSexFemale": "Femelle",
+  "@petSexFemale": {
+    "description": "Pet screen (2): a female, not spayed or not known."
+  },
+  "petSexMaleNeutered": "Mâle castré",
+  "@petSexMaleNeutered": {
+    "description": "Pet screen (2): a neutered male."
+  },
+  "petSexFemaleNeutered": "Femelle stérilisée",
+  "@petSexFemaleNeutered": {
+    "description": "Pet screen (2): a spayed female."
+  },
+  "petSexUnknownNeutered": "Stérilisé",
+  "@petSexUnknownNeutered": {
+    "description": "Pet screen (2): a neutered pet whose sex is not known."
+  },
+  "petDeceasedMale": "Décédé",
+  "@petDeceasedMale": {
+    "description": "Pet screen (2): the pill of a deceased pet (male or sex not known)."
+  },
+  "petDeceasedFemale": "Décédée",
+  "@petDeceasedFemale": {
+    "description": "Pet screen (2): the pill of a deceased female."
+  },
+  "petMissingMale": "Disparu",
+  "@petMissingMale": {
+    "description": "Pet screen (2): the pill of a missing pet (male or sex not known)."
+  },
+  "petMissingFemale": "Disparue",
+  "@petMissingFemale": {
+    "description": "Pet screen (2): the pill of a missing female."
+  },
+  "petAgeYears": "{count, plural, =1{1 an} other{{count} ans}}",
+  "@petAgeYears": {
+    "description": "A pet's age in full years.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "6"
+      }
+    }
+  },
+  "petAgeMonths": "{count, plural, =1{1 mois} other{{count} mois}}",
+  "@petAgeMonths": {
+    "description": "A pet's age in full months, under one year.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "petAgeUnderOneMonth": "Moins d'un mois",
+  "@petAgeUnderOneMonth": {
+    "description": "A pet's age, under one month."
+  },
+  "petBornMale": "Né le",
+  "@petBornMale": {
+    "description": "Pet screen (2): the label of the birth date (male or sex not known)."
+  },
+  "petBornFemale": "Née le",
+  "@petBornFemale": {
+    "description": "Pet screen (2): the label of the birth date of a female."
+  },
+  "petWeight": "Poids",
+  "@petWeight": {
+    "description": "Pet screen (2): the label of the last weight."
+  },
+  "petWeightValue": "{value} kg",
+  "@petWeightValue": {
+    "description": "Pet screen (2): a weight in kilograms, already formatted.",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "34,9"
+      }
+    }
+  },
+  "petChip": "Puce",
+  "@petChip": {
+    "description": "Pet screen (2): the label of the masked chip number."
+  },
+  "petReferentVet": "Suivi par",
+  "@petReferentVet": {
+    "description": "Pet screen (2): the label of the vet who follows the pet."
+  },
+  "petNone": "—",
+  "@petNone": {
+    "description": "Pet screen (2): a value the clinic did not record."
+  },
+  "petReportChange": "Signaler une modification",
+  "@petReportChange": {
+    "description": "Pet screen (2): the button asking the clinic to change the pet's sheet."
+  },
+  "petReportChangeCaption": "Vérifiée par la clinique avant mise à jour de la fiche.",
+  "@petReportChangeCaption": {
+    "description": "Pet screen (2): the caption under the change request button."
+  },
+  "petCareTitle": "Vaccins et préventions",
+  "@petCareTitle": {
+    "description": "Pet screen (2): the title of the care items section."
+  },
+  "petBooklet": "Carnet PDF",
+  "@petBooklet": {
+    "description": "Pet screen (2): the button opening the vaccination booklet."
+  },
+  "petBookletTitle": "Carnet de vaccination · {name}",
+  "@petBookletTitle": {
+    "description": "Pet screen (2): the title of the vaccination booklet viewer.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Oscar"
+      }
+    }
+  },
+  "petCareEmpty": "Aucun soin préventif à suivre.",
+  "@petCareEmpty": {
+    "description": "Pet screen (2): no care item to follow (a deceased pet, nothing recorded)."
+  },
+  "petEmptyTitle": "Aucun animal",
+  "@petEmptyTitle": {
+    "description": "Pets tab (2): the owner has no pet in the active clinic."
+  },
+  "petEmptyBody": "Les animaux suivis par {clinic} apparaîtront ici.",
+  "@petEmptyBody": {
+    "description": "Pets tab (2): body of the empty state, with the active clinic's name.",
+    "placeholders": {
+      "clinic": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Paris"
+      }
+    }
+  },
+
+  "careBooked": "RDV pris",
+  "@careBooked": {
+    "description": "Care pill: an appointment covers the care."
+  },
+  "careOverdue": "En retard",
+  "@careOverdue": {
+    "description": "Care pill: the care is overdue."
+  },
+  "careUpToDate": "À jour",
+  "@careUpToDate": {
+    "description": "Care pill: the care is up to date, the due date is far."
+  },
+  "careToday": "Aujourd'hui",
+  "@careToday": {
+    "description": "Care pill: due today."
+  },
+  "careTomorrow": "Demain",
+  "@careTomorrow": {
+    "description": "Care pill: due tomorrow."
+  },
+  "careInDays": "Dans {count} j",
+  "@careInDays": {
+    "description": "Care pill: due in 2 to 13 days (\"j\" for jours).",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "6"
+      }
+    }
+  },
+  "careInWeeks": "Dans {count} sem.",
+  "@careInWeeks": {
+    "description": "Care pill: due in 2 weeks or more (full weeks).",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "careDoneAndDue": "Fait le {done} · prochain avant le {due}",
+  "@careDoneAndDue": {
+    "description": "Pet screen (2): a care item's last act and next due date.",
+    "placeholders": {
+      "done": {
+        "type": "String",
+        "example": "2 mai"
+      },
+      "due": {
+        "type": "String",
+        "example": "4 nov."
+      }
+    }
+  },
+  "careOverdueSince": "À faire depuis le {due}",
+  "@careOverdueSince": {
+    "description": "Pet screen (2): an overdue care item's due date.",
+    "placeholders": {
+      "due": {
+        "type": "String",
+        "example": "13 oct."
+      }
+    }
+  },
+  "careDueBefore": "Prochain avant le {due}",
+  "@careDueBefore": {
+    "description": "Pet screen (2): the next due date of a care item due soon.",
+    "placeholders": {
+      "due": {
+        "type": "String",
+        "example": "9 nov."
+      }
+    }
+  },
+  "careValidUntil": "Valide jusqu'au {due}",
+  "@careValidUntil": {
+    "description": "Pet screen (2): an up-to-date care item's validity.",
+    "placeholders": {
+      "due": {
+        "type": "String",
+        "example": "16 avr. 2027"
+      }
+    }
+  },
+
+  "timelineTitle": "Historique",
+  "@timelineTitle": {
+    "description": "Pet screen (2): the title of the visit history."
+  },
+  "timelineNoDocument": "Aucun document partagé",
+  "@timelineNoDocument": {
+    "description": "Pet screen (2): a visit without a document the owner may open."
+  },
+  "timelineEmpty": "Aucune consultation partagée pour le moment.",
+  "@timelineEmpty": {
+    "description": "Pet screen (2): no visit shared with the owner yet."
+  },
+  "timelineMoreError": "Impossible de charger la suite.",
+  "@timelineMoreError": {
+    "description": "Pet screen (2): the next page of the history failed (a retry button follows)."
+  },
 
   "documentsSubtitle": "Partagés par {clinic}",
   "@documentsSubtitle": {
@@ -906,6 +1268,30 @@
   "documentsPrescriptionGoneBody": "Cette ordonnance n'est plus disponible.",
   "@documentsPrescriptionGoneBody": {
     "description": "Prescription sheet: body of the 404 on the prescription."
+  },
+  "documentsKindReport": "Compte-rendu",
+  "@documentsKindReport": {
+    "description": "The name of a kind of document: a consultation report (a chip of the pet's history)."
+  },
+  "documentsKindPrescription": "Ordonnance",
+  "@documentsKindPrescription": {
+    "description": "The name of a kind of document: a prescription."
+  },
+  "documentsKindInvoice": "Facture",
+  "@documentsKindInvoice": {
+    "description": "The name of a kind of document: an invoice."
+  },
+  "documentsKindLabResult": "Résultats",
+  "@documentsKindLabResult": {
+    "description": "The name of a kind of document: lab results."
+  },
+  "documentsKindCertificate": "Certificat",
+  "@documentsKindCertificate": {
+    "description": "The name of a kind of document: a certificate."
+  },
+  "documentsKindUnknown": "Document",
+  "@documentsKindUnknown": {
+    "description": "The name of a kind of document this app does not know."
   },
   "documentsNamesAnd": "{head} et {last}",
   "@documentsNamesAnd": {

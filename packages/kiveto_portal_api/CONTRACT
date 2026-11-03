@@ -1,7 +1,7 @@
 # Written by `make api-generate`; checked by `make api-check`. Never edit.
 contract: contracts/portal.v1.yaml
-sha256: 91fd6444255735a96084e0c6f5a692eb75c8825c052112be8facc3dff0de0266
-commit: 840dbead0202f55a4e8aacf2858a579d2b828f45
+sha256: 2746027fd901aaccf5e679a59d6c598fd2c2c69654e7524ec28163164fd990b7
+commit: bcb8d8b1a9624489299d49917b336aa42fdc92ee
 generator: tonik 0.11.1
 inputs: f4a8e9164f6d3408fb15c16144c4a2c7759d79d1554da707d70f6e6d2accebc1
-files: 7bc33de60b3ea270e0c5bd5d3b96797af5426e7c4f62ce1a98ce034d4acaee14
+files: 921c3cbccd03f4774434541848f7d538ba2387561860120b30d32663ec85f9fd

@@ -154,18 +154,6 @@ abstract class AppLocalizations {
   /// **'Trouver une clinique'**
   String get screenClinicsTitle;
 
-  /// Title of the pets tab.
-  ///
-  /// In fr, this message translates to:
-  /// **'Mes animaux'**
-  String get screenPetsTitle;
-
-  /// Title of the pet sheet (2).
-  ///
-  /// In fr, this message translates to:
-  /// **'Fiche animal'**
-  String get screenPetTitle;
-
   /// Title of the appointments screen (4).
   ///
   /// In fr, this message translates to:
@@ -982,6 +970,402 @@ abstract class AppLocalizations {
   /// **'Bonjour'**
   String get homeGreetingNoName;
 
+  /// Home screen (1): screen reader label of the active clinic's name, which opens the clinic switcher.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de clinique, actuellement {name}'**
+  String homeClinicSwitcherLabel(String name);
+
+  /// Home screen (1): the overline of the next appointment card (shown in upper case).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochain rendez-vous'**
+  String get homeNextAppointmentTitle;
+
+  /// Home screen (1): the pill of a confirmed next appointment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmé'**
+  String get homeAppointmentConfirmed;
+
+  /// Home screen (1): the pill of a next appointment the clinic has not confirmed yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get homeAppointmentPending;
+
+  /// Home screen (1): the pet and the motif of the next appointment (the practitioner follows after " · ").
+  ///
+  /// In fr, this message translates to:
+  /// **'{pet} — {motif}'**
+  String homeAppointmentPetMotif(String pet, String motif);
+
+  /// Home screen (1): the button of the next appointment card opening its questionnaire (screen 15).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplir le questionnaire'**
+  String get homeFillQuestionnaire;
+
+  /// Home screen (1): the button of the next appointment card opening the appointments tab.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer'**
+  String get homeManageAppointments;
+
+  /// Home screen (1): the title of the pets section.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes animaux'**
+  String get homePetsTitle;
+
+  /// Home screen (1): the title of the care due dates section.
+  ///
+  /// In fr, this message translates to:
+  /// **'À prévoir'**
+  String get homeCareTitle;
+
+  /// Home screen (1): the caption next to the title of the care due dates section.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échéances de soins'**
+  String get homeCareCaption;
+
+  /// Home screen (1): a care due date: the pet, then the care.
+  ///
+  /// In fr, this message translates to:
+  /// **'{pet} — {label}'**
+  String homeCareItemTitle(String pet, String label);
+
+  /// Home screen (1): the due date of a care item.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avant le {date}'**
+  String homeCareDue(String date);
+
+  /// Home screen (1): the button starting a booking (screen 12).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre rendez-vous'**
+  String get homeBook;
+
+  /// Home screen (1): the title of the latest documents section.
+  ///
+  /// In fr, this message translates to:
+  /// **'Derniers documents'**
+  String get homeDocumentsTitle;
+
+  /// Home screen (1): the link opening the documents tab.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout voir'**
+  String get homeDocumentsSeeAll;
+
+  /// Home screen (1): 404 on the home, the link with the clinic is gone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clinique indisponible'**
+  String get homeClinicGoneTitle;
+
+  /// Home screen (1): body of the 404 on the home.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès à cette clinique n\'est plus actif.'**
+  String get homeClinicGoneBody;
+
+  /// Clinic switcher sheet: its title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de clinique'**
+  String get clientClinicSwitcherTitle;
+
+  /// Clinic switcher sheet: the pill of the active clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Active'**
+  String get clientClinicActive;
+
+  /// Pet screen (2): screen reader label of the pet switcher.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal'**
+  String get petSwitcherLabel;
+
+  /// A species: dog.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chien'**
+  String get petSpeciesDog;
+
+  /// A species: cat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chat'**
+  String get petSpeciesCat;
+
+  /// A species: "nouveaux animaux de compagnie" (rabbits, birds, reptiles…).
+  ///
+  /// In fr, this message translates to:
+  /// **'NAC'**
+  String get petSpeciesNac;
+
+  /// A species: another one.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get petSpeciesOther;
+
+  /// Pet screen (2): a male, not neutered or not known.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mâle'**
+  String get petSexMale;
+
+  /// Pet screen (2): a female, not spayed or not known.
+  ///
+  /// In fr, this message translates to:
+  /// **'Femelle'**
+  String get petSexFemale;
+
+  /// Pet screen (2): a neutered male.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mâle castré'**
+  String get petSexMaleNeutered;
+
+  /// Pet screen (2): a spayed female.
+  ///
+  /// In fr, this message translates to:
+  /// **'Femelle stérilisée'**
+  String get petSexFemaleNeutered;
+
+  /// Pet screen (2): a neutered pet whose sex is not known.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stérilisé'**
+  String get petSexUnknownNeutered;
+
+  /// Pet screen (2): the pill of a deceased pet (male or sex not known).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décédé'**
+  String get petDeceasedMale;
+
+  /// Pet screen (2): the pill of a deceased female.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décédée'**
+  String get petDeceasedFemale;
+
+  /// Pet screen (2): the pill of a missing pet (male or sex not known).
+  ///
+  /// In fr, this message translates to:
+  /// **'Disparu'**
+  String get petMissingMale;
+
+  /// Pet screen (2): the pill of a missing female.
+  ///
+  /// In fr, this message translates to:
+  /// **'Disparue'**
+  String get petMissingFemale;
+
+  /// A pet's age in full years.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 an} other{{count} ans}}'**
+  String petAgeYears(int count);
+
+  /// A pet's age in full months, under one year.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 mois} other{{count} mois}}'**
+  String petAgeMonths(int count);
+
+  /// A pet's age, under one month.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moins d\'un mois'**
+  String get petAgeUnderOneMonth;
+
+  /// Pet screen (2): the label of the birth date (male or sex not known).
+  ///
+  /// In fr, this message translates to:
+  /// **'Né le'**
+  String get petBornMale;
+
+  /// Pet screen (2): the label of the birth date of a female.
+  ///
+  /// In fr, this message translates to:
+  /// **'Née le'**
+  String get petBornFemale;
+
+  /// Pet screen (2): the label of the last weight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get petWeight;
+
+  /// Pet screen (2): a weight in kilograms, already formatted.
+  ///
+  /// In fr, this message translates to:
+  /// **'{value} kg'**
+  String petWeightValue(String value);
+
+  /// Pet screen (2): the label of the masked chip number.
+  ///
+  /// In fr, this message translates to:
+  /// **'Puce'**
+  String get petChip;
+
+  /// Pet screen (2): the label of the vet who follows the pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi par'**
+  String get petReferentVet;
+
+  /// Pet screen (2): a value the clinic did not record.
+  ///
+  /// In fr, this message translates to:
+  /// **'—'**
+  String get petNone;
+
+  /// Pet screen (2): the button asking the clinic to change the pet's sheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler une modification'**
+  String get petReportChange;
+
+  /// Pet screen (2): the caption under the change request button.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiée par la clinique avant mise à jour de la fiche.'**
+  String get petReportChangeCaption;
+
+  /// Pet screen (2): the title of the care items section.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vaccins et préventions'**
+  String get petCareTitle;
+
+  /// Pet screen (2): the button opening the vaccination booklet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carnet PDF'**
+  String get petBooklet;
+
+  /// Pet screen (2): the title of the vaccination booklet viewer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carnet de vaccination · {name}'**
+  String petBookletTitle(String name);
+
+  /// Pet screen (2): no care item to follow (a deceased pet, nothing recorded).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun soin préventif à suivre.'**
+  String get petCareEmpty;
+
+  /// Pets tab (2): the owner has no pet in the active clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun animal'**
+  String get petEmptyTitle;
+
+  /// Pets tab (2): body of the empty state, with the active clinic's name.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les animaux suivis par {clinic} apparaîtront ici.'**
+  String petEmptyBody(String clinic);
+
+  /// Care pill: an appointment covers the care.
+  ///
+  /// In fr, this message translates to:
+  /// **'RDV pris'**
+  String get careBooked;
+
+  /// Care pill: the care is overdue.
+  ///
+  /// In fr, this message translates to:
+  /// **'En retard'**
+  String get careOverdue;
+
+  /// Care pill: the care is up to date, the due date is far.
+  ///
+  /// In fr, this message translates to:
+  /// **'À jour'**
+  String get careUpToDate;
+
+  /// Care pill: due today.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get careToday;
+
+  /// Care pill: due tomorrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demain'**
+  String get careTomorrow;
+
+  /// Care pill: due in 2 to 13 days ("j" for jours).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans {count} j'**
+  String careInDays(int count);
+
+  /// Care pill: due in 2 weeks or more (full weeks).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans {count} sem.'**
+  String careInWeeks(int count);
+
+  /// Pet screen (2): a care item's last act and next due date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fait le {done} · prochain avant le {due}'**
+  String careDoneAndDue(String done, String due);
+
+  /// Pet screen (2): an overdue care item's due date.
+  ///
+  /// In fr, this message translates to:
+  /// **'À faire depuis le {due}'**
+  String careOverdueSince(String due);
+
+  /// Pet screen (2): the next due date of a care item due soon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochain avant le {due}'**
+  String careDueBefore(String due);
+
+  /// Pet screen (2): an up-to-date care item's validity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valide jusqu\'au {due}'**
+  String careValidUntil(String due);
+
+  /// Pet screen (2): the title of the visit history.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique'**
+  String get timelineTitle;
+
+  /// Pet screen (2): a visit without a document the owner may open.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun document partagé'**
+  String get timelineNoDocument;
+
+  /// Pet screen (2): no visit shared with the owner yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune consultation partagée pour le moment.'**
+  String get timelineEmpty;
+
+  /// Pet screen (2): the next page of the history failed (a retry button follows).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger la suite.'**
+  String get timelineMoreError;
+
   /// Documents screen (5): the subtitle under the title, with the active clinic's name.
   ///
   /// In fr, this message translates to:
@@ -1215,6 +1599,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cette ordonnance n\'est plus disponible.'**
   String get documentsPrescriptionGoneBody;
+
+  /// The name of a kind of document: a consultation report (a chip of the pet's history).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte-rendu'**
+  String get documentsKindReport;
+
+  /// The name of a kind of document: a prescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ordonnance'**
+  String get documentsKindPrescription;
+
+  /// The name of a kind of document: an invoice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Facture'**
+  String get documentsKindInvoice;
+
+  /// The name of a kind of document: lab results.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats'**
+  String get documentsKindLabResult;
+
+  /// The name of a kind of document: a certificate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Certificat'**
+  String get documentsKindCertificate;
+
+  /// The name of a kind of document this app does not know.
+  ///
+  /// In fr, this message translates to:
+  /// **'Document'**
+  String get documentsKindUnknown;
 
   /// Documents screen (5): the pets of a document, the first ones joined by commas, then the last one ("Moka, Oslo et Pistache").
   ///

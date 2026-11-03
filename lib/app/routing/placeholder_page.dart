@@ -6,6 +6,7 @@ import 'package:kiveto_mobile/app/routing/app_routes.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
@@ -17,7 +18,7 @@ enum PlaceholderKind {
   /// A tab root: canvas, page header.
   tab,
 
-  /// A page pushed inside a tab (the pet sheet): canvas, back button.
+  /// A page pushed inside a tab: canvas, back button.
   pushed,
 
   /// A full-screen flow over the shell: white, back button.
@@ -101,6 +102,22 @@ class PlaceholderPage extends StatelessWidget {
     }
   }
 }
+
+/// The placeholder of a sheet a later slice builds (the change request of a
+/// pet): its title and "Cet écran arrive dans une prochaine version."
+Future<void> showPlaceholderSheet(BuildContext context, String title) =>
+    showKivetoSheet<void>(
+      context: context,
+      builder: (context) => KivetoSheet(
+        title: title,
+        children: [
+          Text(
+            AppLocalizations.of(context).placeholderBody,
+            style: KivetoText.bodyLarge,
+          ),
+        ],
+      ),
+    );
 
 /// "Se déconnecter": the logout of identity_access (the server revokes the
 /// session, the app signs out whatever it answers; the router then goes to

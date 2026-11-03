@@ -1,5 +1,5 @@
 # Written by `make api-sync`; checked by `make api-check`. Never edit.
 repository: https://github.com/djamils/kiveto
 path: openapi/portal.v1.yaml
-commit: 840dbead0202f55a4e8aacf2858a579d2b828f45
-sha256: 91fd6444255735a96084e0c6f5a692eb75c8825c052112be8facc3dff0de0266
+commit: bcb8d8b1a9624489299d49917b336aa42fdc92ee
+sha256: 2746027fd901aaccf5e679a59d6c598fd2c2c69654e7524ec28163164fd990b7

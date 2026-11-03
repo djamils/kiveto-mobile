@@ -15,6 +15,7 @@ enum CareItemStatusModel
         _i1.FormEncodable,
         _i1.JsonEncodable,
         _i1.UriEncodable {
+  booked(r'booked'),
   overdue(r'overdue'),
   dueSoon(r'due_soon'),
   upToDate(r'up_to_date'),

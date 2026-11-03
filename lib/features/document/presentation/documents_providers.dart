@@ -9,6 +9,7 @@ import 'package:kiveto_mobile/features/document/domain/document.dart';
 import 'package:kiveto_mobile/features/document/domain/prescription.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
+import 'package:kiveto_mobile/shared/domain/document_kind.dart';
 
 // The state of the documents screen. Every provider belongs to the account:
 // each watches the session and only the id of the active clinic

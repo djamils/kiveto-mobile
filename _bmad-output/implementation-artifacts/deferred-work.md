@@ -187,3 +187,25 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
   summary: Check screen 5, the prescription sheet and the PDF viewer with large text (accessibility font scale ≥ 1.3) and on a ~360-dp phone: the C-30 card holds a 40-px tile, a wrapping title, a 44-px button and a full-width renewal button; the viewer title is one line.
   evidence: Code review (blind-hunter); slice 2 was checked on the 411-dp emulator and the 390 × 844 test frame only (the same gap as slice 1's entry).
+
+## Deferred from: spec-patient-home.md (slice 3, 2026-11-03)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-patient-home.md`
+  summary: While `GET /me` reloads (pull-to-refresh, after a document is opened), the home header's clinic line and chevron, the pet sheet's « Carnet PDF » and the switcher sheet's « Active » mark disappear for the length of the request (the page jumps), because they read `activeClinicProvider` through `AsyncData` patterns only and `ActiveClinicNotifier.build` awaits `meProvider.future`.
+  evidence: Build review (blind-hunter) and code review (edge-case hunter), verified, low: the « never `.value` » rule of slices 1–2 keeps a previous account's clinic from showing; slice 2 notes the same blink of the Documents subtitle. A fix needs to tell a same-account refresh from a session change (e.g. keep the last clinic keyed by account id).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-patient-home.md`
+  summary: The clinic switcher on the home (the clinic's name, mockup 01 draws it unpadded) is an ~18 px tap target, and the pet sheet's back button has a 10 px dead strip (its 44 px box overflows a 34 px slot, the mockup's `margin-left: −10`); add a kit-level way to give a control a 44/48 px hit area without moving its drawn layout (design-system § 7), then use it there.
+  evidence: Build review (blind-hunter), verified, medium: `_ClinicSwitcherButton` is a bare `GestureDetector` on 13 px text + a 16 px chevron; Flutter's hit-testing stops at the parent's bounds, so the area cannot grow without changing the layout.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-patient-home.md`
+  summary: Merge the backend branch `fix/portal-care-item-booked-status` (commit `bcb8d8b1`, adds `booked` to the `CareItem` and `HomeCareItemView` status enums of `openapi/portal.v1.yaml`) into the backend's master, then re-run `make api-sync` on the merged commit if the SHA changes: `contracts/SOURCE` pins `bcb8d8b1`, which no backend master contains yet.
+  evidence: Code review (blind-hunter, acceptance auditor), verified: the agent's `git merge --no-ff` into the backend's local master was refused by the permission system (needs the user's go-ahead); the branch passed the backend's `make ci` (8302 tests). If the branch is squashed or rebased, the pin must move.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-patient-home.md`
+  summary: « Today » for the care countdowns, ages and the year rule is the device's local date (`deviceToday`), while the server decides the care status on the clinic's local date (`ClinicLink.timezone`, e.g. `Europe/Paris`); an owner in another zone near midnight sees « Demain » for an item the server says is due today. Computing the clinic's date needs time-zone data (e.g. the `timezone` package, checked under CLAUDE.md §7).
+  evidence: Code review (blind-hunter, edge-case hunter), verified, low: the clinic's IANA zone name is known (`/me`) but the app has no zone database; same-zone owners are unaffected.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-patient-home.md`
+  summary: A clinic switch whose `shared_preferences` write failed reverts to the stored (or first) clinic at the next `/me` reload (pull-to-refresh), because `ActiveClinicNotifier.build` re-reads the store; keep the session's choice in the notifier and prefer it over the store.
+  evidence: Code review (edge-case hunter), verified, low, pre-existing (slice 1's `ActiveClinicNotifier.select` only logs the failed write).

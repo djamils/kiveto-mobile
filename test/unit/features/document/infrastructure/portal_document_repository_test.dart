@@ -13,8 +13,10 @@ import 'package:kiveto_mobile/features/document/infrastructure/portal_document_r
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_instant.dart';
+import 'package:kiveto_mobile/shared/domain/document_kind.dart';
 import 'package:kiveto_mobile/shared/domain/local_date.dart';
 import 'package:kiveto_mobile/shared/domain/money.dart';
+import 'package:kiveto_mobile/shared/domain/payment_status.dart';
 
 import '../../../../support/fakes.dart';
 import '../../../../support/portal_api/fake_portal_backend.dart';

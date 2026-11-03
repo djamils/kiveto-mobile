@@ -8,8 +8,10 @@ import 'package:kiveto_mobile/features/document/domain/document.dart';
 import 'package:kiveto_mobile/features/document/presentation/document_messages.dart';
 import 'package:kiveto_mobile/l10n/app_localizations_fr.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_instant.dart';
+import 'package:kiveto_mobile/shared/domain/document_kind.dart';
 import 'package:kiveto_mobile/shared/domain/local_date.dart';
 import 'package:kiveto_mobile/shared/domain/money.dart';
+import 'package:kiveto_mobile/shared/domain/payment_status.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 
 final _l10n = AppLocalizationsFr();
@@ -113,6 +115,17 @@ void main() {
     );
     expect(meta(PaymentStatus.credited), '1 234,56 € · Avoir émis · 31 août');
     expect(meta(PaymentStatus.unknown), '1 234,56 € · 31 août');
+  });
+
+  test('documentKindName: the names of the history chips', () {
+    expect(DocumentKind.values.map((kind) => documentKindName(_l10n, kind)), [
+      'Compte-rendu',
+      'Ordonnance',
+      'Facture',
+      'Résultats',
+      'Certificat',
+      'Document',
+    ]);
   });
 
   test('documentTile: the mockup colours and glyphs; a file icon for an '

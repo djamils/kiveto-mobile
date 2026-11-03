@@ -1,7 +1,7 @@
 // Slice 1 in the real app (router, seams, PortalHttp on the fake backend):
 // welcome → code → the destination of each branch, the restart signed in,
-// the clinic-less account, the seams while /me reloads, the home
-// placeholder, the logout.
+// the clinic-less account, the seams while /me reloads, the home's header
+// from /me, the logout.
 
 import 'dart:async';
 import 'dart:convert';
@@ -29,6 +29,8 @@ const _me = '$api/me';
 const _terms = '$api/legal/terms/current';
 const _logout = '$api/auth/logout';
 const _refresh = '$api/auth/refresh';
+const _parisHome = '$api/clinics/01960000-0000-7000-8000-000000000001/home';
+const _lyonHome = '$api/clinics/01960000-0000-7000-8000-000000000101/home';
 
 String _location(ProviderContainer container) => container
     .read(routerProvider)
@@ -47,6 +49,11 @@ FakePortalBackend _signInBackend(PortalReply verify, {String me = 'me.get'}) =>
       )
       ..on('POST', _verify, verify)
       ..on('GET', _me, PortalReply.fixture('$me.200.json'))
+      ..on(
+        'GET',
+        _parisHome,
+        PortalReply.fixture('clinics.paris.home.get.200.json'),
+      )
       ..on(
         'GET',
         _terms,
@@ -117,6 +124,7 @@ void main() {
     expect(session.status, SessionStatus.signedIn);
     expect(find.text('Bonjour Julien'), findsOneWidget);
     expect(find.text('Clinique Vétérinaire de Paris'), findsOneWidget);
+    expect(find.text('Mer. 11 nov. · 10:30'), findsOneWidget);
     expect(find.text('JG'), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
     expect(container.read(hasConfirmedClinicProvider), isTrue);
@@ -349,7 +357,12 @@ void main() {
     ) as Map<String, Object?>;
     (me['account']! as Map<String, Object?>)['firstName'] = null;
     final backend = FakePortalBackend()
-      ..on('GET', _me, PortalReply.json(jsonEncode(me)));
+      ..on('GET', _me, PortalReply.json(jsonEncode(me)))
+      ..on(
+        'GET',
+        _lyonHome,
+        PortalReply.fixture('clinics.lyon.home.get.200.json'),
+      );
     await pumpKivetoApp(
       tester,
       session: await memorySession(pair('A')),
@@ -364,6 +377,8 @@ void main() {
 
     expect(find.text('Bonjour'), findsOneWidget);
     expect(find.text('Clinique Vétérinaire de Lyon'), findsOneWidget);
+    expect(find.text('Pixel'), findsOneWidget);
+    expect(backend.requestsTo(_lyonHome), hasLength(1));
     expect(find.text('G'), findsOneWidget);
     expect(find.text('1'), findsNothing);
   });
@@ -376,7 +391,12 @@ void main() {
         return calls == 1
             ? problem('service_unavailable', 503)
             : PortalReply.fixture('me.get.200.json');
-      });
+      })
+      ..on(
+        'GET',
+        _parisHome,
+        PortalReply.fixture('clinics.paris.home.get.200.json'),
+      );
     final container = await pumpKivetoApp(
       tester,
       session: await memorySession(pair('A')),
@@ -389,6 +409,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Bonjour Julien'), findsOneWidget);
+    expect(find.text('Oslo'), findsOneWidget);
   });
 
   testWidgets('/me loading after a session change: the seams are unknown, '
