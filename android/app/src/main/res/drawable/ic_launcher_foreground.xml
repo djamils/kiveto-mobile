@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive icon foreground (108dp grid): DM Sans 18pt Bold "K", cap height 25.2dp, centred. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M43.884 66.6L43.884 41.4L48.744 41.4L48.744 51.372L57.852 41.4L63.864 41.4L54.576 51.372L64.116 66.6L58.212 66.6L51.12 55.152L48.744 57.672L48.744 66.6L43.884 66.6Z" />
+</vector>
