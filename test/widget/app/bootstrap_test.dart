@@ -2,9 +2,12 @@
 
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/app/bootstrap/bootstrap.dart';
+import 'package:kiveto_mobile/app/kiveto_app.dart';
+import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/network/api_config.dart';
 import 'package:kiveto_mobile/core/security/device_id_store.dart';
 import 'package:kiveto_mobile/core/security/token_storage.dart';
@@ -39,6 +42,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Rendez-vous'), findsOneWidget);
+
+    // The storage bootstrap really uses: device-only on iOS (the platform
+    // mock ignores the options, so they are pinned here).
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(KivetoApp)),
+    );
+    final storage = container.read(secureStorageProvider);
+    expect(storage, same(secureStorage));
+    expect(
+      storage.iOptions.accessibility,
+      KeychainAccessibility.first_unlock_this_device,
+    );
   });
 
   test('without --dart-define: a StateError before runApp', () async {

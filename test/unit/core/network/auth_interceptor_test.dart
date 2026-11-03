@@ -60,6 +60,38 @@ void main() {
       expect(harness.refreshes, isEmpty);
     });
 
+    test('the Bearer goes to the API origin only', () async {
+      harness.backend.on('GET', '/x', PortalReply.json('{}'));
+
+      await harness.http.dio.get<Object?>('https://cdn.example.com/x');
+      await harness.http.dio.get<Object?>('/x');
+
+      final [other, api] = harness.backend.requests;
+      expect(other.headers, isNot(contains('Authorization')));
+      expect(bearerOf(api), 'Bearer A');
+    });
+
+    test('a request that waited on a refresh which then failed refreshes '
+        'again', () async {
+      _meAccepts(harness.backend, 'B');
+      late Future<TonikResult<GetMeResponse, Response<Object?>>> during;
+      var refreshes = 0;
+      harness.backend.onRequest('POST', _refresh, (_) async {
+        if (++refreshes > 1) return refreshed('B');
+        during = getMe();
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        throw const SocketException('offline');
+      });
+
+      final first = await getMe();
+      final waited = await during;
+
+      expect(failureOf(first), isA<NetworkFailure>());
+      expect(waited, isA<TonikSuccess<GetMeResponse, Response<Object?>>>());
+      expect(harness.refreshes, hasLength(2));
+      expect(harness.session.tokens?.accessToken, 'B');
+    });
+
     test('V4: 5 concurrent 401s trigger exactly one refresh', () async {
       _meAccepts(harness.backend, 'B');
       harness.backend.onRequest('POST', _refresh, (_) async {
@@ -407,6 +439,7 @@ void main() {
   test('a request flagged as already retried is passed on', () async {
     harness = await PortalHarness.create(tokens: pair('A'));
     final interceptor = AuthInterceptor(
+      config: devConfig,
       session: harness.session,
       refresher: SessionRefresher(AuthApi(harness.http.server)),
       retryDio: harness.http.bareDio,

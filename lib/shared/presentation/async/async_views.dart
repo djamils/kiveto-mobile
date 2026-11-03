@@ -79,19 +79,28 @@ class LoadingView extends StatelessWidget {
 };
 
 /// An error in the empty-state layout (C-36): a glyph per kind, the
-/// French title and body of [failureMessage] ([message] replaces the body:
-/// a slice maps its business codes), a retry button when [onRetry] is set.
+/// French title and body of [failureMessage] ([title] and [message]
+/// replace them: a slice maps its business codes, e.g. a 401
+/// `onboarding_invalid` is not "Session expirée"), a retry button when
+/// [onRetry] is set.
 class ErrorView extends StatelessWidget {
-  const new({required this.error, super.key, this.onRetry, this.message});
+  const new({
+    required this.error,
+    super.key,
+    this.onRetry,
+    this.title,
+    this.message,
+  });
 
   final Object error;
   final VoidCallback? onRetry;
+  final String? title;
   final String? message;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final (title, body) = failureMessage(l10n, error);
+    final (defaultTitle, body) = failureMessage(l10n, error);
     final onRetry = this.onRetry;
     return EmptyState(
       glyph: switch (error) {
@@ -99,7 +108,7 @@ class ErrorView extends StatelessWidget {
         RateLimitedFailure() => LucideGlyph.clock,
         _ => LucideGlyph.circleAlert,
       },
-      title: title,
+      title: title ?? defaultTitle,
       body: message ?? body,
       action: onRetry == null
           ? null

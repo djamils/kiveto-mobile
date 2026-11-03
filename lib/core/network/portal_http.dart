@@ -54,6 +54,7 @@ final class PortalHttp {
       ..addAll(transport())
       ..add(
         AuthInterceptor(
+          config: config,
           session: session,
           refresher: refresher,
           retryDio: bareDio,

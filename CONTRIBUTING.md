@@ -287,9 +287,11 @@ policies: session lifecycle, one token refresh at a time, a stable
 ### App foundation (phase 5)
 
 - **Material** comes from `package:material_ui/material_ui.dart` (go_router
-  18 is built on it): never import `package:flutter/material.dart`, or the
+  18 is built on it): never import `package:flutter/material.dart` (nor
+  `package:flutter/cupertino.dart`: `cupertino_ui` replaces it), or the
   app gets a second `MaterialApp`, `Theme` and `MaterialLocalizations`
-  that go_router does not see.
+  that go_router does not see; `test/architecture/material_ui_test.dart`
+  fails on either import.
 - **Failures:** repositories throw the sealed `ApiFailure` of
   `lib/shared/domain/api_failure.dart` (`switch (await api.getMe()) {
   TonikSuccess(value: GetMeResponse200(:final body)) => …, final other =>

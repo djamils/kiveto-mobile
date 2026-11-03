@@ -396,8 +396,8 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minWidth: 18),
-    height: 18,
+    // Min 18 × 18: grows with large text instead of clipping "99+".
+    constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
     padding: const EdgeInsets.symmetric(horizontal: KivetoSpace.xs),
     alignment: Alignment.center,
     decoration: BoxDecoration(
@@ -409,13 +409,15 @@ class _Badge extends StatelessWidget {
   );
 }
 
-/// C-35: shows a [KivetoSheet] over the scrim.
+/// C-35: shows a [KivetoSheet] over the scrim, on the root navigator: the
+/// scrim covers the whole screen, the bottom navigation included.
 Future<T?> showKivetoSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
 }) => showModalBottomSheet<T>(
   context: context,
   builder: builder,
+  useRootNavigator: true,
   isScrollControlled: true,
   useSafeArea: true,
   barrierColor: KivetoColors.scrim,
@@ -443,53 +445,60 @@ class KivetoSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtitle = this.subtitle;
+    // Above the keyboard, and scrollable when the content is taller than
+    // the room left.
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        KivetoSpace.gutter,
-        10,
-        KivetoSpace.gutter,
-        kivetoBottomPadding(context, 28),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(
-                color: KivetoColors.borderChip,
-                borderRadius: BorderRadius.circular(3),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          KivetoSpace.gutter,
+          10,
+          KivetoSpace.gutter,
+          kivetoBottomPadding(context, 28),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: KivetoColors.borderChip,
+                  borderRadius: BorderRadius.circular(3),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: KivetoSpace.xl2),
-          Semantics(
-            header: true,
-            child: Text(
-              title,
-              style: kivetoTextStyle(
-                22,
-                FontWeight.w700,
-                letterSpacingEm: -0.01,
-                color: KivetoColors.ink,
+            const SizedBox(height: KivetoSpace.xl2),
+            Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: kivetoTextStyle(
+                  22,
+                  FontWeight.w700,
+                  letterSpacingEm: -0.01,
+                  color: KivetoColors.ink,
+                ),
               ),
             ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: KivetoSpace.s),
-            Text(
-              subtitle,
-              style: KivetoText.body.copyWith(color: KivetoColors.inkSecondary),
-            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: KivetoSpace.s),
+              Text(
+                subtitle,
+                style: KivetoText.body.copyWith(
+                  color: KivetoColors.inkSecondary,
+                ),
+              ),
+            ],
+            const SizedBox(height: KivetoSpace.xl2),
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) const SizedBox(height: KivetoSpace.sm),
+              children[i],
+            ],
           ],
-          const SizedBox(height: KivetoSpace.xl2),
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const SizedBox(height: KivetoSpace.sm),
-            children[i],
-          ],
-        ],
+        ),
       ),
     );
   }

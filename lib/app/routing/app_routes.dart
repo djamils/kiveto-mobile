@@ -14,7 +14,7 @@ abstract final class AppRoutes {
   static const home = '/home'; // 1
   static const clinics = '/clinics'; // 10, in the home branch
   static const pets = '/pets'; // 2
-  static String pet(String petId) => '/pets/$petId';
+  static String pet(String petId) => '/pets/${_id(petId)}';
   static const appointments = '/appointments'; // 4
   static const documents = '/documents'; // 5
   static const account = '/account'; // 6
@@ -25,18 +25,21 @@ abstract final class AppRoutes {
   static const bookingSlot = '/booking/slot'; // 3
   static const bookingConfirm = '/booking/confirm'; // 14
   static String questionnaire(String appointmentId) =>
-      '/appointments/$appointmentId/questionnaire'; // 15
+      '/appointments/${_id(appointmentId)}/questionnaire'; // 15
   static String cancelAppointment(String appointmentId) =>
-      '/appointments/$appointmentId/cancel'; // 16
+      '/appointments/${_id(appointmentId)}/cancel'; // 16
   static String reschedule(String appointmentId) =>
-      '/appointments/$appointmentId/reschedule'; // 3, reused
+      '/appointments/${_id(appointmentId)}/reschedule'; // 3, reused
   static String prescriptionRenewal(String prescriptionId) =>
-      '/documents/prescriptions/$prescriptionId/renewal'; // 17
+      '/documents/prescriptions/${_id(prescriptionId)}/renewal'; // 17
   static String clinicListing(String listingId) =>
-      '/clinic-listings/$listingId'; // 11
+      '/clinic-listings/${_id(listingId)}'; // 11
 
   /// Debug builds only: the UI kit gallery.
   static const kitGallery = '/debug/kit';
+
+  /// An id as one path segment (go_router decodes it back).
+  static String _id(String id) => Uri.encodeComponent(id);
 }
 
 /// What a signed-out session may open.

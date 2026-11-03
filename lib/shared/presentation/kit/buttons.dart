@@ -484,31 +484,47 @@ class KivetoInlineLinks extends StatefulWidget {
 }
 
 class _KivetoInlineLinksState extends State<KivetoInlineLinks> {
+  /// One recognizer per link, kept across builds (a rebuild between the
+  /// pointer down and up must not drop the tap): only their callbacks are
+  /// updated; they are disposed with the state.
   final _recognizers = <TapGestureRecognizer>[];
 
   @override
-  void dispose() {
-    _disposeRecognizers();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _syncRecognizers();
   }
 
-  void _disposeRecognizers() {
+  @override
+  void didUpdateWidget(KivetoInlineLinks oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncRecognizers();
+  }
+
+  @override
+  void dispose() {
     for (final recognizer in _recognizers) {
       recognizer.dispose();
     }
-    _recognizers.clear();
+    super.dispose();
   }
 
-  /// A recognizer owned by this state (disposed on rebuild and dispose).
-  TapGestureRecognizer _recognizer(VoidCallback onTap) {
-    final recognizer = TapGestureRecognizer()..onTap = onTap;
-    _recognizers.add(recognizer);
-    return recognizer;
+  void _syncRecognizers() {
+    final taps = [for (final part in widget.parts) ?part.onTap];
+    while (_recognizers.length > taps.length) {
+      _recognizers.removeLast().dispose();
+    }
+    while (_recognizers.length < taps.length) {
+      _recognizers.add(TapGestureRecognizer());
+    }
+    for (var i = 0; i < taps.length; i++) {
+      _recognizers[i].onTap = taps[i];
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    _disposeRecognizers();
+    var link = 0;
     final base =
         widget.style ??
         KivetoText.bodySmall.copyWith(
@@ -520,7 +536,7 @@ class _KivetoInlineLinksState extends State<KivetoInlineLinks> {
         style: base,
         children: [
           for (final part in widget.parts)
-            if (part.onTap case final onTap?)
+            if (part.onTap != null)
               TextSpan(
                 text: part.text,
                 style: TextStyle(
@@ -529,7 +545,7 @@ class _KivetoInlineLinksState extends State<KivetoInlineLinks> {
                   decoration: part.underline ? TextDecoration.underline : null,
                   decorationColor: KivetoColors.brand,
                 ),
-                recognizer: _recognizer(onTap),
+                recognizer: _recognizers[link++],
               )
             else
               TextSpan(text: part.text),

@@ -93,7 +93,7 @@
 ## Deferred from: spec-app-shell.md (phase 5, 2026-11-03)
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
-  summary: Correct CLAUDE.md (needs the user's own go-ahead, agent-context file): bootstrap status "phases 1–5 done" (phase 5 validated on Windows and the Android emulator, iOS not built); the stack line and §3/§6 say Material comes from `package:material_ui/material_ui.dart` (go_router 18 is built on it) and that no file of `lib/`, `test/` or `integration_test/` imports `package:flutter/material.dart`; §5 tonik 0.11.1 (already listed for phase 4); user-facing strings in `lib/l10n/app_fr.arb`, `fvm flutter gen-l10n` after an edit.
+  summary: Correct CLAUDE.md (needs the user's own go-ahead, agent-context file): bootstrap status "phases 1–5 done" (phase 5 validated on Windows and the Android emulator, iOS not built); the stack line and §3/§6 say Material comes from `package:material_ui/material_ui.dart` (go_router 18 is built on it) and that no file of `lib/`, `test/` or `integration_test/` imports `package:flutter/material.dart` or `package:flutter/cupertino.dart` (`test/architecture/material_ui_test.dart`); §5 tonik 0.11.1 (already listed for phase 4); user-facing strings in `lib/l10n/app_fr.arb`, `fvm flutter gen-l10n` after an edit.
   evidence: CLAUDE.md still reads "phases 1–3 done" and names no Material import rule; the spec forbids editing it (corrections go here).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
@@ -129,3 +129,9 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Global error handling in `app/bootstrap/`: `FlutterError.onError` / `PlatformDispatcher.instance.onError` (crash reporting) and a fallback screen when `bootstrap()` fails before `runApp` (no `API_BASE_URL` in a release build, D11 flavors).
   evidence: Review (blind-hunter, intent-alignment), rejected for phase 5 (every run goes through `make start`, the `StateError` names the fix); `structure-d15.md` lists "error handlers" in `app/bootstrap/`.
+
+## Deferred from: code review of spec-app-shell.md (2026-11-03, bmad-code-review)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
+  summary: Design the logout request so that a token refresh cannot replay a spent refresh token: with an expired access token, `POST /auth/logout {refreshToken: A}` through `PortalHttp.dio` gets 401, the auth interceptor refreshes (A → B) and retries the same body; send logout with a "do not refresh" request flag (and fall back to a local sign-out), or on `bareDio` with the current pair — slice 1 (`identity_access`).
+  evidence: Code review (blind-hunter), maybe-false, if true medium: whether the backend revokes the whole family when given a spent member decides it (guide: "famille du jeton révoquée si elle appartient à l'appelant"); if it does not, B stays valid on the server after a sign-out.

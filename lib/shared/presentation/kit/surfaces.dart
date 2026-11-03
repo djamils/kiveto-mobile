@@ -1,3 +1,4 @@
+import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/kiveto_icon.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
@@ -321,33 +322,38 @@ class KivetoSwitchRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final description = this.description;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: KivetoText.labelStrong),
-                if (description != null) ...[
-                  const SizedBox(height: KivetoSpace.tight),
-                  Text(
-                    description,
-                    style: KivetoText.caption.copyWith(height: 1.4),
-                  ),
-                ],
-              ],
-            ),
+    final onChanged = this.onChanged;
+    // The whole row toggles, read as one switch (as KivetoCheckboxRow).
+    return MergeSemantics(
+      child: InkWell(
+        onTap: onChanged == null ? null : () => onChanged(!value),
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: const WidgetStatePropertyAll(KivetoColors.inkPressed),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: KivetoText.labelStrong),
+                    if (description != null) ...[
+                      const SizedBox(height: KivetoSpace.tight),
+                      Text(
+                        description,
+                        style: KivetoText.caption.copyWith(height: 1.4),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              KivetoSwitch(value: value, onChanged: onChanged),
+            ],
           ),
-          const SizedBox(width: 14),
-          KivetoSwitch(
-            value: value,
-            onChanged: onChanged,
-            semanticLabel: title,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -576,10 +582,10 @@ class KivetoBadgeMark extends StatelessWidget {
 
 /// C-38: the brand lockup: the K badge and the "Kiveto" wordmark.
 class KivetoBrandLockup extends StatelessWidget {
-  const new({super.key, this.name = 'Kiveto'});
+  const new({super.key, this.name});
 
-  /// The brand name (not translated).
-  final String name;
+  /// The brand name; default: the app title of the ARB.
+  final String? name;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -587,7 +593,10 @@ class KivetoBrandLockup extends StatelessWidget {
     children: [
       const KivetoBadgeMark(),
       const SizedBox(width: KivetoSpace.m),
-      Text(name, style: KivetoText.brandWordmark),
+      Text(
+        name ?? AppLocalizations.of(context).appTitle,
+        style: KivetoText.brandWordmark,
+      ),
     ],
   );
 }

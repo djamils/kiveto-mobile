@@ -50,10 +50,11 @@ InputDecoration _fieldDecoration({
   );
 }
 
-/// [field] (a text input) announced by screen readers with [label]: the
+/// [field] (a text input) announced by screen readers with [label] and,
+/// as its hint, the error or help text shown under it ([note]): the
 /// visible label is a separate text, excluded from the semantics tree.
-Widget _labelled(String label, Widget field) =>
-    Semantics(label: label, child: field);
+Widget _labelled(String label, Widget field, {String? note}) =>
+    Semantics(label: label, hint: note, child: field);
 
 /// The label, field and help/error column of the form fields: gap 6.
 class _FieldColumn extends StatelessWidget {
@@ -105,12 +106,15 @@ class _FieldColumn extends StatelessWidget {
         field,
         if (note != null) ...[
           const SizedBox(height: KivetoSpace.s),
-          Text(
-            note,
-            style: KivetoText.caption.copyWith(
-              color: errorText == null
-                  ? KivetoColors.inkMuted
-                  : KivetoColors.danger,
+          // Read as the input's hint: not twice.
+          ExcludeSemantics(
+            child: Text(
+              note,
+              style: KivetoText.caption.copyWith(
+                color: errorText == null
+                    ? KivetoColors.inkMuted
+                    : KivetoColors.danger,
+              ),
             ),
           ),
         ],
@@ -194,6 +198,7 @@ class KivetoTextField extends StatelessWidget {
       optional
           ? '$label ${AppLocalizations.of(context).commonOptional}'
           : label,
+      note: errorText ?? helpText,
       TextField(
         controller: controller,
         focusNode: focusNode,
@@ -343,6 +348,7 @@ class KivetoPhoneField extends StatelessWidget {
           Expanded(
             child: _labelled(
               label,
+              note: errorText ?? helpText,
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.phone,
@@ -400,6 +406,7 @@ class KivetoCodeField extends StatelessWidget {
       errorText: errorText,
       field: _labelled(
         label,
+        note: errorText ?? helpText,
         TextField(
           controller: controller,
           onChanged: onChanged,
@@ -524,6 +531,7 @@ class _KivetoOtpFieldState extends State<KivetoOtpField> {
             Positioned.fill(
               child: _labelled(
                 widget.legend,
+                note: widget.helpText,
                 TextField(
                   controller: _controller,
                   focusNode: _focus,
@@ -560,7 +568,7 @@ class _KivetoOtpFieldState extends State<KivetoOtpField> {
         ),
         if (helpText != null) ...[
           const SizedBox(height: KivetoSpace.m),
-          Text(helpText, style: KivetoText.caption),
+          ExcludeSemantics(child: Text(helpText, style: KivetoText.caption)),
         ],
       ],
     );

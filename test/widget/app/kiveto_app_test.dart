@@ -19,6 +19,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../support/fakes.dart';
 import '../../support/portal_api/fake_portal_backend.dart';
+import '../../support/portal_api/portal_http_harness.dart';
 
 final class _Bundle extends CachingAssetBundle {
   @override
@@ -125,6 +126,37 @@ void main() {
       expect(container.read(clockProvider), isA<SystemClock>());
       expect(container.read(clockProvider).now().isUtc, isTrue);
       expect(container.read(apiFailureMapperProvider), isNotNull);
+    });
+
+    test('the downloader runs on the authenticated chain', () async {
+      final harness = await PortalHarness.create(tokens: pair('A'));
+      const file = '/api/portal/v1/clinics/c/documents/d/file';
+      harness.backend
+        ..on(
+          'GET',
+          file,
+          PortalReply.empty(
+            302,
+            headers: {
+              'location': ['http://portal.kiveto.local/files/x'],
+            },
+          ),
+        )
+        ..on('GET', '/files/x', PortalReply.bytes(const [1, 2, 3]));
+      final container = ProviderContainer(
+        overrides: [
+          portalHttpProvider.overrideWithValue(harness.http),
+          apiConfigProvider.overrideWithValue(devConfig),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final downloaded = await container
+          .read(portalFileDownloaderProvider)
+          .download(file);
+
+      expect(downloaded.bytes, [1, 2, 3]);
+      expect(bearerOf(harness.backend.requests.first), 'Bearer A');
     });
 
     Future<ProviderContainer> probe(PortalReply reply) async {

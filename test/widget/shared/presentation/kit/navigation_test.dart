@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -266,5 +269,73 @@ void main() {
       const KivetoSheet(title: 'Sans sous-titre', children: [SizedBox()]),
     );
     expect(find.text('Sans sous-titre'), findsOneWidget);
+  });
+
+  testWidgets('showKivetoSheet from a tab: the scrim covers the bottom nav '
+      'too (root navigator)', (tester) async {
+    await pumpKivetoApp(tester, session: await memorySession(pair('A')));
+
+    unawaited(
+      showKivetoSheet<void>(
+        context: tester.element(find.byType(KivetoPageHeader)),
+        builder: (context) =>
+            const KivetoSheet(title: 'Feuille', children: [SizedBox()]),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    final barrier = tester.getRect(find.byType(ModalBarrier).last);
+    expect(barrier.bottom, screen.height);
+    expect(barrier.height, screen.height);
+  });
+
+  testWidgets('KivetoSheet: above the keyboard, tall content scrolls', (
+    tester,
+  ) async {
+    await pumpKit(
+      tester,
+      SizedBox(
+        height: 500,
+        child: MediaQuery(
+          data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 400)),
+          child: KivetoSheet(
+            title: 'Annuler ce rendez-vous ?',
+            subtitle: 'Mar. 4 nov. · 10:30',
+            children: [
+              for (var i = 0; i < 6; i++)
+                KivetoButton.outline(label: 'Action $i', onPressed: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SingleChildScrollView), findsWidgets);
+  });
+
+  testWidgets('the badge grows with large text', (tester) async {
+    await pumpKit(
+      tester,
+      MediaQuery(
+        data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+        child: KivetoBottomNav(
+          items: _items(120),
+          currentIndex: 0,
+          onTap: (_) {},
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    final text = tester.getSize(find.text('99+'));
+    final badge = tester.getSize(
+      find
+          .ancestor(of: find.text('99+'), matching: find.byType(Container))
+          .first,
+    );
+    expect(badge.height, greaterThanOrEqualTo(text.height + 4));
+    expect(badge.width, greaterThanOrEqualTo(text.width + 8));
   });
 }

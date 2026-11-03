@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:kiveto_mobile/core/errors/api_failure_mapper.dart';
+import 'package:kiveto_mobile/core/network/api_config.dart';
 import 'package:kiveto_mobile/core/network/session_refresher.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/core/security/token_pair.dart';
 
 /// The last interceptor of `PortalHttp.dio`: `Authorization: Bearer` on
-/// every request of a signed-in session, and one token refresh in flight at
+/// every request of a signed-in session to the API origin (never another
+/// host), and one token refresh in flight at
 /// a time (the backend requires the client to serialise its refreshes).
 ///
 /// A [QueuedInterceptor] handles one error at a time: the first 401
@@ -17,6 +19,7 @@ import 'package:kiveto_mobile/core/security/token_pair.dart';
 /// behind the one awaiting it.
 final class AuthInterceptor extends QueuedInterceptor {
   new({
+    required this._config,
     required this._session,
     required this._refresher,
     required this._retryDio,
@@ -40,6 +43,7 @@ final class AuthInterceptor extends QueuedInterceptor {
   /// The 401 `type`s that mean "refresh, then retry" (absent counts too).
   static const _refreshable = {'token_expired', 'unauthorized'};
 
+  final ApiConfig _config;
   final SessionManager _session;
   final SessionRefresher _refresher;
   final Dio _retryDio;
@@ -63,7 +67,9 @@ final class AuthInterceptor extends QueuedInterceptor {
     if (inFlight != null) await inFlight;
     options.extra[sequenceKey] = ++_sequence;
     final tokens = _session.tokens;
-    if (tokens != null && options.extra[anonymousKey] != true) {
+    if (tokens != null &&
+        options.extra[anonymousKey] != true &&
+        _config.isApiOrigin(options.uri)) {
       options.headers['Authorization'] = 'Bearer ${tokens.accessToken}';
       options.extra[sentTokenKey] = tokens.accessToken;
     }

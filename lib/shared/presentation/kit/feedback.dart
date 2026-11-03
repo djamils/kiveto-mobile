@@ -217,11 +217,17 @@ class ReassuranceList extends StatelessWidget {
   );
 }
 
-/// The check in a circle of the success states.
+/// The check in a circle of the success states: 72 with a 36 check
+/// (C-34a), 64 with a 30 check (C-34b).
 class _SuccessMark extends StatelessWidget {
-  const new({required this.size, required this.colors});
+  const new({
+    required this.size,
+    required this.checkSize,
+    required this.colors,
+  });
 
   final double size;
+  final double checkSize;
   final KivetoColorSet colors;
 
   @override
@@ -232,7 +238,7 @@ class _SuccessMark extends StatelessWidget {
     decoration: BoxDecoration(color: colors.fill, shape: BoxShape.circle),
     child: KivetoIcon(
       LucideGlyph.check,
-      size: size / 2,
+      size: checkSize,
       strokeWidth: 2.4,
       color: colors.foreground,
     ),
@@ -266,7 +272,11 @@ class SuccessView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const _SuccessMark(size: 72, colors: KivetoColorSets.green),
+          const _SuccessMark(
+            size: 72,
+            checkSize: 36,
+            colors: KivetoColorSets.green,
+          ),
           const SizedBox(height: KivetoSpace.xl),
           Semantics(
             header: true,
@@ -319,7 +329,11 @@ class SheetSuccessView extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const _SuccessMark(size: 64, colors: KivetoColorSets.neutral),
+        const _SuccessMark(
+          size: 64,
+          checkSize: 30,
+          colors: KivetoColorSets.neutral,
+        ),
         const SizedBox(height: KivetoSpace.l),
         Semantics(
           header: true,

@@ -193,4 +193,21 @@ void main() {
     expect(find.text('prêt'), findsOneWidget);
     expect(find.text('Aucun document'), findsOneWidget);
   });
+
+  testWidgets('ErrorView: a slice replaces the title and the body', (
+    tester,
+  ) async {
+    await pumpKit(
+      tester,
+      const ErrorView(
+        error: UnauthorizedFailure(code: 'onboarding_invalid'),
+        title: 'Lien expiré',
+        message: 'Reconnectez-vous avec votre numéro.',
+      ),
+    );
+
+    expect(find.text('Lien expiré'), findsOneWidget);
+    expect(find.text('Session expirée'), findsNothing);
+    expect(find.text('Reconnectez-vous avec votre numéro.'), findsOneWidget);
+  });
 }

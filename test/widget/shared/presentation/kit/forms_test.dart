@@ -360,4 +360,28 @@ void main() {
       greaterThanOrEqualTo(76),
     );
   });
+
+  testWidgets("the error, else the help, is the input's semantics hint", (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pumpKit(
+      tester,
+      const Column(
+        children: [
+          KivetoTextField(label: 'Nom', errorText: 'Le nom est vide.'),
+          KivetoPhoneField(label: 'Mobile', helpText: 'Un code par SMS.'),
+        ],
+      ),
+    );
+
+    final inputs = find.byType(EditableText).evaluate().toList();
+    final name = tester.getSemantics(find.byWidget(inputs[0].widget));
+    final phone = tester.getSemantics(find.byWidget(inputs[1].widget));
+    expect(name.hint, contains('Le nom est vide.'));
+    expect(phone.hint, contains('Un code par SMS.'));
+    // The visible note is not read a second time.
+    expect(find.bySemanticsLabel('Le nom est vide.'), findsNothing);
+    handle.dispose();
+  });
 }

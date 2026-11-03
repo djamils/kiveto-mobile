@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kiveto_mobile/shared/presentation/icons/kiveto_icon.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/feedback.dart';
@@ -293,5 +294,74 @@ void main() {
     }
     expect(taps, ['info', 'brand', 'call']);
     expect(find.text('Rendez-vous confirmé'), findsOneWidget);
+  });
+
+  testWidgets('the switch row toggles from its title, read as one switch', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    var value = false;
+    await pumpKit(
+      tester,
+      StatefulBuilder(
+        builder: (context, setState) => KivetoSwitchRow(
+          title: 'Rappels de soins',
+          description: 'Un rappel avant échéance.',
+          value: value,
+          onChanged: (next) => setState(() => value = next),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Rappels de soins'));
+    await tester.pumpAndSettle();
+    expect(value, isTrue);
+    await tester.tap(find.byType(KivetoSwitch));
+    await tester.pumpAndSettle();
+    expect(value, isFalse);
+    expect(
+      tester.getSemantics(find.byType(KivetoSwitchRow)).label,
+      contains('Rappels de soins'),
+    );
+    handle.dispose();
+  });
+
+  testWidgets('the success checks: 36 in 72, 30 in 64', (tester) async {
+    await pumpKit(
+      tester,
+      Column(
+        children: [
+          const SuccessView(title: 'Envoyé', message: 'OK'),
+          SheetSuccessView(
+            title: 'Annulé',
+            message: 'OK',
+            action: KivetoButton.primary(label: 'Fermer', onPressed: () {}),
+          ),
+        ],
+      ),
+    );
+
+    final checks = tester
+        .widgetList<KivetoIcon>(find.byType(KivetoIcon))
+        .where((icon) => icon.glyph == LucideGlyph.check)
+        .map((icon) => icon.size);
+    expect(checks, [36, 30]);
+  });
+
+  testWidgets('the brand lockup reads the app title of the ARB', (
+    tester,
+  ) async {
+    await pumpKit(
+      tester,
+      const Column(
+        children: [
+          KivetoBrandLockup(),
+          KivetoBrandLockup(name: 'Autre'),
+        ],
+      ),
+    );
+
+    expect(find.text('Kiveto'), findsOneWidget);
+    expect(find.text('Autre'), findsOneWidget);
   });
 }

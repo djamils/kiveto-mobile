@@ -123,6 +123,24 @@ void main() {
   test('the paths of the routes with ids', () {
     expect(AppRoutes.cancelAppointment('a'), '/appointments/a/cancel');
     expect(AppRoutes.reschedule('a'), '/appointments/a/reschedule');
+    // An id is one encoded path segment.
+    expect(AppRoutes.pet('a/b c'), '/pets/a%2Fb%20c');
+    expect(AppRoutes.clinicListing('x?y'), '/clinic-listings/x%3Fy');
+  });
+
+  testWidgets('an encoded id reaches its page decoded', (tester) async {
+    final container = await pumpKivetoApp(
+      tester,
+      session: await memorySession(pair('A')),
+      initialLocation: AppRoutes.pet('a/b'),
+    );
+
+    expect(find.text('Fiche animal'), findsOneWidget);
+    final match = container
+        .read(routerProvider)
+        .routerDelegate
+        .currentConfiguration;
+    expect(match.pathParameters['petId'], 'a/b');
   });
 
   group('the pumped router', () {

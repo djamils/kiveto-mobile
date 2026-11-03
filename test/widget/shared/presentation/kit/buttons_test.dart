@@ -279,4 +279,35 @@ void main() {
     );
     handle.dispose();
   });
+
+  testWidgets('a rebuild between pointer down and up keeps the link tap', (
+    tester,
+  ) async {
+    var taps = 0;
+    late StateSetter rebuild;
+    var tick = 0;
+    await pumpKit(
+      tester,
+      StatefulBuilder(
+        builder: (context, setState) {
+          rebuild = setState;
+          return KivetoInlineLinks([
+            // A new list and callback at every build, as a countdown parent.
+            InlinePart.link('Renvoyer ($tick)', onTap: () => taps++),
+          ]);
+        },
+      ),
+    );
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byType(KivetoInlineLinks)),
+    );
+    rebuild(() => tick++);
+    await tester.pump();
+    await gesture.up();
+    await tester.pump();
+
+    expect(taps, 1);
+    expect(find.textContaining('(1)', findRichText: true), findsOneWidget);
+  });
 }
