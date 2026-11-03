@@ -12,10 +12,12 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
+import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/client/di.dart';
 import 'package:kiveto_mobile/features/consultation/consultation.dart';
 import 'package:kiveto_mobile/features/consultation/presentation/pet_timeline_section.dart';
 import 'package:kiveto_mobile/features/document/presentation/pdf_file_page.dart';
+import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:material_ui/material_ui.dart';
@@ -371,5 +373,45 @@ void main() {
     held.complete();
     await tester.pumpAndSettle();
     expect(find.text('Boiterie'), findsOneWidget);
+  });
+
+  testWidgets('a next page answering after a clinic switch is dropped', (
+    tester,
+  ) async {
+    const lyon = '01960000-0000-7000-8000-000000000101';
+    final held = Completer<void>();
+    final backend = _backend()
+      ..onRequest('GET', _page2, (request) async {
+        await held.future;
+        return PortalReply.fixture(
+          'clinics.paris.pet.timeline.garnier-oscar-page2.get.200.json',
+        );
+      })
+      ..on(
+        'GET',
+        '$api/clinics/$lyon/pets/$_oscar/timeline',
+        PortalReply.fixture('clinics.lyon.pet.timeline.get.200.json'),
+      );
+    final container = await pump(tester, backend, _oscar);
+    // The next page is held: its spinner turns, no settling.
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -30000));
+    await pumpBriefly(tester);
+    expect(backend.requestsTo(_page2), hasLength(1));
+
+    unawaited(
+      container
+          .read(activeClinicProvider.notifier)
+          .select(const ClinicId(lyon)),
+    );
+    await tester.pumpAndSettle();
+    held.complete();
+    await tester.pumpAndSettle();
+
+    expect(_visits(container, _oscar), 0);
+    expect(
+      find.text('Aucune consultation partagée pour le moment.'),
+      findsOneWidget,
+    );
+    expect(find.text('Bilan thyroïdien'), findsNothing);
   });
 }

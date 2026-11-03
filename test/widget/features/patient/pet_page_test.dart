@@ -12,11 +12,13 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
+import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/client/di.dart';
 import 'package:kiveto_mobile/features/consultation/consultation.dart';
 import 'package:kiveto_mobile/features/consultation/presentation/pet_timeline_section.dart';
 import 'package:kiveto_mobile/features/document/presentation/pdf_file_page.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart';
+import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/feedback.dart';
@@ -768,4 +770,118 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Chien · Labrador'), findsOneWidget);
   });
+
+  testWidgets('a clinic switch drops the choice: back on Paris, the '
+      "route's pet", (tester) async {
+    const lyon = '01960000-0000-7000-8000-000000000101';
+    const pixel = '01a19a10-d1df-75fb-acf1-2987bfc236b8';
+    const lyonPets = '$api/clinics/$lyon/pets';
+    final backend = _garnier()
+      ..on(
+        'GET',
+        lyonPets,
+        PortalReply.fixture('clinics.lyon.pets.get.200.json'),
+      )
+      ..on(
+        'GET',
+        '$lyonPets/$pixel',
+        PortalReply.fixture('clinics.lyon.pet.get.200.json'),
+      )
+      ..on(
+        'GET',
+        '$lyonPets/$pixel/care-items',
+        PortalReply.fixture('clinics.lyon.pet.care-items.get.200.json'),
+      )
+      ..on(
+        'GET',
+        '$lyonPets/$pixel/timeline',
+        PortalReply.fixture('clinics.lyon.pet.timeline.get.200.json'),
+      );
+    final container = await pump(tester, backend, petId: _oscar);
+    await tester.tap(find.text('Nala'));
+    await tester.pumpAndSettle();
+    expect(find.text('Chat · Européen · Femelle stérilisée'), findsOneWidget);
+
+    await container
+        .read(activeClinicProvider.notifier)
+        .select(const ClinicId(lyon));
+    await tester.pumpAndSettle();
+    expect(find.text('Pixel'), findsOneWidget);
+
+    await container
+        .read(activeClinicProvider.notifier)
+        .select(const ClinicId(_paris));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<KivetoSegmentedControl<PetId>>(
+            find.byType(KivetoSegmentedControl<PetId>),
+          )
+          .selected,
+      const PetId(_oscar),
+    );
+    expect(
+      find.text('Chien · Labrador retriever · Mâle castré'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('the sheet answers 404 (the pet left the list): the retry '
+      'reads the pets and /me again', (tester) async {
+    final backend = _julien()
+      ..on(
+        'GET',
+        '$_pets/$_oslo',
+        PortalReply.fixture(
+          'clinics.paris.pet.not-found.get.404.json',
+          status: 404,
+        ),
+      );
+    await pump(tester, backend);
+    expect(backend.requestsTo(_pets), hasLength(1));
+    expect(backend.requestsTo(_me), hasLength(1));
+
+    await tester.tap(find.text('Réessayer'));
+    await tester.pumpAndSettle();
+
+    expect(backend.requestsTo(_pets), hasLength(2));
+    expect(backend.requestsTo(_me), hasLength(2));
+    expect(backend.requestsTo('$_pets/$_oslo'), hasLength(2));
+  });
+
+  for (final (part, path, done) in [
+    ('the identity grid', '$_pets/$_oslo', 'clinics.paris.pet.get.200.json'),
+    (
+      'the care items',
+      '$_pets/$_oslo/care-items',
+      'clinics.paris.pet.care-items.get.200.json',
+    ),
+  ]) {
+    testWidgets('a retry of $part in flight shows its loading, not the '
+        'error and its retry', (tester) async {
+      var calls = 0;
+      final held = Completer<void>();
+      final backend = _julien()
+        ..onRequest('GET', path, (request) async {
+          if (calls++ == 0) return problem('service_unavailable', 503);
+          await held.future;
+          return PortalReply.fixture(done);
+        });
+      await pump(tester, backend);
+      await tester.ensureVisible(find.text('Réessayer'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+
+      expect(find.byType(LoadingView), findsOneWidget);
+      expect(find.text('Réessayer'), findsNothing);
+
+      held.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(ErrorView), findsNothing);
+      expect(backend.requestsTo(path), hasLength(2));
+    });
+  }
 }

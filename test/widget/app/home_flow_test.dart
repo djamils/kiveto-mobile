@@ -128,6 +128,10 @@ void main() {
     expect(find.text('Bonjour Julien'), findsOneWidget);
     expect(find.text('Mer. 11 nov. · 10:30'), findsOneWidget);
     expect(find.text('Accueil'), findsOneWidget);
+    expect(
+      tester.widget<KivetoBottomNav>(find.byType(KivetoBottomNav)).currentIndex,
+      0,
+    );
 
     await tester.tap(find.text('Oslo'));
     await tester.pumpAndSettle();

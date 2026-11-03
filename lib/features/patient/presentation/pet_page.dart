@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/misc.dart' show ProviderException;
+import 'package:flutter_riverpod/misc.dart'
+    show ProviderException, ProviderOrFamily;
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/consultation/consultation.dart';
@@ -112,21 +113,31 @@ class _PetPageState extends ConsumerState<PetPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: KivetoColors.canvas,
-    body: SafeArea(
-      bottom: false,
-      child: RefreshIndicator(
-        color: KivetoColors.brand,
-        onRefresh: _refresh,
-        child: CustomScrollView(
-          // A short page can be pulled too.
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: _content(context),
+  Widget build(BuildContext context) {
+    // A list without the chosen pet (another clinic, a pet gone) drops the
+    // choice; the same list read again (a refresh) keeps it.
+    ref.listen(petsProvider, (_, next) {
+      if (next case AsyncData(:final value)
+          when _selected != null && !value.any((pet) => pet.id == _selected)) {
+        setState(() => _selected = null);
+      }
+    });
+    return Scaffold(
+      backgroundColor: KivetoColors.canvas,
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          color: KivetoColors.brand,
+          onRefresh: _refresh,
+          child: CustomScrollView(
+            // A short page can be pulled too.
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: _content(context),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 
   List<Widget> _content(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -466,10 +477,7 @@ class _IdentityGrid extends ConsumerWidget {
       case AsyncError(:final error):
         return ErrorView(
           error: error,
-          onRetry: () {
-            if (ref.read(meProvider).hasError) ref.invalidate(meProvider);
-            ref.invalidate(provider);
-          },
+          onRetry: () => _retryPart(ref, error, provider),
         );
       default:
         return const _Loading();
@@ -545,10 +553,7 @@ class _CareSection extends ConsumerWidget {
       AsyncData(:final value) => _CareList(items: value),
       AsyncError(:final error) => ErrorView(
         error: error,
-        onRetry: () {
-          if (ref.read(meProvider).hasError) ref.invalidate(meProvider);
-          ref.invalidate(provider);
-        },
+        onRetry: () => _retryPart(ref, error, provider),
       ),
       _ => const _Loading(),
     };
@@ -629,3 +634,18 @@ class _Loading extends StatelessWidget {
 /// another provider arrives wrapped in [ProviderException]s).
 Object _cause(Object error) =>
     error is ProviderException ? _cause(error.exception) : error;
+
+/// The retry of a part of the sheet ([part]: its sheet, its care items). A
+/// 404 (the pet left the clinic's list after it loaded) reads the pets and
+/// `/me` again; a failure of `/me` reaches the part through the active
+/// clinic.
+void _retryPart(WidgetRef ref, Object error, ProviderOrFamily part) {
+  if (_cause(error) is NotFoundFailure) {
+    ref
+      ..invalidate(meProvider)
+      ..invalidate(petsProvider);
+  } else if (ref.read(meProvider).hasError) {
+    ref.invalidate(meProvider);
+  }
+  ref.invalidate(part);
+}

@@ -71,10 +71,14 @@ GoRoute _page(
 void _goWelcome(BuildContext context) => context.go(AppRoutes.welcome);
 void _goHome(BuildContext context) => context.go(AppRoutes.home);
 
+/// The navigations to a pet's sheet so far.
+var _petVisits = 0;
+
 /// A new navigation to a pet's sheet, the same pet included: a fresh
-/// `extra` drops the choice the sheet's switcher kept.
+/// `extra` (a serialisable count) drops the choice the sheet's switcher
+/// kept.
 void _goPet(BuildContext context, String petId) =>
-    context.go(AppRoutes.pet(petId), extra: Object());
+    context.go(AppRoutes.pet(petId), extra: ++_petVisits);
 void _goAppointments(BuildContext context) =>
     context.go(AppRoutes.appointments);
 void _goDocuments(BuildContext context) => context.go(AppRoutes.documents);

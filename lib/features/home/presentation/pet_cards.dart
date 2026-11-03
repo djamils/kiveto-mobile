@@ -81,37 +81,43 @@ class PetCard extends StatelessWidget {
       pet.birthDate,
       today,
     );
-    return Material(
-      color: KivetoColors.surface,
-      shape: RoundedRectangleBorder(
-        side: const BorderSide(color: KivetoColors.border),
-        borderRadius: BorderRadius.circular(KivetoRadius.l),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        splashFactory: NoSplash.splashFactory,
-        overlayColor: const WidgetStatePropertyAll(KivetoColors.inkPressed),
-        child: Padding(
-          padding: const EdgeInsets.all(KivetoSpace.ml),
-          child: Row(
-            children: [
-              InitialsAvatar(pet.initial, tone: AvatarTone.forPetIndex(index)),
-              const SizedBox(width: KivetoSpace.ml),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(pet.name, style: KivetoText.itemTitle),
-                    if (meta.isNotEmpty) ...[
-                      const SizedBox(height: KivetoSpace.xxs),
-                      Text(meta, style: KivetoText.caption),
-                    ],
-                  ],
+    return Semantics(
+      button: true,
+      child: Material(
+        color: KivetoColors.surface,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: KivetoColors.border),
+          borderRadius: BorderRadius.circular(KivetoRadius.l),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: const WidgetStatePropertyAll(KivetoColors.inkPressed),
+          child: Padding(
+            padding: const EdgeInsets.all(KivetoSpace.ml),
+            child: Row(
+              children: [
+                InitialsAvatar(
+                  pet.initial,
+                  tone: AvatarTone.forPetIndex(index),
                 ),
-              ),
-            ],
+                const SizedBox(width: KivetoSpace.ml),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(pet.name, style: KivetoText.itemTitle),
+                      if (meta.isNotEmpty) ...[
+                        const SizedBox(height: KivetoSpace.xxs),
+                        Text(meta, style: KivetoText.caption),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

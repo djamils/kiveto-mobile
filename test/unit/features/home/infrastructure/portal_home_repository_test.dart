@@ -119,6 +119,26 @@ void main() {
     expect(home.latestDocuments, isEmpty);
   });
 
+  test('Garnier, Lyon (capture): Moka only, nothing else', () async {
+    harness.backend.on(
+      'GET',
+      '$api/clinics/${_lyon.value}/home',
+      PortalReply.fixture('clinics.lyon.home.garnier.get.200.json'),
+    );
+
+    final home = await repository.overview(_lyon);
+
+    expect(home.nextAppointment, isNull);
+    final moka = home.pets.single;
+    expect(moka.id, '01a19a12-75b9-7e7a-8197-e6898515cb61');
+    expect(moka.name, 'Moka');
+    expect(moka.initial, 'M');
+    expect(moka.species, Species.dog);
+    expect(moka.birthDate, LocalDate(2023, 3, 18));
+    expect(home.careItems, isEmpty);
+    expect(home.latestDocuments, isEmpty);
+  });
+
   test('Garnier, Paris (capture): four pets, three overdue care items, a '
       'prescription and an unpaid invoice', () async {
     harness.backend.on(

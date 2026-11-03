@@ -677,4 +677,60 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Oslo'), findsOneWidget);
   });
+
+  testWidgets('the switcher lists the confirmed clinics only', (tester) async {
+    final me = jsonDecode(
+      File('$portalFixtures/me.get.200.json').readAsStringSync(),
+    ) as Map<String, Object?>;
+    final clinics = me['clinics']! as List<Object?>;
+    clinics.add({
+      ...clinics.first! as Map<String, Object?>,
+      'clinicId': '01960000-0000-7000-8000-000000000201',
+      'name': 'Clinique Vétérinaire de Nice',
+      'city': 'Nice',
+      'linkStatus': 'pending',
+    });
+    final backend = _julienBackend()
+      ..on('GET', _me, PortalReply.json(jsonEncode(me)));
+    await pump(tester, backend);
+
+    await tester.tap(find.text('Clinique Vétérinaire de Paris'));
+    await tester.pumpAndSettle();
+
+    final sheet = find.byType(BottomSheet);
+    expect(
+      find.descendant(of: sheet, matching: find.byType(StatusDot)),
+      findsNWidgets(2),
+    );
+    expect(
+      find.descendant(
+        of: sheet,
+        matching: find.text('Clinique Vétérinaire de Nice'),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: sheet,
+        matching: find.text('Clinique Vétérinaire de Lyon'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('no pet: no « Mes animaux » section', (tester) async {
+    final body = jsonDecode(
+      File('$portalFixtures/clinics.paris.home.get.200.json')
+          .readAsStringSync(),
+    ) as Map<String, Object?>;
+    body['pets'] = <Object?>[];
+    final backend = _julienBackend()
+      ..on('GET', _parisHome, PortalReply.json(jsonEncode(body)));
+    await pump(tester, backend);
+
+    expect(find.text('PROCHAIN RENDEZ-VOUS'), findsOneWidget);
+    expect(find.text('Mes animaux'), findsNothing);
+    expect(find.byType(PetCard), findsNothing);
+    expect(find.text('À prévoir'), findsOneWidget);
+  });
 }

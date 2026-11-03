@@ -147,11 +147,16 @@ class KivetoListRow extends StatelessWidget {
     );
     return onTap == null
         ? row
-        : InkWell(
-            onTap: onTap,
-            splashFactory: NoSplash.splashFactory,
-            overlayColor: const WidgetStatePropertyAll(KivetoColors.inkPressed),
-            child: row,
+        : Semantics(
+            button: true,
+            child: InkWell(
+              onTap: onTap,
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: const WidgetStatePropertyAll(
+                KivetoColors.inkPressed,
+              ),
+              child: row,
+            ),
           );
   }
 }

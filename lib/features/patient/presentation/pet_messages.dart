@@ -109,9 +109,13 @@ String careDate(LocalDate date, LocalDate today) => date.year == today.year
     ? KivetoFormat.dayMonth(date)
     : KivetoFormat.dayMonthYear(date);
 
+/// Within this many days an up-to-date care item reads as due (its line
+/// and its pill), beyond it as valid.
+const _soonDays = 60;
+
 /// The line under a care item's label, by its status: « À faire depuis le
 /// 13 oct. » (overdue), the last act and the due date (booked), « Valide
-/// jusqu'au 16 avr. 2027 » (up to date, due beyond 60 days, as its pill),
+/// jusqu'au 16 avr. 2027 » (up to date, due beyond [_soonDays], as its pill),
 /// « Prochain avant le 9 nov. » otherwise.
 String careSubLine(AppLocalizations l10n, CareItem item, LocalDate today) {
   final due = careDate(item.dueOn, today);
@@ -121,7 +125,7 @@ String careSubLine(AppLocalizations l10n, CareItem item, LocalDate today) {
       careDate(item.lastDoneOn, today),
       due,
     ),
-    CareStatus.upToDate when today.daysUntil(item.dueOn) > 60 =>
+    CareStatus.upToDate when today.daysUntil(item.dueOn) > _soonDays =>
       l10n.careValidUntil(due),
     CareStatus.dueSoon ||
     CareStatus.upToDate ||
@@ -152,7 +156,7 @@ String careCountdown(AppLocalizations l10n, LocalDate dueOn, LocalDate today) {
   CareStatus.booked => (l10n.careBooked, StatusTone.warning),
   CareStatus.overdue => (l10n.careOverdue, StatusTone.danger),
   CareStatus.dueSoon => (careCountdown(l10n, dueOn, today), StatusTone.warning),
-  CareStatus.upToDate when today.daysUntil(dueOn) <= 60 => (
+  CareStatus.upToDate when today.daysUntil(dueOn) <= _soonDays => (
     careCountdown(l10n, dueOn, today),
     StatusTone.neutral,
   ),

@@ -49,7 +49,12 @@ final class PortalHomeRepository implements HomeRepository {
             AppointmentState.confirmed,
           api.AppointmentViewStatusModel.pendingClinicConfirmation =>
             AppointmentState.pendingClinicConfirmation,
-          _ => AppointmentState.other,
+          api.AppointmentViewStatusModel.cancelledByClient ||
+          api.AppointmentViewStatusModel.cancelledByClinic ||
+          api.AppointmentViewStatusModel.declined ||
+          api.AppointmentViewStatusModel.completed ||
+          api.AppointmentViewStatusModel.noShow ||
+          api.AppointmentViewStatusModel.unknown => AppointmentState.other,
         },
         questionnaire: switch (view.questionnaireStatus) {
           api.AppointmentViewQuestionnaireStatusModel.notStarted =>
