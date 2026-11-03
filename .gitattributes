@@ -32,3 +32,7 @@ assets/licenses/lucide.txt -text
 
 # gen-l10n output (fvm flutter gen-l10n), committed: collapsed in diffs.
 lib/l10n/app_localizations*.dart linguist-generated=true
+
+# Live captures of text/calendar answers keep the CRLF lines of RFC 5545
+# (exact bytes, like every Portal API fixture).
+test/support/fixtures/portal_api/*.ics -text

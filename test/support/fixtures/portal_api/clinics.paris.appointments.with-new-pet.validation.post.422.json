@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"newPet.name","message":"Le nom de l'animal est obligatoire.","code":"c1051bb4-d103-4f74-8988-acbcafc7fdc3"}],"detail":"newPet.name: Le nom de l'animal est obligatoire.","type":"validation_failed","title":"Données invalides."}
