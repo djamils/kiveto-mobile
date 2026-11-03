@@ -228,6 +228,26 @@ void main() {
     ]);
   });
 
+  testWidgets('WizardHeader: a widget over the title (the clinic chip)', (
+    tester,
+  ) async {
+    await pumpKit(
+      tester,
+      WizardHeader(
+        step: 1,
+        stepLabel: 'Étape 1 sur 4',
+        title: 'Pour quel animal ?',
+        onBack: () {},
+        onClose: () {},
+        overTitle: const Text('Clinique des Lices'),
+      ),
+    );
+
+    final chip = tester.getRect(find.text('Clinique des Lices'));
+    final title = tester.getRect(find.text('Pour quel animal ?'));
+    expect(title.top - chip.bottom, 10);
+  });
+
   testWidgets('showKivetoSheet: scrim, handle, title, actions', (tester) async {
     await pumpKit(
       tester,

@@ -100,6 +100,8 @@ final class ClinicLink {
     required this.timezone,
     required this.linkStatus,
     this.city,
+    this.phone,
+    this.address,
     this.linkedAt,
     this.petNames = const [],
     this.tags = const [],
@@ -109,6 +111,13 @@ final class ClinicLink {
   final ClinicId clinicId;
   final String name;
   final String? city;
+
+  /// The clinic's phone number, E.164 (`+33142551890`); null when the
+  /// clinic gave none.
+  final String? phone;
+
+  /// The clinic's postal address; null when the clinic gave none.
+  final ClinicAddress? address;
 
   /// The clinic's IANA zone (`Europe/Paris`).
   final String timezone;
@@ -122,4 +131,14 @@ final class ClinicLink {
 
   @override
   String toString() => 'ClinicLink(${clinicId.value}, $name)';
+}
+
+/// The postal address of a clinic, as the clinic set it.
+final class ClinicAddress {
+  const new({required this.line, required this.city, this.postalCode});
+
+  /// The street line (`18 rue des Abbesses`).
+  final String line;
+  final String? postalCode;
+  final String city;
 }

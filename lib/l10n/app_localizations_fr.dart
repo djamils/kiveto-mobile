@@ -72,9 +72,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get screenQuestionnaireTitle => 'Avant la consultation';
 
   @override
-  String get screenCancelAppointmentTitle => 'Annuler le rendez-vous';
-
-  @override
   String get screenRescheduleTitle => 'Reporter le rendez-vous';
 
   @override
@@ -923,4 +920,402 @@ class AppLocalizationsFr extends AppLocalizations {
   String documentsNamesAnd(String head, String last) {
     return '$head et $last';
   }
+
+  @override
+  String bookingStepLabel(int step) {
+    return 'Étape $step sur 4';
+  }
+
+  @override
+  String get bookingPetLabel => 'Animal';
+
+  @override
+  String bookingClinicSwitcherLabel(String name) {
+    return 'Changer de clinique, actuellement $name';
+  }
+
+  @override
+  String get bookingNewPet => 'Un autre animal';
+
+  @override
+  String get bookingNewPetName => 'Nom de l\'animal';
+
+  @override
+  String get bookingNewPetSpecies => 'Espèce';
+
+  @override
+  String get bookingPetFootnote =>
+      'Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.';
+
+  @override
+  String get bookingPetBarLabel => 'Rendez-vous pour';
+
+  @override
+  String get bookingNewPetBarValue => 'Nouvel animal';
+
+  @override
+  String get bookingMotifLabel => 'Motif';
+
+  @override
+  String bookingMotifSubtitle(String pet, String clinic) {
+    return 'Pour $pet · $clinic';
+  }
+
+  @override
+  String get bookingMotifSuggested => 'Rappel à faire';
+
+  @override
+  String bookingMotifDuration(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get bookingMotifEmpty => 'Choisissez un motif';
+
+  @override
+  String get bookingMotifsEmptyTitle => 'Aucun motif en ligne';
+
+  @override
+  String get bookingMotifsEmptyBody =>
+      'Cette clinique ne propose pas de rendez-vous en ligne pour le moment.';
+
+  @override
+  String get bookingNotOpenTitle => 'Réservation en ligne indisponible';
+
+  @override
+  String get bookingNotOpenBody =>
+      'Cette clinique ne prend pas de rendez-vous en ligne pour le moment. Contactez-la directement.';
+
+  @override
+  String get bookingEmergency =>
+      'Urgence ? Ne réservez pas en ligne, appelez la clinique.';
+
+  @override
+  String get bookingEmergencyNoPhone =>
+      'Urgence ? Ne réservez pas en ligne, appelez directement la clinique.';
+
+  @override
+  String get bookingCall => 'Appeler';
+
+  @override
+  String get bookingCallError => 'Impossible de lancer l\'appel.';
+
+  @override
+  String get bookingSlotLabel => 'Votre créneau';
+
+  @override
+  String get bookingSlotEmpty => 'Choisissez un créneau';
+
+  @override
+  String bookingDateAtTime(String date, String time) {
+    return '$date à $time';
+  }
+
+  @override
+  String get bookingVetLabel => 'Vétérinaire';
+
+  @override
+  String get bookingPreviousWeek => 'Semaine précédente';
+
+  @override
+  String get bookingNextWeek => 'Semaine suivante';
+
+  @override
+  String get bookingMorning => 'Matin';
+
+  @override
+  String get bookingAfternoon => 'Après-midi';
+
+  @override
+  String get bookingNoSlotDay => 'Aucun créneau disponible ce jour-là.';
+
+  @override
+  String get bookingNoSlotWeek => 'Aucun créneau cette semaine.';
+
+  @override
+  String get bookingNoPractitioner =>
+      'Aucun vétérinaire ne prend de rendez-vous en ligne pour ce motif.';
+
+  @override
+  String get bookingSlotFootnote =>
+      'Seuls les créneaux ouverts à la réservation en ligne par la clinique sont affichés.';
+
+  @override
+  String get bookingSlotTaken =>
+      'Ce créneau vient d\'être pris. Choisissez-en un autre.';
+
+  @override
+  String bookingSlotTakenLabel(String time) {
+    return '$time, déjà pris';
+  }
+
+  @override
+  String get bookingRecapDate => 'Date';
+
+  @override
+  String get bookingRecapClinic => 'Clinique';
+
+  @override
+  String get bookingEdit => 'Modifier';
+
+  @override
+  String bookingNewPetSecondary(String species) {
+    return 'Nouvel animal · $species';
+  }
+
+  @override
+  String get bookingReassuranceCancel =>
+      'Annulation et report en ligne jusqu\'au délai fixé par la clinique';
+
+  @override
+  String get bookingReassuranceQuestionnaire =>
+      'Questionnaire de 2 min avant la visite';
+
+  @override
+  String get bookingConfirm => 'Confirmer le rendez-vous';
+
+  @override
+  String get bookingConfirmedTitle => 'Rendez-vous confirmé';
+
+  @override
+  String get bookingPendingTitle => 'Demande envoyée';
+
+  @override
+  String get bookingSmsSent => 'Une confirmation vous a été envoyée par SMS.';
+
+  @override
+  String get bookingPendingNote =>
+      'La clinique doit confirmer ce rendez-vous. Vous le retrouverez dans vos rendez-vous.';
+
+  @override
+  String get bookingFillQuestionnaire => 'Remplir le questionnaire maintenant';
+
+  @override
+  String get bookingLater => 'Plus tard';
+
+  @override
+  String get bookingBackHome => 'Retour à l\'accueil';
+
+  @override
+  String get bookingErrorPetNotBookable =>
+      'Cet animal ne peut plus prendre rendez-vous en ligne.';
+
+  @override
+  String get bookingErrorNotOpen =>
+      'La réservation en ligne n\'est pas ouverte pour ce motif. Contactez la clinique.';
+
+  @override
+  String get bookingErrorNotFound =>
+      'Ce choix n\'est plus disponible. Recommencez la réservation.';
+
+  @override
+  String get appointmentsNew => 'Nouveau rendez-vous';
+
+  @override
+  String get appointmentsUpcoming => 'À venir';
+
+  @override
+  String get appointmentsPast => 'Passés';
+
+  @override
+  String get appointmentsStatusConfirmed => 'Confirmé';
+
+  @override
+  String get appointmentsStatusPending => 'En attente';
+
+  @override
+  String get appointmentsStatusCancelled => 'Annulé';
+
+  @override
+  String get appointmentsStatusCancelledByClinic => 'Annulé par la clinique';
+
+  @override
+  String get appointmentsStatusDeclined => 'Refusé';
+
+  @override
+  String get appointmentsStatusCompleted => 'Terminé';
+
+  @override
+  String get appointmentsStatusNoShow => 'Non honoré';
+
+  @override
+  String appointmentsTimePet(String time, String pet) {
+    return '$time · $pet';
+  }
+
+  @override
+  String get appointmentsPendingLine =>
+      'En attente de confirmation par la clinique';
+
+  @override
+  String get appointmentsQuestionnaireTitle => 'Questionnaire à compléter';
+
+  @override
+  String get appointmentsQuestionnaireBody =>
+      '2 min · motif, symptômes, traitements en cours';
+
+  @override
+  String get appointmentsReschedule => 'Reporter';
+
+  @override
+  String get appointmentsCancel => 'Annuler';
+
+  @override
+  String appointmentsCancellableUntil(String date, String time) {
+    return 'Annulation en ligne possible jusqu\'au $date à $time.';
+  }
+
+  @override
+  String get appointmentsWindowClosed =>
+      'Le délai d\'annulation en ligne est dépassé : contactez la clinique.';
+
+  @override
+  String get appointmentsAddToCalendar => 'Ajouter à mon calendrier';
+
+  @override
+  String get appointmentsCalendarError =>
+      'Impossible d\'ajouter ce rendez-vous à votre calendrier.';
+
+  @override
+  String get appointmentsEmptyUpcomingTitle => 'Aucun rendez-vous à venir';
+
+  @override
+  String get appointmentsBook => 'Prendre rendez-vous';
+
+  @override
+  String get appointmentsEmptyPastTitle => 'Aucun rendez-vous passé';
+
+  @override
+  String get appointmentsClinicGoneTitle => 'Clinique indisponible';
+
+  @override
+  String get appointmentsClinicGoneBody =>
+      'Votre accès à cette clinique n\'est plus actif.';
+
+  @override
+  String get appointmentsMoreError => 'Impossible de charger la suite.';
+
+  @override
+  String get appointmentsBackToList => 'Retour à mes rendez-vous';
+
+  @override
+  String get appointmentCancelTitle => 'Annuler ce rendez-vous ?';
+
+  @override
+  String appointmentCancelSubtitle(String date, String pet, String motif) {
+    return '$date · $pet — $motif';
+  }
+
+  @override
+  String appointmentCancelSubtitleNoPet(String date, String motif) {
+    return '$date — $motif';
+  }
+
+  @override
+  String appointmentCancelCareVaccination(
+    String label,
+    String pet,
+    String date,
+  ) {
+    return 'Le rappel $label de $pet est à faire avant le $date. Reporter évite un retard de vaccination.';
+  }
+
+  @override
+  String appointmentCancelCareInternalParasite(
+    String label,
+    String pet,
+    String date,
+  ) {
+    return 'Le traitement $label de $pet est à faire avant le $date. Reporter évite un retard de vermifugation.';
+  }
+
+  @override
+  String appointmentCancelCareExternalParasite(
+    String label,
+    String pet,
+    String date,
+  ) {
+    return 'Le traitement $label de $pet est à faire avant le $date. Reporter évite un retard de traitement antiparasitaire.';
+  }
+
+  @override
+  String appointmentCancelCareOther(String label, String pet, String date) {
+    return 'Le soin $label de $pet est à faire avant le $date. Reporter évite un retard de soin.';
+  }
+
+  @override
+  String get appointmentCancelReasonLegend => 'Raison de l\'annulation';
+
+  @override
+  String get appointmentCancelReasonUnavailable => 'Empêchement';
+
+  @override
+  String get appointmentCancelReasonNoLongerNeeded => 'Plus nécessaire';
+
+  @override
+  String get appointmentCancelReasonSeenElsewhere => 'Vu ailleurs';
+
+  @override
+  String get appointmentCancelReasonOther => 'Autre';
+
+  @override
+  String get appointmentCancelConfirm => 'Annuler le rendez-vous';
+
+  @override
+  String get appointmentCancelReschedule => 'Reporter plutôt';
+
+  @override
+  String get appointmentCancelKeep => 'Garder mon rendez-vous';
+
+  @override
+  String get appointmentCancelDoneTitle => 'Rendez-vous annulé';
+
+  @override
+  String get appointmentCancelDoneBody => 'La clinique a été prévenue.';
+
+  @override
+  String get appointmentCancelDoneSms =>
+      'Une confirmation vous est envoyée par SMS.';
+
+  @override
+  String get appointmentCancelNotModifiable =>
+      'Ce rendez-vous ne peut plus être modifié.';
+
+  @override
+  String rescheduleSubtitle(String pet, String motif, String date) {
+    return '$pet · $motif · actuellement $date';
+  }
+
+  @override
+  String rescheduleSubtitleNoPet(String motif, String date) {
+    return '$motif · actuellement $date';
+  }
+
+  @override
+  String get rescheduleSlotLabel => 'Nouveau créneau';
+
+  @override
+  String get rescheduleConfirm => 'Confirmer';
+
+  @override
+  String get rescheduleDoneTitle => 'Rendez-vous reporté';
+
+  @override
+  String get rescheduleNotAllowed =>
+      'Ce rendez-vous ne peut pas être reporté en ligne.';
+
+  @override
+  String get rescheduleNotFoundTitle => 'Rendez-vous introuvable';
+
+  @override
+  String bookingNewPetNameTooLong(int max) {
+    return '$max caractères au plus.';
+  }
+
+  @override
+  String get appointmentGone => 'Ce rendez-vous n\'est plus disponible.';
+
+  @override
+  String get rescheduleStillPending =>
+      'La clinique doit confirmer le nouveau créneau.';
 }

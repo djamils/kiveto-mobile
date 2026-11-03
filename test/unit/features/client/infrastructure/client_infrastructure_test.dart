@@ -59,6 +59,15 @@ void main() {
         expect(paris.petNames, ['Oslo']);
         expect(paris.tags, isEmpty);
         expect(paris.unreadDocuments, 1);
+        expect(paris.phone, '+33142551890');
+        expect(paris.address?.line, '18 rue des Abbesses');
+        expect(paris.address?.postalCode, '75018');
+        expect(paris.address?.city, 'Paris');
+        final lyon = me.clinics.last;
+        expect(lyon.phone, '+33478920145');
+        expect(lyon.address?.line, '7 quai Saint-Antoine, Bâtiment B');
+        expect(lyon.address?.postalCode, '69002');
+        expect(lyon.address?.city, 'Lyon');
         expect(me.activeClinic(), paris);
       },
     );
@@ -93,6 +102,13 @@ void main() {
       (clinics[0]! as Map<String, Object?>)['linkStatus'] = 'pending';
       (clinics[1]! as Map<String, Object?>)['linkStatus'] = 'archived';
       (clinics[1]! as Map<String, Object?>)['linkedAt'] = null;
+      (clinics[1]! as Map<String, Object?>)['phone'] = null;
+      (clinics[1]! as Map<String, Object?>)['address'] = null;
+      (clinics[0]! as Map<String, Object?>)['address'] = {
+        'line': '18 rue des Abbesses',
+        'postalCode': null,
+        'city': 'Paris',
+      };
       harness.backend.on('GET', _me, PortalReply.json(jsonEncode(body)));
 
       final me = await repository.me();
@@ -108,6 +124,9 @@ void main() {
         LinkStatus.unknown,
       ]);
       expect(me.clinics.last.linkedAt, isNull);
+      expect(me.clinics.last.phone, isNull);
+      expect(me.clinics.last.address, isNull);
+      expect(me.clinics.first.address?.postalCode, isNull);
       expect(me.hasConfirmedClinic, isFalse);
     });
 

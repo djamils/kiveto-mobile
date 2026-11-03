@@ -202,12 +202,6 @@ abstract class AppLocalizations {
   /// **'Avant la consultation'**
   String get screenQuestionnaireTitle;
 
-  /// Title of the appointment cancellation screen (16).
-  ///
-  /// In fr, this message translates to:
-  /// **'Annuler le rendez-vous'**
-  String get screenCancelAppointmentTitle;
-
   /// Title of the reschedule screen (the slot picker of 3, reused).
   ///
   /// In fr, this message translates to:
@@ -1641,6 +1635,672 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{head} et {last}'**
   String documentsNamesAnd(String head, String last);
+
+  /// Booking wizard (12, 13, 3, 14): the step counter of the header.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {step} sur 4'**
+  String bookingStepLabel(int step);
+
+  /// Booking wizard: the pet choice (12, accessible name of the group) and its row of the recap (14).
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal'**
+  String get bookingPetLabel;
+
+  /// Booking, pet step (12): accessible name of the clinic chip that opens the clinic switcher.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de clinique, actuellement {name}'**
+  String bookingClinicSwitcherLabel(String name);
+
+  /// Booking, pet step (12): the dashed card that opens the new pet form.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un autre animal'**
+  String get bookingNewPet;
+
+  /// Booking, pet step (12): label of the new pet name field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de l\'animal'**
+  String get bookingNewPetName;
+
+  /// Booking, pet step (12): accessible name of the species chips of a new pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèce'**
+  String get bookingNewPetSpecies;
+
+  /// Booking, pet step (12): the footnote under the pets (the API creates a new pet with the booking).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.'**
+  String get bookingPetFootnote;
+
+  /// Booking, pet step (12): label of the sticky bar (its value is the pet name).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous pour'**
+  String get bookingPetBarLabel;
+
+  /// Booking, pet step (12): value of the sticky bar while the new pet has no name yet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvel animal'**
+  String get bookingNewPetBarValue;
+
+  /// Booking: the motif choice (13, accessible name of the group and label of the sticky bar) and its row of the recap (14).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif'**
+  String get bookingMotifLabel;
+
+  /// Booking, motif step (13): the line under the title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour {pet} · {clinic}'**
+  String bookingMotifSubtitle(String pet, String clinic);
+
+  /// Booking, motif step (13): the amber pill of a motif the server suggests for the pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappel à faire'**
+  String get bookingMotifSuggested;
+
+  /// Booking: the length of a motif (« 30 min »).
+  ///
+  /// In fr, this message translates to:
+  /// **'{minutes} min'**
+  String bookingMotifDuration(int minutes);
+
+  /// Booking, motif step (13): value of the sticky bar before a motif is chosen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un motif'**
+  String get bookingMotifEmpty;
+
+  /// Booking, motif step (13): title of the empty state when the clinic opens no motif online.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun motif en ligne'**
+  String get bookingMotifsEmptyTitle;
+
+  /// Booking, motif step (13): body of the empty state when the clinic opens no motif online.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette clinique ne propose pas de rendez-vous en ligne pour le moment.'**
+  String get bookingMotifsEmptyBody;
+
+  /// Booking, motif step (13): title of the error when the clinic closed online booking (422 booking_not_open).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservation en ligne indisponible'**
+  String get bookingNotOpenTitle;
+
+  /// Booking, motif step (13): body of the error when the clinic closed online booking (422 booking_not_open).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette clinique ne prend pas de rendez-vous en ligne pour le moment. Contactez-la directement.'**
+  String get bookingNotOpenBody;
+
+  /// Booking, motif step (13): the emergency callout, next to the clinic's call button.
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgence ? Ne réservez pas en ligne, appelez la clinique.'**
+  String get bookingEmergency;
+
+  /// Booking, motif step (13): the emergency callout when the clinic gave no phone number.
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgence ? Ne réservez pas en ligne, appelez directement la clinique.'**
+  String get bookingEmergencyNoPhone;
+
+  /// Booking, motif step (13): calls the clinic's phone number.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler'**
+  String get bookingCall;
+
+  /// Booking, motif step (13): snack bar when no app could take the call.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de lancer l\'appel.'**
+  String get bookingCallError;
+
+  /// Booking, slot step (3): label of the sticky bar.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre créneau'**
+  String get bookingSlotLabel;
+
+  /// Booking slot step (3) and reschedule: value of the sticky bar before a slot is chosen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un créneau'**
+  String get bookingSlotEmpty;
+
+  /// A day and a time (« Lun. 9 nov. à 10:00 », « Lundi 9 novembre à 10:00 »).
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} à {time}'**
+  String bookingDateAtTime(String date, String time);
+
+  /// Booking: the practitioner chips (3, accessible name of the group), their label without a name, and the row of the recap (14).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vétérinaire'**
+  String get bookingVetLabel;
+
+  /// Slot picker (3, reschedule): the previous week button.
+  ///
+  /// In fr, this message translates to:
+  /// **'Semaine précédente'**
+  String get bookingPreviousWeek;
+
+  /// Slot picker (3, reschedule): the next week button.
+  ///
+  /// In fr, this message translates to:
+  /// **'Semaine suivante'**
+  String get bookingNextWeek;
+
+  /// Slot picker (3, reschedule): the slots before noon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Matin'**
+  String get bookingMorning;
+
+  /// Slot picker (3, reschedule): the slots from noon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Après-midi'**
+  String get bookingAfternoon;
+
+  /// Slot picker (3, reschedule): an open day without a bookable slot.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun créneau disponible ce jour-là.'**
+  String get bookingNoSlotDay;
+
+  /// Slot picker (3, reschedule): a week without a bookable slot.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun créneau cette semaine.'**
+  String get bookingNoSlotWeek;
+
+  /// Slot picker (3, reschedule): the motif has no practitioner bookable online.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun vétérinaire ne prend de rendez-vous en ligne pour ce motif.'**
+  String get bookingNoPractitioner;
+
+  /// Slot picker (3, reschedule): the footnote under the slots.
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les créneaux ouverts à la réservation en ligne par la clinique sont affichés.'**
+  String get bookingSlotFootnote;
+
+  /// Slot picker (3, reschedule): warning after another booking took the chosen slot (409 slot_taken).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce créneau vient d\'être pris. Choisissez-en un autre.'**
+  String get bookingSlotTaken;
+
+  /// Slot picker (3, reschedule): accessible name of a slot struck through (taken).
+  ///
+  /// In fr, this message translates to:
+  /// **'{time}, déjà pris'**
+  String bookingSlotTakenLabel(String time);
+
+  /// Booking, recap (14): label of the date row.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date'**
+  String get bookingRecapDate;
+
+  /// Booking, recap (14): label of the clinic row.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clinique'**
+  String get bookingRecapClinic;
+
+  /// Booking, recap (14): goes back to a step to change it.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get bookingEdit;
+
+  /// Booking, recap (14): the line under the name of a new pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvel animal · {species}'**
+  String bookingNewPetSecondary(String species);
+
+  /// Booking, recap (14): a reassurance line.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulation et report en ligne jusqu\'au délai fixé par la clinique'**
+  String get bookingReassuranceCancel;
+
+  /// Booking, recap (14): a reassurance line.
+  ///
+  /// In fr, this message translates to:
+  /// **'Questionnaire de 2 min avant la visite'**
+  String get bookingReassuranceQuestionnaire;
+
+  /// Booking, recap (14): books the appointment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le rendez-vous'**
+  String get bookingConfirm;
+
+  /// Booking, success (14): title when the clinic confirmed at once.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous confirmé'**
+  String get bookingConfirmedTitle;
+
+  /// Booking, success (14): title when the clinic must confirm (pending_clinic_confirmation).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée'**
+  String get bookingPendingTitle;
+
+  /// Booking, success (14): note of a confirmed booking.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une confirmation vous a été envoyée par SMS.'**
+  String get bookingSmsSent;
+
+  /// Booking, success (14): note of a booking the clinic must confirm (no SMS promised).
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique doit confirmer ce rendez-vous. Vous le retrouverez dans vos rendez-vous.'**
+  String get bookingPendingNote;
+
+  /// Booking, success (14): opens the questionnaire (15).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplir le questionnaire maintenant'**
+  String get bookingFillQuestionnaire;
+
+  /// Booking, success (14): back to the home.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get bookingLater;
+
+  /// Booking, success (14): back to the home when the questionnaire is already sent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à l\'accueil'**
+  String get bookingBackHome;
+
+  /// Booking, recap (14): the pet may not book online (pet_not_bookable).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet animal ne peut plus prendre rendez-vous en ligne.'**
+  String get bookingErrorPetNotBookable;
+
+  /// Booking recap (14) and reschedule: online booking is closed for this motif (booking_not_open).
+  ///
+  /// In fr, this message translates to:
+  /// **'La réservation en ligne n\'est pas ouverte pour ce motif. Contactez la clinique.'**
+  String get bookingErrorNotOpen;
+
+  /// Booking, recap (14): a choice of the booking is gone (404 not_found).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce choix n\'est plus disponible. Recommencez la réservation.'**
+  String get bookingErrorNotFound;
+
+  /// Appointments (4): accessible name of the round plus button that opens the booking.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau rendez-vous'**
+  String get appointmentsNew;
+
+  /// Appointments (4): the tab of the appointments to come.
+  ///
+  /// In fr, this message translates to:
+  /// **'À venir'**
+  String get appointmentsUpcoming;
+
+  /// Appointments (4): the tab of the other appointments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passés'**
+  String get appointmentsPast;
+
+  /// Appointments (4): pill of a confirmed appointment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmé'**
+  String get appointmentsStatusConfirmed;
+
+  /// Appointments (4): pill of an appointment the clinic must confirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get appointmentsStatusPending;
+
+  /// Appointments (4): pill of an appointment the owner cancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulé'**
+  String get appointmentsStatusCancelled;
+
+  /// Appointments (4): pill of an appointment the clinic cancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulé par la clinique'**
+  String get appointmentsStatusCancelledByClinic;
+
+  /// Appointments (4): pill of a request the clinic declined.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusé'**
+  String get appointmentsStatusDeclined;
+
+  /// Appointments (4): pill of an appointment that took place.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminé'**
+  String get appointmentsStatusCompleted;
+
+  /// Appointments (4): pill of an appointment the owner missed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non honoré'**
+  String get appointmentsStatusNoShow;
+
+  /// Appointments (4): the first line of a card.
+  ///
+  /// In fr, this message translates to:
+  /// **'{time} · {pet}'**
+  String appointmentsTimePet(String time, String pet);
+
+  /// Appointments (4): the third line of an appointment the clinic must confirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de confirmation par la clinique'**
+  String get appointmentsPendingLine;
+
+  /// Appointments (4): title of the questionnaire banner of a card.
+  ///
+  /// In fr, this message translates to:
+  /// **'Questionnaire à compléter'**
+  String get appointmentsQuestionnaireTitle;
+
+  /// Appointments (4): line of the questionnaire banner of a card.
+  ///
+  /// In fr, this message translates to:
+  /// **'2 min · motif, symptômes, traitements en cours'**
+  String get appointmentsQuestionnaireBody;
+
+  /// Appointments (4): moves an appointment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reporter'**
+  String get appointmentsReschedule;
+
+  /// Appointments (4): opens the cancellation sheet (16).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get appointmentsCancel;
+
+  /// Appointments (4) and booking success (14): until when the clinic lets the owner cancel online.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulation en ligne possible jusqu\'au {date} à {time}.'**
+  String appointmentsCancellableUntil(String date, String time);
+
+  /// Appointments (4) and cancellation (16): the online cancellation window is over.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le délai d\'annulation en ligne est dépassé : contactez la clinique.'**
+  String get appointmentsWindowClosed;
+
+  /// Appointments (4), booking (14), reschedule: shares the .ics of the appointment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter à mon calendrier'**
+  String get appointmentsAddToCalendar;
+
+  /// Snack bar when the .ics could not be read or shared.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ajouter ce rendez-vous à votre calendrier.'**
+  String get appointmentsCalendarError;
+
+  /// Appointments (4): empty upcoming tab.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun rendez-vous à venir'**
+  String get appointmentsEmptyUpcomingTitle;
+
+  /// Appointments (4): the button of the empty upcoming tab.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre rendez-vous'**
+  String get appointmentsBook;
+
+  /// Appointments (4): empty past tab.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun rendez-vous passé'**
+  String get appointmentsEmptyPastTitle;
+
+  /// Appointments (4): the list answered 404 (the link with the clinic is gone).
+  ///
+  /// In fr, this message translates to:
+  /// **'Clinique indisponible'**
+  String get appointmentsClinicGoneTitle;
+
+  /// Appointments (4): the list answered 404 (the link with the clinic is gone).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès à cette clinique n\'est plus actif.'**
+  String get appointmentsClinicGoneBody;
+
+  /// Appointments (4): the next page failed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger la suite.'**
+  String get appointmentsMoreError;
+
+  /// Cancellation (16) and reschedule success: back to the appointments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à mes rendez-vous'**
+  String get appointmentsBackToList;
+
+  /// Cancellation sheet (16): title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler ce rendez-vous ?'**
+  String get appointmentCancelTitle;
+
+  /// Cancellation sheet (16): the appointment.
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · {pet} — {motif}'**
+  String appointmentCancelSubtitle(String date, String pet, String motif);
+
+  /// Cancellation sheet (16): an appointment without pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} — {motif}'**
+  String appointmentCancelSubtitleNoPet(String date, String motif);
+
+  /// Cancellation sheet (16): warning when the motif covers a vaccination of the pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le rappel {label} de {pet} est à faire avant le {date}. Reporter évite un retard de vaccination.'**
+  String appointmentCancelCareVaccination(
+    String label,
+    String pet,
+    String date,
+  );
+
+  /// Cancellation sheet (16): warning when the motif covers a deworming of the pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le traitement {label} de {pet} est à faire avant le {date}. Reporter évite un retard de vermifugation.'**
+  String appointmentCancelCareInternalParasite(
+    String label,
+    String pet,
+    String date,
+  );
+
+  /// Cancellation sheet (16): warning when the motif covers a flea and tick treatment of the pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le traitement {label} de {pet} est à faire avant le {date}. Reporter évite un retard de traitement antiparasitaire.'**
+  String appointmentCancelCareExternalParasite(
+    String label,
+    String pet,
+    String date,
+  );
+
+  /// Cancellation sheet (16): warning when the motif covers another care item of the pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le soin {label} de {pet} est à faire avant le {date}. Reporter évite un retard de soin.'**
+  String appointmentCancelCareOther(String label, String pet, String date);
+
+  /// Cancellation sheet (16): legend of the reasons.
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison de l\'annulation'**
+  String get appointmentCancelReasonLegend;
+
+  /// Cancellation sheet (16): reason: the owner cannot come.
+  ///
+  /// In fr, this message translates to:
+  /// **'Empêchement'**
+  String get appointmentCancelReasonUnavailable;
+
+  /// Cancellation sheet (16): reason: no longer needed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus nécessaire'**
+  String get appointmentCancelReasonNoLongerNeeded;
+
+  /// Cancellation sheet (16): reason: seen by another vet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vu ailleurs'**
+  String get appointmentCancelReasonSeenElsewhere;
+
+  /// Cancellation sheet (16): reason: another one.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get appointmentCancelReasonOther;
+
+  /// Cancellation sheet (16): cancels the appointment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler le rendez-vous'**
+  String get appointmentCancelConfirm;
+
+  /// Cancellation sheet (16): moves the appointment instead.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reporter plutôt'**
+  String get appointmentCancelReschedule;
+
+  /// Cancellation sheet (16): closes the sheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder mon rendez-vous'**
+  String get appointmentCancelKeep;
+
+  /// Cancellation sheet (16): title once cancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous annulé'**
+  String get appointmentCancelDoneTitle;
+
+  /// Cancellation sheet (16): body once cancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique a été prévenue.'**
+  String get appointmentCancelDoneBody;
+
+  /// Cancellation sheet (16): added to the body when the appointment was confirmed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une confirmation vous est envoyée par SMS.'**
+  String get appointmentCancelDoneSms;
+
+  /// Cancellation (16) and reschedule: the server refused the change (appointment_not_modifiable).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce rendez-vous ne peut plus être modifié.'**
+  String get appointmentCancelNotModifiable;
+
+  /// Reschedule: the appointment and its current slot.
+  ///
+  /// In fr, this message translates to:
+  /// **'{pet} · {motif} · actuellement {date}'**
+  String rescheduleSubtitle(String pet, String motif, String date);
+
+  /// Reschedule: an appointment without pet and its current slot.
+  ///
+  /// In fr, this message translates to:
+  /// **'{motif} · actuellement {date}'**
+  String rescheduleSubtitleNoPet(String motif, String date);
+
+  /// Reschedule: label of the sticky bar.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau créneau'**
+  String get rescheduleSlotLabel;
+
+  /// Reschedule: moves the appointment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer'**
+  String get rescheduleConfirm;
+
+  /// Reschedule: success title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous reporté'**
+  String get rescheduleDoneTitle;
+
+  /// Reschedule: the appointment may not be moved online (status, booked by the clinic, no motif, window over).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce rendez-vous ne peut pas être reporté en ligne.'**
+  String get rescheduleNotAllowed;
+
+  /// Reschedule: the appointment is gone (404).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous introuvable'**
+  String get rescheduleNotFoundTitle;
+
+  /// Booking, pet step (12): error of the new pet name field when it is too long.
+  ///
+  /// In fr, this message translates to:
+  /// **'{max} caractères au plus.'**
+  String bookingNewPetNameTooLong(int max);
+
+  /// Cancellation (16) and reschedule: the appointment is gone (404).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce rendez-vous n\'est plus disponible.'**
+  String get appointmentGone;
+
+  /// Reschedule success: note when the appointment still waits for the clinic's confirmation.
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique doit confirmer le nouveau créneau.'**
+  String get rescheduleStillPending;
 }
 
 class _AppLocalizationsDelegate

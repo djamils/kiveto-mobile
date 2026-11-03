@@ -45,6 +45,15 @@ final class PortalMeRepository implements MeRepository {
     clinicId: ClinicId(view.clinicId),
     name: view.name,
     city: view.city,
+    phone: view.phone,
+    address: switch (view.address?.clinicAddressView) {
+      final api.ClinicAddressView address => ClinicAddress(
+        line: address.line,
+        postalCode: address.postalCode,
+        city: address.city,
+      ),
+      null => null,
+    },
     timezone: view.timezone,
     linkStatus: switch (view.linkStatus) {
       api.ClinicLinkViewLinkStatusModel.confirmed => LinkStatus.confirmed,

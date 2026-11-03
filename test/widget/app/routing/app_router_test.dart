@@ -14,6 +14,8 @@ import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart';
+import 'package:kiveto_mobile/features/scheduling/scheduling.dart';
+import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -137,7 +139,7 @@ void main() {
   });
 
   test('the paths of the routes with ids', () {
-    expect(AppRoutes.cancelAppointment('a'), '/appointments/a/cancel');
+    expect(AppRoutes.questionnaire('a'), '/appointments/a/questionnaire');
     expect(AppRoutes.reschedule('a'), '/appointments/a/reschedule');
     // An id is one encoded path segment.
     expect(AppRoutes.pet('a/b c'), '/pets/a%2Fb%20c');
@@ -366,7 +368,7 @@ void main() {
       expect(_location(container), AppRoutes.pets);
     });
 
-    testWidgets('a full-screen flow reached directly: back goes home', (
+    testWidgets('the booking reached directly: back (and close) goes home', (
       tester,
     ) async {
       final container = await pumpKivetoApp(
@@ -374,13 +376,63 @@ void main() {
         session: await memorySession(pair('A')),
         initialLocation: AppRoutes.bookingPet,
       );
+      expect(find.byType(BookingPetPage), findsOneWidget);
       expect(find.text('Pour quel animal ?'), findsOneWidget);
       expect(find.text('Accueil'), findsNothing);
 
-      await tester.tap(find.byType(KivetoIconButton));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is KivetoIconButton &&
+              widget.glyph == LucideGlyph.chevronLeft,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(_location(container), AppRoutes.home);
+
+      container.read(routerProvider).go(AppRoutes.bookingConfirm);
+      await tester.pumpAndSettle();
+      expect(find.byType(BookingConfirmPage), findsOneWidget);
+      await tester.tap(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is KivetoIconButton && widget.glyph == LucideGlyph.x,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(_location(container), AppRoutes.home);
+    });
+
+    testWidgets('the scheduling routes build their pages', (tester) async {
+      final container = await pumpKivetoApp(
+        tester,
+        session: await memorySession(pair('A')),
+      );
+      final router = container.read(routerProvider);
+      for (final (path, page) in [
+        (AppRoutes.appointments, AppointmentsPage),
+        (AppRoutes.bookingMotif, BookingMotifPage),
+        (AppRoutes.bookingSlot, BookingSlotPage),
+        (AppRoutes.bookingConfirm, BookingConfirmPage),
+        (AppRoutes.reschedule('a'), ReschedulePage),
+      ]) {
+        router.go(path);
+        await tester.pumpAndSettle();
+        expect(find.byType(page), findsOneWidget, reason: path);
+      }
+
+      // The reschedule reached directly: back shows the Rendez-vous tab.
+      await tester.tap(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is KivetoIconButton &&
+              widget.glyph == LucideGlyph.chevronLeft,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(_location(container), AppRoutes.appointments);
+      expect(find.byType(AppointmentsPage), findsOneWidget);
     });
 
     testWidgets('the badge and initials seams; no badge on Documents', (
@@ -478,14 +530,8 @@ void main() {
       );
       final router = container.read(routerProvider);
       for (final (path, title) in [
-        (AppRoutes.appointments, 'Rendez-vous'),
         (AppRoutes.questionnaire('a'), 'Avant la consultation'),
-        (AppRoutes.cancelAppointment('a'), 'Annuler le rendez-vous'),
-        (AppRoutes.reschedule('a'), 'Reporter le rendez-vous'),
         (AppRoutes.prescriptionRenewal('p'), 'Demander un renouvellement'),
-        (AppRoutes.bookingMotif, 'Quel est le motif ?'),
-        (AppRoutes.bookingSlot, 'Choisissez un créneau'),
-        (AppRoutes.bookingConfirm, 'Vérifiez et confirmez'),
         (AppRoutes.clinicListing('l'), 'Fiche clinique'),
       ]) {
         router.go(path);

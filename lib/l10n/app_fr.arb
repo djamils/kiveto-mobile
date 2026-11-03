@@ -81,10 +81,6 @@
   "@screenQuestionnaireTitle": {
     "description": "Title of the pre-consultation questionnaire (15)."
   },
-  "screenCancelAppointmentTitle": "Annuler le rendez-vous",
-  "@screenCancelAppointmentTitle": {
-    "description": "Title of the appointment cancellation screen (16)."
-  },
   "screenRescheduleTitle": "Reporter le rendez-vous",
   "@screenRescheduleTitle": {
     "description": "Title of the reschedule screen (the slot picker of 3, reused)."
@@ -1306,5 +1302,629 @@
         "example": "Pistache"
       }
     }
+  },
+
+  "bookingStepLabel": "Étape {step} sur 4",
+  "@bookingStepLabel": {
+    "description": "Booking wizard (12, 13, 3, 14): the step counter of the header.",
+    "placeholders": {
+      "step": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "bookingPetLabel": "Animal",
+  "@bookingPetLabel": {
+    "description": "Booking wizard: the pet choice (12, accessible name of the group) and its row of the recap (14)."
+  },
+  "bookingClinicSwitcherLabel": "Changer de clinique, actuellement {name}",
+  "@bookingClinicSwitcherLabel": {
+    "description": "Booking, pet step (12): accessible name of the clinic chip that opens the clinic switcher.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Paris"
+      }
+    }
+  },
+  "bookingNewPet": "Un autre animal",
+  "@bookingNewPet": {
+    "description": "Booking, pet step (12): the dashed card that opens the new pet form."
+  },
+  "bookingNewPetName": "Nom de l'animal",
+  "@bookingNewPetName": {
+    "description": "Booking, pet step (12): label of the new pet name field."
+  },
+  "bookingNewPetSpecies": "Espèce",
+  "@bookingNewPetSpecies": {
+    "description": "Booking, pet step (12): accessible name of the species chips of a new pet."
+  },
+  "bookingPetFootnote": "Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.",
+  "@bookingPetFootnote": {
+    "description": "Booking, pet step (12): the footnote under the pets (the API creates a new pet with the booking)."
+  },
+  "bookingPetBarLabel": "Rendez-vous pour",
+  "@bookingPetBarLabel": {
+    "description": "Booking, pet step (12): label of the sticky bar (its value is the pet name)."
+  },
+  "bookingNewPetBarValue": "Nouvel animal",
+  "@bookingNewPetBarValue": {
+    "description": "Booking, pet step (12): value of the sticky bar while the new pet has no name yet."
+  },
+
+  "bookingMotifLabel": "Motif",
+  "@bookingMotifLabel": {
+    "description": "Booking: the motif choice (13, accessible name of the group and label of the sticky bar) and its row of the recap (14)."
+  },
+  "bookingMotifSubtitle": "Pour {pet} · {clinic}",
+  "@bookingMotifSubtitle": {
+    "description": "Booking, motif step (13): the line under the title.",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      },
+      "clinic": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Paris"
+      }
+    }
+  },
+  "bookingMotifSuggested": "Rappel à faire",
+  "@bookingMotifSuggested": {
+    "description": "Booking, motif step (13): the amber pill of a motif the server suggests for the pet."
+  },
+  "bookingMotifDuration": "{minutes} min",
+  "@bookingMotifDuration": {
+    "description": "Booking: the length of a motif (« 30 min »).",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "bookingMotifEmpty": "Choisissez un motif",
+  "@bookingMotifEmpty": {
+    "description": "Booking, motif step (13): value of the sticky bar before a motif is chosen."
+  },
+  "bookingMotifsEmptyTitle": "Aucun motif en ligne",
+  "@bookingMotifsEmptyTitle": {
+    "description": "Booking, motif step (13): title of the empty state when the clinic opens no motif online."
+  },
+  "bookingMotifsEmptyBody": "Cette clinique ne propose pas de rendez-vous en ligne pour le moment.",
+  "@bookingMotifsEmptyBody": {
+    "description": "Booking, motif step (13): body of the empty state when the clinic opens no motif online."
+  },
+  "bookingNotOpenTitle": "Réservation en ligne indisponible",
+  "@bookingNotOpenTitle": {
+    "description": "Booking, motif step (13): title of the error when the clinic closed online booking (422 booking_not_open)."
+  },
+  "bookingNotOpenBody": "Cette clinique ne prend pas de rendez-vous en ligne pour le moment. Contactez-la directement.",
+  "@bookingNotOpenBody": {
+    "description": "Booking, motif step (13): body of the error when the clinic closed online booking (422 booking_not_open)."
+  },
+  "bookingEmergency": "Urgence ? Ne réservez pas en ligne, appelez la clinique.",
+  "@bookingEmergency": {
+    "description": "Booking, motif step (13): the emergency callout, next to the clinic's call button."
+  },
+  "bookingEmergencyNoPhone": "Urgence ? Ne réservez pas en ligne, appelez directement la clinique.",
+  "@bookingEmergencyNoPhone": {
+    "description": "Booking, motif step (13): the emergency callout when the clinic gave no phone number."
+  },
+  "bookingCall": "Appeler",
+  "@bookingCall": {
+    "description": "Booking, motif step (13): calls the clinic's phone number."
+  },
+  "bookingCallError": "Impossible de lancer l'appel.",
+  "@bookingCallError": {
+    "description": "Booking, motif step (13): snack bar when no app could take the call."
+  },
+
+  "bookingSlotLabel": "Votre créneau",
+  "@bookingSlotLabel": {
+    "description": "Booking, slot step (3): label of the sticky bar."
+  },
+  "bookingSlotEmpty": "Choisissez un créneau",
+  "@bookingSlotEmpty": {
+    "description": "Booking slot step (3) and reschedule: value of the sticky bar before a slot is chosen."
+  },
+  "bookingDateAtTime": "{date} à {time}",
+  "@bookingDateAtTime": {
+    "description": "A day and a time (« Lun. 9 nov. à 10:00 », « Lundi 9 novembre à 10:00 »).",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Lun. 9 nov."
+      },
+      "time": {
+        "type": "String",
+        "example": "10:00"
+      }
+    }
+  },
+  "bookingVetLabel": "Vétérinaire",
+  "@bookingVetLabel": {
+    "description": "Booking: the practitioner chips (3, accessible name of the group), their label without a name, and the row of the recap (14)."
+  },
+  "bookingPreviousWeek": "Semaine précédente",
+  "@bookingPreviousWeek": {
+    "description": "Slot picker (3, reschedule): the previous week button."
+  },
+  "bookingNextWeek": "Semaine suivante",
+  "@bookingNextWeek": {
+    "description": "Slot picker (3, reschedule): the next week button."
+  },
+  "bookingMorning": "Matin",
+  "@bookingMorning": {
+    "description": "Slot picker (3, reschedule): the slots before noon."
+  },
+  "bookingAfternoon": "Après-midi",
+  "@bookingAfternoon": {
+    "description": "Slot picker (3, reschedule): the slots from noon."
+  },
+  "bookingNoSlotDay": "Aucun créneau disponible ce jour-là.",
+  "@bookingNoSlotDay": {
+    "description": "Slot picker (3, reschedule): an open day without a bookable slot."
+  },
+  "bookingNoSlotWeek": "Aucun créneau cette semaine.",
+  "@bookingNoSlotWeek": {
+    "description": "Slot picker (3, reschedule): a week without a bookable slot."
+  },
+  "bookingNoPractitioner": "Aucun vétérinaire ne prend de rendez-vous en ligne pour ce motif.",
+  "@bookingNoPractitioner": {
+    "description": "Slot picker (3, reschedule): the motif has no practitioner bookable online."
+  },
+  "bookingSlotFootnote": "Seuls les créneaux ouverts à la réservation en ligne par la clinique sont affichés.",
+  "@bookingSlotFootnote": {
+    "description": "Slot picker (3, reschedule): the footnote under the slots."
+  },
+  "bookingSlotTaken": "Ce créneau vient d'être pris. Choisissez-en un autre.",
+  "@bookingSlotTaken": {
+    "description": "Slot picker (3, reschedule): warning after another booking took the chosen slot (409 slot_taken)."
+  },
+  "bookingSlotTakenLabel": "{time}, déjà pris",
+  "@bookingSlotTakenLabel": {
+    "description": "Slot picker (3, reschedule): accessible name of a slot struck through (taken).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "10:00"
+      }
+    }
+  },
+
+  "bookingRecapDate": "Date",
+  "@bookingRecapDate": {
+    "description": "Booking, recap (14): label of the date row."
+  },
+  "bookingRecapClinic": "Clinique",
+  "@bookingRecapClinic": {
+    "description": "Booking, recap (14): label of the clinic row."
+  },
+  "bookingEdit": "Modifier",
+  "@bookingEdit": {
+    "description": "Booking, recap (14): goes back to a step to change it."
+  },
+  "bookingNewPetSecondary": "Nouvel animal · {species}",
+  "@bookingNewPetSecondary": {
+    "description": "Booking, recap (14): the line under the name of a new pet.",
+    "placeholders": {
+      "species": {
+        "type": "String",
+        "example": "Chat"
+      }
+    }
+  },
+  "bookingReassuranceCancel": "Annulation et report en ligne jusqu'au délai fixé par la clinique",
+  "@bookingReassuranceCancel": {
+    "description": "Booking, recap (14): a reassurance line."
+  },
+  "bookingReassuranceQuestionnaire": "Questionnaire de 2 min avant la visite",
+  "@bookingReassuranceQuestionnaire": {
+    "description": "Booking, recap (14): a reassurance line."
+  },
+  "bookingConfirm": "Confirmer le rendez-vous",
+  "@bookingConfirm": {
+    "description": "Booking, recap (14): books the appointment."
+  },
+  "bookingConfirmedTitle": "Rendez-vous confirmé",
+  "@bookingConfirmedTitle": {
+    "description": "Booking, success (14): title when the clinic confirmed at once."
+  },
+  "bookingPendingTitle": "Demande envoyée",
+  "@bookingPendingTitle": {
+    "description": "Booking, success (14): title when the clinic must confirm (pending_clinic_confirmation)."
+  },
+  "bookingSmsSent": "Une confirmation vous a été envoyée par SMS.",
+  "@bookingSmsSent": {
+    "description": "Booking, success (14): note of a confirmed booking."
+  },
+  "bookingPendingNote": "La clinique doit confirmer ce rendez-vous. Vous le retrouverez dans vos rendez-vous.",
+  "@bookingPendingNote": {
+    "description": "Booking, success (14): note of a booking the clinic must confirm (no SMS promised)."
+  },
+  "bookingFillQuestionnaire": "Remplir le questionnaire maintenant",
+  "@bookingFillQuestionnaire": {
+    "description": "Booking, success (14): opens the questionnaire (15)."
+  },
+  "bookingLater": "Plus tard",
+  "@bookingLater": {
+    "description": "Booking, success (14): back to the home."
+  },
+  "bookingBackHome": "Retour à l'accueil",
+  "@bookingBackHome": {
+    "description": "Booking, success (14): back to the home when the questionnaire is already sent."
+  },
+  "bookingErrorPetNotBookable": "Cet animal ne peut plus prendre rendez-vous en ligne.",
+  "@bookingErrorPetNotBookable": {
+    "description": "Booking, recap (14): the pet may not book online (pet_not_bookable)."
+  },
+  "bookingErrorNotOpen": "La réservation en ligne n'est pas ouverte pour ce motif. Contactez la clinique.",
+  "@bookingErrorNotOpen": {
+    "description": "Booking recap (14) and reschedule: online booking is closed for this motif (booking_not_open)."
+  },
+  "bookingErrorNotFound": "Ce choix n'est plus disponible. Recommencez la réservation.",
+  "@bookingErrorNotFound": {
+    "description": "Booking, recap (14): a choice of the booking is gone (404 not_found)."
+  },
+
+  "appointmentsNew": "Nouveau rendez-vous",
+  "@appointmentsNew": {
+    "description": "Appointments (4): accessible name of the round plus button that opens the booking."
+  },
+  "appointmentsUpcoming": "À venir",
+  "@appointmentsUpcoming": {
+    "description": "Appointments (4): the tab of the appointments to come."
+  },
+  "appointmentsPast": "Passés",
+  "@appointmentsPast": {
+    "description": "Appointments (4): the tab of the other appointments."
+  },
+  "appointmentsStatusConfirmed": "Confirmé",
+  "@appointmentsStatusConfirmed": {
+    "description": "Appointments (4): pill of a confirmed appointment."
+  },
+  "appointmentsStatusPending": "En attente",
+  "@appointmentsStatusPending": {
+    "description": "Appointments (4): pill of an appointment the clinic must confirm."
+  },
+  "appointmentsStatusCancelled": "Annulé",
+  "@appointmentsStatusCancelled": {
+    "description": "Appointments (4): pill of an appointment the owner cancelled."
+  },
+  "appointmentsStatusCancelledByClinic": "Annulé par la clinique",
+  "@appointmentsStatusCancelledByClinic": {
+    "description": "Appointments (4): pill of an appointment the clinic cancelled."
+  },
+  "appointmentsStatusDeclined": "Refusé",
+  "@appointmentsStatusDeclined": {
+    "description": "Appointments (4): pill of a request the clinic declined."
+  },
+  "appointmentsStatusCompleted": "Terminé",
+  "@appointmentsStatusCompleted": {
+    "description": "Appointments (4): pill of an appointment that took place."
+  },
+  "appointmentsStatusNoShow": "Non honoré",
+  "@appointmentsStatusNoShow": {
+    "description": "Appointments (4): pill of an appointment the owner missed."
+  },
+  "appointmentsTimePet": "{time} · {pet}",
+  "@appointmentsTimePet": {
+    "description": "Appointments (4): the first line of a card.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "10:30"
+      },
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      }
+    }
+  },
+  "appointmentsPendingLine": "En attente de confirmation par la clinique",
+  "@appointmentsPendingLine": {
+    "description": "Appointments (4): the third line of an appointment the clinic must confirm."
+  },
+  "appointmentsQuestionnaireTitle": "Questionnaire à compléter",
+  "@appointmentsQuestionnaireTitle": {
+    "description": "Appointments (4): title of the questionnaire banner of a card."
+  },
+  "appointmentsQuestionnaireBody": "2 min · motif, symptômes, traitements en cours",
+  "@appointmentsQuestionnaireBody": {
+    "description": "Appointments (4): line of the questionnaire banner of a card."
+  },
+  "appointmentsReschedule": "Reporter",
+  "@appointmentsReschedule": {
+    "description": "Appointments (4): moves an appointment."
+  },
+  "appointmentsCancel": "Annuler",
+  "@appointmentsCancel": {
+    "description": "Appointments (4): opens the cancellation sheet (16)."
+  },
+  "appointmentsCancellableUntil": "Annulation en ligne possible jusqu'au {date} à {time}.",
+  "@appointmentsCancellableUntil": {
+    "description": "Appointments (4) and booking success (14): until when the clinic lets the owner cancel online.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "mar. 10 nov."
+      },
+      "time": {
+        "type": "String",
+        "example": "10:30"
+      }
+    }
+  },
+  "appointmentsWindowClosed": "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
+  "@appointmentsWindowClosed": {
+    "description": "Appointments (4) and cancellation (16): the online cancellation window is over."
+  },
+  "appointmentsAddToCalendar": "Ajouter à mon calendrier",
+  "@appointmentsAddToCalendar": {
+    "description": "Appointments (4), booking (14), reschedule: shares the .ics of the appointment."
+  },
+  "appointmentsCalendarError": "Impossible d'ajouter ce rendez-vous à votre calendrier.",
+  "@appointmentsCalendarError": {
+    "description": "Snack bar when the .ics could not be read or shared."
+  },
+  "appointmentsEmptyUpcomingTitle": "Aucun rendez-vous à venir",
+  "@appointmentsEmptyUpcomingTitle": {
+    "description": "Appointments (4): empty upcoming tab."
+  },
+  "appointmentsBook": "Prendre rendez-vous",
+  "@appointmentsBook": {
+    "description": "Appointments (4): the button of the empty upcoming tab."
+  },
+  "appointmentsEmptyPastTitle": "Aucun rendez-vous passé",
+  "@appointmentsEmptyPastTitle": {
+    "description": "Appointments (4): empty past tab."
+  },
+  "appointmentsClinicGoneTitle": "Clinique indisponible",
+  "@appointmentsClinicGoneTitle": {
+    "description": "Appointments (4): the list answered 404 (the link with the clinic is gone)."
+  },
+  "appointmentsClinicGoneBody": "Votre accès à cette clinique n'est plus actif.",
+  "@appointmentsClinicGoneBody": {
+    "description": "Appointments (4): the list answered 404 (the link with the clinic is gone)."
+  },
+  "appointmentsMoreError": "Impossible de charger la suite.",
+  "@appointmentsMoreError": {
+    "description": "Appointments (4): the next page failed."
+  },
+  "appointmentsBackToList": "Retour à mes rendez-vous",
+  "@appointmentsBackToList": {
+    "description": "Cancellation (16) and reschedule success: back to the appointments."
+  },
+
+  "appointmentCancelTitle": "Annuler ce rendez-vous ?",
+  "@appointmentCancelTitle": {
+    "description": "Cancellation sheet (16): title."
+  },
+  "appointmentCancelSubtitle": "{date} · {pet} — {motif}",
+  "@appointmentCancelSubtitle": {
+    "description": "Cancellation sheet (16): the appointment.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Lun. 16 nov. · 11:00"
+      },
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      },
+      "motif": {
+        "type": "String",
+        "example": "Vaccination"
+      }
+    }
+  },
+  "appointmentCancelSubtitleNoPet": "{date} — {motif}",
+  "@appointmentCancelSubtitleNoPet": {
+    "description": "Cancellation sheet (16): an appointment without pet.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Lun. 16 nov. · 11:00"
+      },
+      "motif": {
+        "type": "String",
+        "example": "Vaccination"
+      }
+    }
+  },
+  "appointmentCancelCareVaccination": "Le rappel {label} de {pet} est à faire avant le {date}. Reporter évite un retard de vaccination.",
+  "@appointmentCancelCareVaccination": {
+    "description": "Cancellation sheet (16): warning when the motif covers a vaccination of the pet.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "CHPL"
+      },
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      },
+      "date": {
+        "type": "String",
+        "example": "5 sept. 2027"
+      }
+    }
+  },
+  "appointmentCancelCareInternalParasite": "Le traitement {label} de {pet} est à faire avant le {date}. Reporter évite un retard de vermifugation.",
+  "@appointmentCancelCareInternalParasite": {
+    "description": "Cancellation sheet (16): warning when the motif covers a deworming of the pet.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Vermifuge"
+      },
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      },
+      "date": {
+        "type": "String",
+        "example": "5 sept. 2027"
+      }
+    }
+  },
+  "appointmentCancelCareExternalParasite": "Le traitement {label} de {pet} est à faire avant le {date}. Reporter évite un retard de traitement antiparasitaire.",
+  "@appointmentCancelCareExternalParasite": {
+    "description": "Cancellation sheet (16): warning when the motif covers a flea and tick treatment of the pet.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Antiparasitaire"
+      },
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      },
+      "date": {
+        "type": "String",
+        "example": "5 sept. 2027"
+      }
+    }
+  },
+  "appointmentCancelCareOther": "Le soin {label} de {pet} est à faire avant le {date}. Reporter évite un retard de soin.",
+  "@appointmentCancelCareOther": {
+    "description": "Cancellation sheet (16): warning when the motif covers another care item of the pet.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Détartrage"
+      },
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      },
+      "date": {
+        "type": "String",
+        "example": "5 sept. 2027"
+      }
+    }
+  },
+  "appointmentCancelReasonLegend": "Raison de l'annulation",
+  "@appointmentCancelReasonLegend": {
+    "description": "Cancellation sheet (16): legend of the reasons."
+  },
+  "appointmentCancelReasonUnavailable": "Empêchement",
+  "@appointmentCancelReasonUnavailable": {
+    "description": "Cancellation sheet (16): reason: the owner cannot come."
+  },
+  "appointmentCancelReasonNoLongerNeeded": "Plus nécessaire",
+  "@appointmentCancelReasonNoLongerNeeded": {
+    "description": "Cancellation sheet (16): reason: no longer needed."
+  },
+  "appointmentCancelReasonSeenElsewhere": "Vu ailleurs",
+  "@appointmentCancelReasonSeenElsewhere": {
+    "description": "Cancellation sheet (16): reason: seen by another vet."
+  },
+  "appointmentCancelReasonOther": "Autre",
+  "@appointmentCancelReasonOther": {
+    "description": "Cancellation sheet (16): reason: another one."
+  },
+  "appointmentCancelConfirm": "Annuler le rendez-vous",
+  "@appointmentCancelConfirm": {
+    "description": "Cancellation sheet (16): cancels the appointment."
+  },
+  "appointmentCancelReschedule": "Reporter plutôt",
+  "@appointmentCancelReschedule": {
+    "description": "Cancellation sheet (16): moves the appointment instead."
+  },
+  "appointmentCancelKeep": "Garder mon rendez-vous",
+  "@appointmentCancelKeep": {
+    "description": "Cancellation sheet (16): closes the sheet."
+  },
+  "appointmentCancelDoneTitle": "Rendez-vous annulé",
+  "@appointmentCancelDoneTitle": {
+    "description": "Cancellation sheet (16): title once cancelled."
+  },
+  "appointmentCancelDoneBody": "La clinique a été prévenue.",
+  "@appointmentCancelDoneBody": {
+    "description": "Cancellation sheet (16): body once cancelled."
+  },
+  "appointmentCancelDoneSms": "Une confirmation vous est envoyée par SMS.",
+  "@appointmentCancelDoneSms": {
+    "description": "Cancellation sheet (16): added to the body when the appointment was confirmed."
+  },
+  "appointmentCancelNotModifiable": "Ce rendez-vous ne peut plus être modifié.",
+  "@appointmentCancelNotModifiable": {
+    "description": "Cancellation (16) and reschedule: the server refused the change (appointment_not_modifiable)."
+  },
+
+  "rescheduleSubtitle": "{pet} · {motif} · actuellement {date}",
+  "@rescheduleSubtitle": {
+    "description": "Reschedule: the appointment and its current slot.",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Oslo"
+      },
+      "motif": {
+        "type": "String",
+        "example": "Consultation"
+      },
+      "date": {
+        "type": "String",
+        "example": "lun. 9 nov. à 10:00"
+      }
+    }
+  },
+  "rescheduleSubtitleNoPet": "{motif} · actuellement {date}",
+  "@rescheduleSubtitleNoPet": {
+    "description": "Reschedule: an appointment without pet and its current slot.",
+    "placeholders": {
+      "motif": {
+        "type": "String",
+        "example": "Consultation"
+      },
+      "date": {
+        "type": "String",
+        "example": "lun. 9 nov. à 10:00"
+      }
+    }
+  },
+  "rescheduleSlotLabel": "Nouveau créneau",
+  "@rescheduleSlotLabel": {
+    "description": "Reschedule: label of the sticky bar."
+  },
+  "rescheduleConfirm": "Confirmer",
+  "@rescheduleConfirm": {
+    "description": "Reschedule: moves the appointment."
+  },
+  "rescheduleDoneTitle": "Rendez-vous reporté",
+  "@rescheduleDoneTitle": {
+    "description": "Reschedule: success title."
+  },
+  "rescheduleNotAllowed": "Ce rendez-vous ne peut pas être reporté en ligne.",
+  "@rescheduleNotAllowed": {
+    "description": "Reschedule: the appointment may not be moved online (status, booked by the clinic, no motif, window over)."
+  },
+  "rescheduleNotFoundTitle": "Rendez-vous introuvable",
+  "@rescheduleNotFoundTitle": {
+    "description": "Reschedule: the appointment is gone (404)."
+  },
+
+  "bookingNewPetNameTooLong": "{max} caractères au plus.",
+  "@bookingNewPetNameTooLong": {
+    "description": "Booking, pet step (12): error of the new pet name field when it is too long.",
+    "placeholders": {
+      "max": {
+        "type": "int",
+        "example": "80"
+      }
+    }
+  },
+  "appointmentGone": "Ce rendez-vous n'est plus disponible.",
+  "@appointmentGone": {
+    "description": "Cancellation (16) and reschedule: the appointment is gone (404)."
+  },
+  "rescheduleStillPending": "La clinique doit confirmer le nouveau créneau.",
+  "@rescheduleStillPending": {
+    "description": "Reschedule success: note when the appointment still waits for the clinic's confirmation."
   }
 }

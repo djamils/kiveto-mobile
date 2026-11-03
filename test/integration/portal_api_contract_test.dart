@@ -7,6 +7,7 @@
 // errors as typed values, and the request lines the client sends.
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -78,6 +79,12 @@ void main() {
         expect(paris.petNames, ['Oslo']);
         expect(paris.tags, isEmpty);
         expect(paris.unreadDocuments, 1);
+        expect(paris.phone, '+33142551890');
+        final address = paris.address!.clinicAddressView!;
+        expect(address.line, '18 rue des Abbesses');
+        expect(address.postalCode, '75018');
+        expect(address.city, 'Paris');
+        expect(me.clinics.last.phone, '+33478920145');
         final linkedAt = paris.linkedAt!;
         expect(linkedAt.isUtc, isTrue);
         expect(linkedAt.timeZoneOffset, Duration.zero);
@@ -429,6 +436,545 @@ void main() {
         suggestion.matchedOn,
         LinkSuggestionsLinkSuggestionViewMatchedOnModel.phone,
       );
+    });
+  });
+
+  group('the scheduling captures (slice 4)', () {
+    const base = '$_api/clinics/$_paris';
+    const consultation = '01a19a10-d467-7bc2-9344-790c64b6ab03';
+    const dupont = '01a19a0e-23cd-70de-a551-46681e052884';
+    const booked = '01a1a297-4a0a-7093-83f7-14de2798613e';
+    const availability =
+        '$base/booking/availability?motifId=$consultation'
+        '&practitionerId=$dupont';
+
+    test('motifs, practitioners, availability windows; the 422 of a past '
+        'or too long window are typed values', () async {
+      final scheduling = SchedulingApi(server);
+      backend
+        ..on(
+          'GET',
+          '$base/booking/motifs?petId=$_oslo',
+          PortalReply.fixture('clinics.paris.booking.motifs.get.200.json'),
+        )
+        ..on(
+          'GET',
+          '$_api/clinics/$_lyon/booking/motifs',
+          PortalReply.fixture('clinics.lyon.booking.motifs.get.200.json'),
+        )
+        ..on(
+          'GET',
+          '$base/booking/practitioners?motifId=$consultation',
+          PortalReply.fixture(
+            'clinics.paris.booking.practitioners.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$availability&from=2026-11-03&to=2026-11-16',
+          PortalReply.fixture(
+            'clinics.paris.booking.availability.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$availability&from=2026-11-17&to=2026-11-30',
+          PortalReply.fixture(
+            'clinics.paris.booking.availability.next.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$availability&from=2026-11-02&to=2026-11-15',
+          PortalReply.fixture(
+            'clinics.paris.booking.availability.past.get.422.json',
+            status: 422,
+          ),
+        )
+        ..on(
+          'GET',
+          '$availability&from=2026-11-03&to=2026-11-30',
+          PortalReply.fixture(
+            'clinics.paris.booking.availability.too-long.get.422.json',
+            status: 422,
+          ),
+        );
+
+      final paris = switch (_value(
+        await scheduling.listMotifs(clinicId: _paris, petId: _oslo),
+      )) {
+        ListMotifsResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final lyon = switch (_value(
+        await scheduling.listMotifs(clinicId: _lyon),
+      )) {
+        ListMotifsResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final practitioners = switch (_value(
+        await scheduling.listPractitioners(
+          clinicId: _paris,
+          motifId: consultation,
+        ),
+      )) {
+        ListPractitionersResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      Future<GetAvailabilityResponse> window(Date from, Date to) async {
+        final result = await scheduling.getAvailability(
+          clinicId: _paris,
+          motifId: consultation,
+          practitionerId: dupont,
+          from: from,
+          to: to,
+        );
+        // A local: the return context would infer a FutureOr.
+        final value = _value(result);
+        return value;
+      }
+
+      final first = switch (await window(
+        Date(2026, 11, 3),
+        Date(2026, 11, 16),
+      )) {
+        GetAvailabilityResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final next = switch (await window(
+        Date(2026, 11, 17),
+        Date(2026, 11, 30),
+      )) {
+        GetAvailabilityResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+
+      expect(paris.map((motif) => motif.label), [
+        'Consultation',
+        'Vaccination',
+        'Contrôle / suivi',
+      ]);
+      expect(paris.first.suggestionReason, isNull);
+      expect(lyon, hasLength(3));
+      expect(practitioners.first.displayName, 'Dr Marc Dupont');
+      expect(first.days, hasLength(14));
+      expect(first.days.first.date, Date(2026, 11, 3));
+      expect(first.days[5].open, isFalse);
+      expect(
+        first.days[2].slots.single.startAt.toTimeZonedIso8601String(),
+        '2026-11-05T16:30:00+01:00',
+      );
+      expect(next.days.first.date, Date(2026, 11, 17));
+      expect(
+        await window(Date(2026, 11, 2), Date(2026, 11, 15)),
+        isA<GetAvailabilityResponse422>(),
+      );
+      expect(
+        await window(Date(2026, 11, 3), Date(2026, 11, 30)),
+        isA<GetAvailabilityResponse422>(),
+      );
+    });
+
+    test('the bookings: known pet, replay, pending, new pet; slot taken, key '
+        'reused, new pet refused', () async {
+      final scheduling = SchedulingApi(server);
+      Future<BookAppointmentResponse> book(String fixture, int status) async {
+        backend.on(
+          'POST',
+          '$base/appointments',
+          PortalReply.fixture(fixture, status: status),
+        );
+        final result = await scheduling.bookAppointment(
+          clinicId: _paris,
+          idempotencyKey: 'key',
+          body: AppointmentBooking(
+            petId: _oslo,
+            motifId: consultation,
+            practitionerId: dupont,
+            startAt: OffsetDateTime.parse('2026-11-09T10:00:00+01:00'),
+          ),
+        );
+        // A local: the return context would infer a FutureOr.
+        final value = _value(result);
+        return value;
+      }
+
+      final created = switch (await book(
+        'clinics.paris.appointments.post.201.json',
+        201,
+      )) {
+        BookAppointmentResponse201(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final replay = switch (await book(
+        'clinics.paris.appointments.replay.post.201.json',
+        201,
+      )) {
+        BookAppointmentResponse201(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final pending = switch (await book(
+        'clinics.paris.appointments.pending.post.201.json',
+        201,
+      )) {
+        BookAppointmentResponse201(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+
+      expect(created.id, booked);
+      expect(
+        created.startAt.toTimeZonedIso8601String(),
+        '2026-11-09T10:00:00+01:00',
+      );
+      expect(
+        created.status,
+        AppointmentBookingAppointmentViewStatusModel.confirmed,
+      );
+      expect(replay.id, created.id);
+      expect(
+        pending.status,
+        AppointmentBookingAppointmentViewStatusModel.pendingClinicConfirmation,
+      );
+      expect(
+        await book('clinics.paris.appointments.slot-taken.post.409.json', 409),
+        isA<BookAppointmentResponse409>(),
+      );
+      // A problem body without violations does not decode as the typed
+      // 422 (its schema requires them): the app reads it on the strict
+      // chain, where it is a TonikError carrying the response.
+      backend.on(
+        'POST',
+        '$base/appointments',
+        PortalReply.fixture(
+          'clinics.paris.appointments.key-reused.post.422.json',
+          status: 422,
+        ),
+      );
+      final reused =
+          await SchedulingApi(
+            portalServer(backend, interceptors: [_successOnly()]),
+          ).bookAppointment(
+            clinicId: _paris,
+            idempotencyKey: 'key',
+            body: AppointmentBooking(
+              petId: _oslo,
+              motifId: consultation,
+              practitionerId: dupont,
+              startAt: OffsetDateTime.parse('2026-11-09T10:00:00+01:00'),
+            ),
+          );
+      expect(switch (reused) {
+        TonikError(:final DioException error) => error.response?.statusCode,
+        _ => null,
+      }, 422);
+
+      for (final (fixture, status) in [
+        ('clinics.paris.appointments.with-new-pet.post.201.json', 201),
+        (
+          'clinics.paris.appointments.with-new-pet.validation.post.422.json',
+          422,
+        ),
+      ]) {
+        backend.on(
+          'POST',
+          '$base/appointments/with-new-pet',
+          PortalReply.fixture(fixture, status: status),
+        );
+        final result = _value(
+          await scheduling.bookAppointmentWithNewPet(
+            clinicId: _paris,
+            idempotencyKey: 'key',
+            body: AppointmentBookingWithNewPet(
+              newPet: const NewPet(
+                name: 'Plume',
+                species: NewPetSpeciesModel.cat,
+              ),
+              motifId: consultation,
+              practitionerId: dupont,
+              startAt: OffsetDateTime.parse('2026-11-16T10:00:00+01:00'),
+            ),
+          ),
+        );
+        switch (result) {
+          case BookAppointmentWithNewPetResponse201(:final body):
+            expect(body.pet?.petReferenceView?.name, 'Plume');
+          case BookAppointmentWithNewPetResponse422():
+            expect(status, 422);
+          default:
+            fail('unexpected $result');
+        }
+      }
+    });
+
+    test('the lists, one appointment and its care item, a 404', () async {
+      final scheduling = SchedulingApi(server);
+      final page1 = jsonDecode(
+        File(
+          '$portalFixtures/'
+          'clinics.paris.appointments.past.page1.get.200.json',
+        ).readAsStringSync(),
+      ) as Map<String, Object?>;
+      backend
+        ..on(
+          'GET',
+          '$base/appointments?scope=upcoming',
+          PortalReply.fixture(
+            'clinics.paris.appointments.upcoming.booked.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$base/appointments?scope=past',
+          PortalReply.fixture(
+            'clinics.paris.appointments.past.page1.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$base/appointments?scope=past&cursor=${page1['nextCursor']}',
+          PortalReply.fixture(
+            'clinics.paris.appointments.past.page2.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$base/appointments/$booked',
+          PortalReply.fixture('clinics.paris.appointment.get.200.json'),
+        )
+        ..on(
+          'GET',
+          '$base/appointments/related',
+          PortalReply.fixture(
+            'clinics.paris.appointment.related-care.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$base/appointments/gone',
+          PortalReply.fixture(
+            'clinics.paris.appointment.not-found.get.404.json',
+            status: 404,
+          ),
+        );
+
+      Future<AppointmentList> list(
+        ApiPortalV1ClinicsClinicIdAppointmentsParametersModel scope, {
+        String? cursor,
+      }) async => switch (_value(
+        await scheduling.listAppointments(
+          clinicId: _paris,
+          scope: scope,
+          cursor: cursor,
+        ),
+      )) {
+        ListAppointmentsResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final upcoming = await list(
+        ApiPortalV1ClinicsClinicIdAppointmentsParametersModel.upcoming,
+      );
+      final past1 = await list(
+        ApiPortalV1ClinicsClinicIdAppointmentsParametersModel.past,
+      );
+      final past2 = await list(
+        ApiPortalV1ClinicsClinicIdAppointmentsParametersModel.past,
+        cursor: past1.nextCursor,
+      );
+      Future<GetAppointmentResponse> read(String id) async {
+        final result = await scheduling.getAppointment(
+          clinicId: _paris,
+          appointmentId: id,
+        );
+        // A local: the return context would infer a FutureOr.
+        final value = _value(result);
+        return value;
+      }
+
+      final one = switch (await read(booked)) {
+        GetAppointmentResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final related = switch (await read('related')) {
+        GetAppointmentResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+
+      expect(upcoming.items, hasLength(3));
+      expect(upcoming.items.first.motif.id, isNull);
+      expect(upcoming.items.first.source, AppointmentViewSourceModel.clinic);
+      expect(past1.items, hasLength(2));
+      expect(past1.nextCursor, page1['nextCursor']);
+      expect(
+        past2.items.single.status,
+        AppointmentViewStatusModel.cancelledByClinic,
+      );
+      expect(past2.nextCursor, isNull);
+      expect(one.relatedCareItem?.relatedCareItemView, isNull);
+      final care = related.relatedCareItem!.relatedCareItemView!;
+      expect(care.kind, 'vaccination');
+      expect(care.dueOn, Date(2027, 9, 5));
+      expect(care.status, RelatedCareItemViewStatusModel.booked);
+      expect(await read('gone'), isA<GetAppointmentResponse404>());
+    });
+
+    test('reschedule, cancel, calendar: their answers and refusals', () async {
+      final scheduling = SchedulingApi(server);
+      const appointment = '$base/appointments/$booked';
+      Future<RescheduleAppointmentResponse> reschedule(
+        String fixture,
+        int status,
+      ) async {
+        backend.on(
+          'POST',
+          '$appointment/reschedule',
+          PortalReply.fixture(fixture, status: status),
+        );
+        final result = await scheduling.rescheduleAppointment(
+          clinicId: _paris,
+          appointmentId: booked,
+          body: AppointmentReschedule(
+            startAt: OffsetDateTime.parse('2026-11-11T10:30:00+01:00'),
+            practitionerId: dupont,
+          ),
+        );
+        // A local: the return context would infer a FutureOr.
+        final value = _value(result);
+        return value;
+      }
+
+      Future<CancelAppointmentResponse> cancel(
+        String fixture,
+        int status,
+      ) async {
+        backend.on(
+          'POST',
+          '$appointment/cancel',
+          PortalReply.fixture(fixture, status: status),
+        );
+        final result = await scheduling.cancelAppointment(
+          clinicId: _paris,
+          appointmentId: booked,
+          body: const AppointmentCancellation(
+            reason: AppointmentCancellationReasonModel.unavailable,
+          ),
+        );
+        // A local: the return context would infer a FutureOr.
+        final value = _value(result);
+        return value;
+      }
+
+      final moved = switch (await reschedule(
+        'clinics.paris.appointment.reschedule.post.200.json',
+        200,
+      )) {
+        RescheduleAppointmentResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final cancelled = switch (await cancel(
+        'clinics.paris.appointment.cancel.post.200.json',
+        200,
+      )) {
+        CancelAppointmentResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final ics = File(
+        '$portalFixtures/clinics.paris.appointment.calendar.get.200.ics',
+      ).readAsBytesSync();
+      backend.on(
+        'GET',
+        '$appointment/calendar.ics',
+        PortalReply.bytes(ics, contentType: 'text/calendar; charset=utf-8'),
+      );
+      final calendar = switch (_value(
+        await scheduling.getAppointmentCalendar(
+          clinicId: _paris,
+          appointmentId: booked,
+        ),
+      )) {
+        GetAppointmentCalendarResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+
+      expect(
+        moved.startAt.toTimeZonedIso8601String(),
+        '2026-11-11T10:30:00+01:00',
+      );
+      expect(
+        await reschedule(
+          'clinics.paris.appointment.reschedule.slot-taken.post.409.json',
+          409,
+        ),
+        isA<RescheduleAppointmentResponse409>(),
+      );
+      // Without violations: on the strict chain (see the bookings).
+      backend.on(
+        'POST',
+        '$appointment/reschedule',
+        PortalReply.fixture(
+          'clinics.paris.appointment.reschedule.not-modifiable.post.422.json',
+          status: 422,
+        ),
+      );
+      final refused =
+          await SchedulingApi(
+            portalServer(backend, interceptors: [_successOnly()]),
+          ).rescheduleAppointment(
+            clinicId: _paris,
+            appointmentId: booked,
+            body: AppointmentReschedule(
+              startAt: OffsetDateTime.parse('2026-11-11T10:30:00+01:00'),
+              practitionerId: dupont,
+            ),
+          );
+      expect(switch (refused) {
+        TonikError(:final DioException error) => error.response?.statusCode,
+        _ => null,
+      }, 422);
+      expect(
+        cancelled.status,
+        AppointmentCancellationAppointmentViewStatusModel.cancelledByClient,
+      );
+      expect(cancelled.cancellableUntil, isNull);
+      expect(
+        await cancel(
+          'clinics.paris.appointment.cancel.validation.post.422.json',
+          422,
+        ),
+        isA<CancelAppointmentResponse422>(),
+      );
+      expect(utf8.encode(calendar), ics);
+      expect(calendar, startsWith('BEGIN:VCALENDAR\r\n'));
+
+      backend.on(
+        'GET',
+        '$appointment/calendar.ics',
+        PortalReply.fixture(
+          'clinics.paris.appointment.calendar.cancelled.get.404.json',
+          status: 404,
+        ),
+      );
+      expect(
+        _value(
+          await scheduling.getAppointmentCalendar(
+            clinicId: _paris,
+            appointmentId: booked,
+          ),
+        ),
+        isA<GetAppointmentCalendarResponse404>(),
+      );
+    });
+
+    test('a client with no pet followed (capture)', () async {
+      backend.on(
+        'GET',
+        '$base/pets',
+        PortalReply.fixture('clinics.paris.pets.empty.get.200.json'),
+      );
+
+      expect(switch (_value(await PetsApi(server).listPets(clinicId: _paris))) {
+        ListPetsResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      }, isEmpty);
     });
   });
 

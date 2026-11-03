@@ -39,6 +39,29 @@ void main() {
     );
   });
 
+  test('the days of the booking: long, short, in a sentence, the day '
+      'picker, the date tile, the months a week covers', () {
+    final monday = LocalDate(2026, 11, 9);
+    expect(KivetoFormat.dayLong(monday), 'Lundi 9 novembre');
+    expect(KivetoFormat.dayShort(monday), 'Lun. 9 nov.');
+    expect(KivetoFormat.dayShort(monday, capitalized: false), 'lun. 9 nov.');
+    expect(KivetoFormat.weekdayShort(monday), 'Lun');
+    expect(KivetoFormat.weekdayShort(LocalDate(2026, 11, 11)), 'Mer');
+    expect(KivetoFormat.monthShort(monday), 'nov.');
+    expect(
+      KivetoFormat.monthRange(LocalDate(2026, 11, 3), LocalDate(2026, 11, 9)),
+      'Novembre 2026',
+    );
+    expect(
+      KivetoFormat.monthRange(LocalDate(2026, 11, 27), LocalDate(2026, 12, 3)),
+      'Novembre – décembre 2026',
+    );
+    expect(
+      KivetoFormat.monthRange(LocalDate(2026, 12, 29), LocalDate(2027, 1, 4)),
+      'Décembre 2026 – janvier 2027',
+    );
+  });
+
   test('money with the currency decimals and French separators', () {
     expect(KivetoFormat.money(Money(6800, 'EUR')), '68,00 €');
     expect(KivetoFormat.money(Money(123456789, 'EUR')), '1 234 567,89 €');
