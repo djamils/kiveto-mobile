@@ -4,13 +4,17 @@
 // of a next page (a retry, a stale cursor), the empty tabs, the failures
 // of the list (a 404 says the clinic is gone), the calendar, the exits.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/appointment_card.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/appointments_page.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_providers.dart';
+import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/domain/portal_file.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
@@ -77,7 +81,7 @@ void main() {
     onFillQuestionnaire: (context, id) => exits.add('questionnaire $id'),
   );
 
-  Future<void> pump(
+  Future<ProviderContainer> pump(
     WidgetTester tester,
     FakePortalBackend backend, {
     DateTime? now,
@@ -168,7 +172,7 @@ void main() {
     expect(
       _inCard(
         _clinicBooked,
-        "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
+        "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
       ),
       findsOneWidget,
     );
@@ -257,6 +261,70 @@ void main() {
       find.widgetWithText(StatusPill, 'Annulé par la clinique'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('a next page answering after a clinic switch is dropped', (
+    tester,
+  ) async {
+    final held = Completer<void>();
+    final backend = _backend()
+      ..onRequest('GET', '$_past&cursor=${_cursor()}', (request) async {
+        await held.future;
+        return PortalReply.fixture(
+          'clinics.paris.appointments.past.page2.get.200.json',
+        );
+      })
+      ..on(
+        'GET',
+        '$api/clinics/$lyonId/appointments?scope=past',
+        PortalReply.json('{"items":[],"nextCursor":null}'),
+      )
+      ..on(
+        'GET',
+        '$api/clinics/$lyonId/appointments?scope=upcoming',
+        PortalReply.json('{"items":[],"nextCursor":null}'),
+      );
+    final container = await pump(tester, backend);
+    // The next page is on its way as soon as its end row shows (a spinner:
+    // no pumpAndSettle).
+    await tester.tap(find.text('Passés'));
+    await pumpBriefly(tester);
+    expect(backend.requestsTo('$_past&cursor=${_cursor()}'), hasLength(1));
+
+    unawaited(
+      container
+          .read(activeClinicProvider.notifier)
+          .select(const ClinicId(lyonId)),
+    );
+    await tester.pumpAndSettle();
+    held.complete();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aucun rendez-vous passé'), findsOneWidget);
+    expect(_card('01a19a12-682c-7440-a2d4-48953f1bcc94'), findsNothing);
+    expect(find.byType(AppointmentCard), findsNothing);
+  });
+
+  testWidgets('an empty first page with a next one: no empty state, the '
+      'next page read', (tester) async {
+    final backend = julienBackend()
+      ..on('GET', _upcoming, PortalReply.json('{"items":[],"nextCursor":null}'))
+      ..on('GET', _past, PortalReply.json('{"items":[],"nextCursor":"c1"}'))
+      ..on(
+        'GET',
+        '$_past&cursor=c1',
+        PortalReply.fixture(
+          'clinics.paris.appointments.past.page2.get.200.json',
+        ),
+      );
+    await pump(tester, backend);
+
+    await tester.tap(find.text('Passés'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aucun rendez-vous passé'), findsNothing);
+    expect(backend.requestsTo('$_past&cursor=c1'), hasLength(1));
+    expect(_card('01a19a12-682c-7440-a2d4-48953f1bcc94'), findsOneWidget);
   });
 
   testWidgets('empty tabs: « Aucun rendez-vous à venir » and « Prendre '

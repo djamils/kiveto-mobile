@@ -41,7 +41,7 @@ void main() {
     final container = await pumpStep(tester, page(), backend: julienBackend());
 
     expect(find.text('Étape 1 sur 4'), findsOneWidget);
-    expect(find.text('Pour quel animal ?'), findsOneWidget);
+    expect(find.text('Pour quel animal ?'), findsOneWidget);
     final chip = tester.widget<KivetoSummaryChip>(
       find.byType(KivetoSummaryChip),
     );
@@ -52,7 +52,7 @@ void main() {
     expect(find.text('Un autre animal'), findsOneWidget);
     expect(
       find.text(
-        'Un nouvel animal est ajouté à votre dossier dès la réservation ; '
+        'Un nouvel animal est ajouté à votre dossier dès la réservation ; '
         'la clinique complète sa fiche lors de la visite.',
       ),
       findsOneWidget,
@@ -170,6 +170,29 @@ void main() {
     expect(find.byType(KivetoRadioCard), findsNothing);
     expect(find.text("Nom de l'animal"), findsOneWidget);
     expect(find.text('Nouvel animal'), findsOneWidget);
+  });
+
+  testWidgets('a missing pet is not listed', (tester) async {
+    final backend = julienBackend()
+      ..on(
+        'GET',
+        '$parisBase/pets',
+        editedReply('clinics.paris.pets.get.200.json', (body) {
+          final pets = body! as List<Object?>;
+          pets.add({
+            ...pets.single! as Map<String, Object?>,
+            'id': 'missing-pet',
+            'name': 'Filou',
+            'initial': 'F',
+            'lifeStatus': 'missing',
+          });
+        }),
+      );
+    await pumpStep(tester, page(), backend: backend);
+
+    expect(find.text('Filou'), findsNothing);
+    expect(find.byType(KivetoRadioCard), findsOneWidget);
+    expect(card(tester, 'Oslo').selected, isTrue);
   });
 
   testWidgets('a deceased pet is not listed (Garnier, capture)', (

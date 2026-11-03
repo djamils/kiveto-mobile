@@ -184,6 +184,31 @@ void main() {
     expect(exits, ['continue', 'pet', 'motif', 'back', 'close']);
   });
 
+  testWidgets('a slot chosen in the second week: the picker opens on its '
+      'week, its day and its slot selected', (tester) async {
+    await pumpStep(
+      tester,
+      page(),
+      backend: julienBackend(),
+      pet: oslo,
+      motif: consultation,
+      practitioner: dupont,
+      slot: ClinicInstant.parse('2026-11-11T10:30:00+01:00'),
+    );
+
+    expect(_day('2026-11-10'), findsOneWidget);
+    expect(_day('2026-11-09'), findsNothing);
+    expect(_daySelected(tester, '2026-11-11'), isTrue);
+    final slot = tester.widget<Text>(
+      find.descendant(
+        of: _slot('2026-11-11T10:30:00+01:00'),
+        matching: find.text('10:30'),
+      ),
+    );
+    expect(slot.style?.color, KivetoColors.surface);
+    expect(find.text('Mer. 11 nov. à 10:30'), findsOneWidget);
+  });
+
   testWidgets('an open day without slot; the morning and the afternoon', (
     tester,
   ) async {

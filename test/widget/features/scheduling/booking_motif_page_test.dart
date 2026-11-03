@@ -65,7 +65,7 @@ void main() {
     );
 
     expect(find.text('Étape 2 sur 4'), findsOneWidget);
-    expect(find.text('Quel est le motif ?'), findsOneWidget);
+    expect(find.text('Quel est le motif ?'), findsOneWidget);
     expect(
       find.text('Pour Oslo · Clinique Vétérinaire de Paris'),
       findsOneWidget,
@@ -89,7 +89,7 @@ void main() {
     expect(enabled(tester, 'Continuer'), isFalse);
     expect(backend.requestsTo('$motifsPath?petId=$osloId'), hasLength(1));
     expect(
-      find.text('Urgence ? Ne réservez pas en ligne, appelez la clinique.'),
+      find.text('Urgence ? Ne réservez pas en ligne, appelez la clinique.'),
       findsOneWidget,
     );
 
@@ -165,7 +165,7 @@ void main() {
 
     expect(
       find.text(
-        'Urgence ? Ne réservez pas en ligne, appelez directement la clinique.',
+        'Urgence ? Ne réservez pas en ligne, appelez directement la clinique.',
       ),
       findsOneWidget,
     );

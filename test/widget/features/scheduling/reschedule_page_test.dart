@@ -3,6 +3,7 @@
 // the slot taken meanwhile (struck, the warning, reloaded), the refusals,
 // no network, the appointment gone (404), one that may not move.
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -241,18 +242,21 @@ void main() {
     (
       'the window closed',
       problem('cancellation_window_closed', 422),
-      "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
+      "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
       false,
       1,
       true,
     ),
     (
-      'gone (404)',
+      // The appointment gone, or the slot or practitioner no longer
+      // offered for its motif.
+      'not found (404)',
       problem('not_found', 404),
-      "Ce rendez-vous n'est plus disponible.",
+      "Ce créneau n'est plus proposé pour ce rendez-vous. Choisissez-en un "
+          'autre.',
       false,
       1,
-      false,
+      true,
     ),
     (
       'booking closed',
@@ -285,12 +289,44 @@ void main() {
       // Refused for good: the appointment read again.
       expect(backend.requestsTo(_appointment), hasLength(reread ? 2 : 1));
       expect(find.text('Réessayer'), retry ? findsOneWidget : findsNothing);
+      if (reply.status == 404) {
+        // The practitioners read again, the slot dropped.
+        expect(backend.requestsTo(practitionersPath), hasLength(2));
+        expect(find.text('Choisissez un créneau'), findsOneWidget);
+        expect(enabled(tester, 'Confirmer'), isFalse);
+      }
       if (retry) {
         await tapVisible(tester, find.text('Réessayer'));
         expect(backend.requestsTo(_reschedule), hasLength(2));
       }
     });
   }
+
+  testWidgets('moved after the page was left: the lists still reload', (
+    tester,
+  ) async {
+    final answer = Completer<PortalReply>();
+    final backend = _backend()
+      ..onRequest('POST', _reschedule, (request) => answer.future);
+    final container = await pump(tester, backend);
+    await chooseWednesday(tester);
+    await tester.tap(button('Confirmer'));
+    await tester.pump();
+
+    // Back while the move is on its way, then the page is gone.
+    await tester.tap(iconButton(LucideGlyph.chevronLeft));
+    expect(exits, ['back']);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: const SizedBox()),
+    );
+    answer.complete(
+      PortalReply.fixture('clinics.paris.appointment.reschedule.post.200.json'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(container.read(appointmentsRevisionProvider), 1);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('the appointment gone (404, capture): « Rendez-vous '
       'introuvable », back', (tester) async {

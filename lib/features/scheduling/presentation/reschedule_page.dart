@@ -99,6 +99,14 @@ class _ReschedulePageState extends ConsumerState<ReschedulePage> {
           (cause is ApiFailure && cause.code == 'booking_not_open')) {
         ref.invalidate(appointmentProvider(_id));
       }
+      // A 404: the appointment is gone, or the slot or practitioner is no
+      // longer offered for its motif; read both again.
+      final gone = cause is NotFoundFailure;
+      if (gone) {
+        ref
+          ..invalidate(appointmentProvider(_id))
+          ..invalidate(practitionersProvider);
+      }
       if (cause case ConflictFailure(code: 'slot_taken')) {
         ref.invalidate(availabilityProvider);
         setState(() {
@@ -112,6 +120,7 @@ class _ReschedulePageState extends ConsumerState<ReschedulePage> {
       setState(() {
         _sending = false;
         _error = error;
+        if (gone) _slot = null;
       });
     }
   }
@@ -204,7 +213,7 @@ class _ReschedulePageState extends ConsumerState<ReschedulePage> {
             body: schedulingFailureMessage(
               l10n,
               error,
-              notFound: l10n.appointmentGone,
+              notFound: l10n.rescheduleSlotGone,
             ),
             actionLabel: isTransientFailure(error) ? l10n.commonRetry : null,
             onAction: () => unawaited(_confirm(clinicId)),

@@ -175,13 +175,13 @@ abstract class AppLocalizations {
   /// Title of the booking step 1, the pet (12).
   ///
   /// In fr, this message translates to:
-  /// **'Pour quel animal ?'**
+  /// **'Pour quel animal ?'**
   String get screenBookingPetTitle;
 
   /// Title of the booking step 2, the reason (13).
   ///
   /// In fr, this message translates to:
-  /// **'Quel est le motif ?'**
+  /// **'Quel est le motif ?'**
   String get screenBookingMotifTitle;
 
   /// Title of the booking step 3, the slot (3).
@@ -1675,7 +1675,7 @@ abstract class AppLocalizations {
   /// Booking, pet step (12): the footnote under the pets (the API creates a new pet with the booking).
   ///
   /// In fr, this message translates to:
-  /// **'Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.'**
+  /// **'Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.'**
   String get bookingPetFootnote;
 
   /// Booking, pet step (12): label of the sticky bar (its value is the pet name).
@@ -1747,13 +1747,13 @@ abstract class AppLocalizations {
   /// Booking, motif step (13): the emergency callout, next to the clinic's call button.
   ///
   /// In fr, this message translates to:
-  /// **'Urgence ? Ne réservez pas en ligne, appelez la clinique.'**
+  /// **'Urgence ? Ne réservez pas en ligne, appelez la clinique.'**
   String get bookingEmergency;
 
   /// Booking, motif step (13): the emergency callout when the clinic gave no phone number.
   ///
   /// In fr, this message translates to:
-  /// **'Urgence ? Ne réservez pas en ligne, appelez directement la clinique.'**
+  /// **'Urgence ? Ne réservez pas en ligne, appelez directement la clinique.'**
   String get bookingEmergencyNoPhone;
 
   /// Booking, motif step (13): calls the clinic's phone number.
@@ -1909,7 +1909,7 @@ abstract class AppLocalizations {
   /// Booking, success (14): note of a confirmed booking.
   ///
   /// In fr, this message translates to:
-  /// **'Une confirmation vous a été envoyée par SMS.'**
+  /// **'Une confirmation vous a été envoyée.'**
   String get bookingSmsSent;
 
   /// Booking, success (14): note of a booking the clinic must confirm (no SMS promised).
@@ -2059,7 +2059,7 @@ abstract class AppLocalizations {
   /// Appointments (4) and cancellation (16): the online cancellation window is over.
   ///
   /// In fr, this message translates to:
-  /// **'Le délai d\'annulation en ligne est dépassé : contactez la clinique.'**
+  /// **'Le délai d\'annulation en ligne est dépassé : contactez la clinique.'**
   String get appointmentsWindowClosed;
 
   /// Appointments (4), booking (14), reschedule: shares the .ics of the appointment.
@@ -2119,7 +2119,7 @@ abstract class AppLocalizations {
   /// Cancellation sheet (16): title.
   ///
   /// In fr, this message translates to:
-  /// **'Annuler ce rendez-vous ?'**
+  /// **'Annuler ce rendez-vous ?'**
   String get appointmentCancelTitle;
 
   /// Cancellation sheet (16): the appointment.
@@ -2137,7 +2137,7 @@ abstract class AppLocalizations {
   /// Cancellation sheet (16): warning when the motif covers a vaccination of the pet.
   ///
   /// In fr, this message translates to:
-  /// **'Le rappel {label} de {pet} est à faire avant le {date}. Reporter évite un retard de vaccination.'**
+  /// **'Le rappel {label} est à faire avant le {date} pour {pet}. Reporter évite un retard de vaccination.'**
   String appointmentCancelCareVaccination(
     String label,
     String pet,
@@ -2147,7 +2147,7 @@ abstract class AppLocalizations {
   /// Cancellation sheet (16): warning when the motif covers a deworming of the pet.
   ///
   /// In fr, this message translates to:
-  /// **'Le traitement {label} de {pet} est à faire avant le {date}. Reporter évite un retard de vermifugation.'**
+  /// **'Le traitement {label} est à faire avant le {date} pour {pet}. Reporter évite un retard de vermifugation.'**
   String appointmentCancelCareInternalParasite(
     String label,
     String pet,
@@ -2157,7 +2157,7 @@ abstract class AppLocalizations {
   /// Cancellation sheet (16): warning when the motif covers a flea and tick treatment of the pet.
   ///
   /// In fr, this message translates to:
-  /// **'Le traitement {label} de {pet} est à faire avant le {date}. Reporter évite un retard de traitement antiparasitaire.'**
+  /// **'Le traitement {label} est à faire avant le {date} pour {pet}. Reporter évite un retard de traitement antiparasitaire.'**
   String appointmentCancelCareExternalParasite(
     String label,
     String pet,
@@ -2167,7 +2167,7 @@ abstract class AppLocalizations {
   /// Cancellation sheet (16): warning when the motif covers another care item of the pet.
   ///
   /// In fr, this message translates to:
-  /// **'Le soin {label} de {pet} est à faire avant le {date}. Reporter évite un retard de soin.'**
+  /// **'Le soin {label} est à faire avant le {date} pour {pet}. Reporter évite un retard de soin.'**
   String appointmentCancelCareOther(String label, String pet, String date);
 
   /// Cancellation sheet (16): legend of the reasons.
@@ -2233,7 +2233,7 @@ abstract class AppLocalizations {
   /// Cancellation sheet (16): added to the body when the appointment was confirmed.
   ///
   /// In fr, this message translates to:
-  /// **'Une confirmation vous est envoyée par SMS.'**
+  /// **'Une confirmation vous est envoyée.'**
   String get appointmentCancelDoneSms;
 
   /// Cancellation (16) and reschedule: the server refused the change (appointment_not_modifiable).
@@ -2301,6 +2301,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'La clinique doit confirmer le nouveau créneau.'**
   String get rescheduleStillPending;
+
+  /// Reschedule: the slot or the practitioner is no longer offered for the appointment (404 on the reschedule).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce créneau n\'est plus proposé pour ce rendez-vous. Choisissez-en un autre.'**
+  String get rescheduleSlotGone;
 }
 
 class _AppLocalizationsDelegate

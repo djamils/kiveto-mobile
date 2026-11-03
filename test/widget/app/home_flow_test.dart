@@ -172,7 +172,7 @@ void main() {
     await tester.pumpAndSettle();
     await _tapVisible(tester, find.text('Prendre rendez-vous'));
     expect(_top(container), AppRoutes.bookingPet);
-    expect(find.text('Pour quel animal ?'), findsOneWidget);
+    expect(find.text('Pour quel animal ?'), findsOneWidget);
     expect(find.text('Accueil'), findsNothing);
   });
 

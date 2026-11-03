@@ -84,80 +84,89 @@ class BookingConfirmPage extends ConsumerWidget {
     final practitioner = draft.practitioner;
     final address = clinic?.address;
     final sending = submission is BookingSubmitting;
-    return FlowScaffold(
-      bar: StickyCtaBar(
-        child: KivetoButton.primary(
-          label: l10n.bookingConfirm,
-          loading: sending,
-          onPressed: draft.request == null || sending
-              ? null
-              : () => unawaited(_confirm(context, ref)),
-        ),
-      ),
-      children: [
-        WizardHeader(
-          step: 4,
-          stepLabel: l10n.bookingStepLabel(4),
-          title: l10n.screenBookingConfirmTitle,
-          onBack: () => onBack(context),
-          onClose: () => onClose(context),
-        ),
-        KivetoCard.list(
-          radius: KivetoRadius.xl,
-          children: [
-            KivetoKeyValueRow(
-              label: l10n.bookingPetLabel,
-              value: pet?.name ?? '',
-              secondary: switch (pet) {
-                NewPet(:final species) => l10n.bookingNewPetSecondary(
-                  speciesLabel(l10n, species) ?? '',
-                ),
-                _ => null,
-              },
-            ),
-            KivetoKeyValueRow(
-              label: l10n.bookingMotifLabel,
-              value: motif == null
-                  ? ''
-                  : motifWithDuration(l10n, motif.label, motif.durationMin),
-            ),
-            KivetoKeyValueRow(
-              label: l10n.bookingRecapDate,
-              value: slot == null ? '' : slotLong(l10n, slot),
-              actionLabel: l10n.bookingEdit,
-              onAction: () => onEditSlot(context),
-            ),
-            KivetoKeyValueRow(
-              label: l10n.bookingVetLabel,
-              value: practitionerLabel(l10n, practitioner?.displayName),
-            ),
-            KivetoKeyValueRow(
-              label: l10n.bookingRecapClinic,
-              value: clinic?.name ?? '',
-              secondary: address == null
-                  ? null
-                  : '${address.line}, '
-                        '${[?address.postalCode, address.city].join(' ')}',
-            ),
-          ],
-        ),
-        ReassuranceList([
-          l10n.bookingReassuranceCancel,
-          l10n.bookingReassuranceQuestionnaire,
-        ]),
-        if (submission case BookingFailed(:final error))
-          KivetoCallout.danger(
-            body: schedulingFailureMessage(l10n, error),
-            actionLabel: isPetFailure(error)
-                ? l10n.bookingEdit
-                : isTransientFailure(error)
-                ? l10n.commonRetry
-                : null,
-            onAction: isPetFailure(error)
-                ? () => onEditPet(context)
+    // While the booking is on its way the owner stays on the recap: its
+    // answer shows here (the success, or why it failed).
+    void unlessSending(void Function(BuildContext context) exit) {
+      if (!sending) exit(context);
+    }
+
+    return PopScope(
+      canPop: !sending,
+      child: FlowScaffold(
+        bar: StickyCtaBar(
+          child: KivetoButton.primary(
+            label: l10n.bookingConfirm,
+            loading: sending,
+            onPressed: draft.request == null || sending
+                ? null
                 : () => unawaited(_confirm(context, ref)),
           ),
-      ],
+        ),
+        children: [
+          WizardHeader(
+            step: 4,
+            stepLabel: l10n.bookingStepLabel(4),
+            title: l10n.screenBookingConfirmTitle,
+            onBack: () => unlessSending(onBack),
+            onClose: () => unlessSending(onClose),
+          ),
+          KivetoCard.list(
+            radius: KivetoRadius.xl,
+            children: [
+              KivetoKeyValueRow(
+                label: l10n.bookingPetLabel,
+                value: pet?.name ?? '',
+                secondary: switch (pet) {
+                  NewPet(:final species) => l10n.bookingNewPetSecondary(
+                    speciesLabel(l10n, species) ?? '',
+                  ),
+                  _ => null,
+                },
+              ),
+              KivetoKeyValueRow(
+                label: l10n.bookingMotifLabel,
+                value: motif == null
+                    ? ''
+                    : motifWithDuration(l10n, motif.label, motif.durationMin),
+              ),
+              KivetoKeyValueRow(
+                label: l10n.bookingRecapDate,
+                value: slot == null ? '' : slotLong(l10n, slot),
+                actionLabel: l10n.bookingEdit,
+                onAction: () => unlessSending(onEditSlot),
+              ),
+              KivetoKeyValueRow(
+                label: l10n.bookingVetLabel,
+                value: practitionerLabel(l10n, practitioner?.displayName),
+              ),
+              KivetoKeyValueRow(
+                label: l10n.bookingRecapClinic,
+                value: clinic?.name ?? '',
+                secondary: address == null
+                    ? null
+                    : '${address.line}, '
+                          '${[?address.postalCode, address.city].join(' ')}',
+              ),
+            ],
+          ),
+          ReassuranceList([
+            l10n.bookingReassuranceCancel,
+            l10n.bookingReassuranceQuestionnaire,
+          ]),
+          if (submission case BookingFailed(:final error))
+            KivetoCallout.danger(
+              body: schedulingFailureMessage(l10n, error),
+              actionLabel: isPetFailure(error)
+                  ? l10n.bookingEdit
+                  : isTransientFailure(error)
+                  ? l10n.commonRetry
+                  : null,
+              onAction: isPetFailure(error)
+                  ? () => onEditPet(context)
+                  : () => unawaited(_confirm(context, ref)),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -2,7 +2,7 @@
 // it covers, read from the appointment), the reasons, « Annuler le
 // rendez-vous » once a reason is chosen, « Reporter plutôt », « Garder mon
 // rendez-vous »; the cancellation (its reason, the done view with or
-// without SMS, the lists reloaded) and its failures.
+// without the confirmation, the lists reloaded) and its failures.
 
 import 'dart:async';
 import 'dart:convert';
@@ -110,15 +110,15 @@ void main() {
       'is chosen', (tester) async {
     await open(tester, _backend());
 
-    expect(find.text('Annuler ce rendez-vous ?'), findsOneWidget);
+    expect(find.text('Annuler ce rendez-vous ?'), findsOneWidget);
     expect(
       find.text('Lun. 16 nov. · 11:00 · Oslo — Vaccination'),
       findsOneWidget,
     );
     expect(
       find.text(
-        'Le rappel CHPL de Oslo est à faire avant le 5 sept. 2027. Reporter '
-        'évite un retard de vaccination.',
+        'Le rappel CHPL est à faire avant le 5 sept. 2027 pour Oslo. '
+        'Reporter évite un retard de vaccination.',
       ),
       findsOneWidget,
     );
@@ -146,54 +146,56 @@ void main() {
 
     await tester.tap(find.text('Garder mon rendez-vous'));
     await tester.pumpAndSettle();
-    expect(find.text('Annuler ce rendez-vous ?'), findsNothing);
+    expect(find.text('Annuler ce rendez-vous ?'), findsNothing);
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     await tapVisible(tester, find.text('Reporter plutôt'));
-    expect(find.text('Annuler ce rendez-vous ?'), findsNothing);
+    expect(find.text('Annuler ce rendez-vous ?'), findsNothing);
     expect(exits, ['reschedule']);
   });
 
-  testWidgets('cancelled (capture): the reason sent, « Rendez-vous annulé », '
-      'the SMS of a confirmed one, back to the list; the lists reload', (
-    tester,
-  ) async {
-    final backend = _backend()
-      ..on(
-        'POST',
-        _cancel,
-        PortalReply.fixture('clinics.paris.appointment.cancel.post.200.json'),
+  testWidgets(
+    'cancelled (capture): the reason sent, « Rendez-vous annulé », '
+    'the confirmation of a confirmed one, back to the list; the lists reload',
+    (tester) async {
+      final backend = _backend()
+        ..on(
+          'POST',
+          _cancel,
+          PortalReply.fixture('clinics.paris.appointment.cancel.post.200.json'),
+        );
+      final container = await open(tester, backend);
+      _watchCareItems(container);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Empêchement'));
+      await tester.pumpAndSettle();
+      await tapVisible(tester, find.text('Annuler le rendez-vous'));
+
+      expect(
+        utf8.decode(backend.requestsTo(_cancel).single.body),
+        '{"reason":"unavailable"}',
       );
-    final container = await open(tester, backend);
-    _watchCareItems(container);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Empêchement'));
-    await tester.pumpAndSettle();
-    await tapVisible(tester, find.text('Annuler le rendez-vous'));
-
-    expect(
-      utf8.decode(backend.requestsTo(_cancel).single.body),
-      '{"reason":"unavailable"}',
-    );
-    expect(container.read(appointmentsRevisionProvider), 1);
-    expect(backend.requestsTo(_careItems), hasLength(2));
-    expect(find.text('Rendez-vous annulé'), findsOneWidget);
-    expect(
-      find.text(
-        'La clinique a été prévenue. Une confirmation vous est envoyée par '
-        'SMS.',
-      ),
-      findsOneWidget,
-    );
-    await tester.tap(find.text('Retour à mes rendez-vous'));
-    await tester.pumpAndSettle();
-    expect(find.text('Rendez-vous annulé'), findsNothing);
-  });
+      expect(container.read(appointmentsRevisionProvider), 1);
+      expect(backend.requestsTo(_careItems), hasLength(2));
+      expect(find.text('Rendez-vous annulé'), findsOneWidget);
+      expect(
+        find.text(
+          'La clinique a été prévenue. Une confirmation vous est envoyée.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Retour à mes rendez-vous'));
+      await tester.pumpAndSettle();
+      expect(find.text('Rendez-vous annulé'), findsNothing);
+    },
+  );
 
   testWidgets('a pending one, booked by the clinic, without care item: no '
-      'SMS promised, no « Reporter plutôt », no warning', (tester) async {
+      'confirmation promised, no « Reporter plutôt », no warning', (
+    tester,
+  ) async {
     final backend = julienBackend()
       ..on(
         'GET',
@@ -220,7 +222,9 @@ void main() {
     await tester.pumpAndSettle();
     await tapVisible(tester, find.text('Annuler le rendez-vous'));
 
+    // No confirmation promised for a request the clinic had not confirmed.
     expect(find.text('La clinique a été prévenue.'), findsOneWidget);
+    expect(find.textContaining('confirmation'), findsNothing);
   });
 
   testWidgets('an appointment without pet: its line without name, no '
@@ -248,7 +252,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Garder mon rendez-vous'));
     await tester.pumpAndSettle();
-    expect(find.text('Annuler ce rendez-vous ?'), findsNothing);
+    expect(find.text('Annuler ce rendez-vous ?'), findsNothing);
 
     answer.complete(
       PortalReply.fixture('clinics.paris.appointment.cancel.post.200.json'),
@@ -263,7 +267,7 @@ void main() {
     (
       'the window closed',
       problem('cancellation_window_closed', 422),
-      "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
+      "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
       1,
       true,
     ),
@@ -279,7 +283,7 @@ void main() {
       problem('not_found', 404),
       "Ce rendez-vous n'est plus disponible.",
       1,
-      false,
+      true,
     ),
     (
       'no reason (capture)',
@@ -301,16 +305,15 @@ void main() {
       await tapVisible(tester, find.text('Annuler le rendez-vous'));
 
       expect(find.text(message), findsOneWidget);
-      expect(find.text('Annuler ce rendez-vous ?'), findsOneWidget);
+      expect(find.text('Annuler ce rendez-vous ?'), findsOneWidget);
       expect(container.read(appointmentsRevisionProvider), reloads);
       // Refused for good: no reason left to send again.
       expect(confirmEnabled(tester), !cleared);
     });
   }
 
-  testWidgets('no network: the message, then the same button again', (
-    tester,
-  ) async {
+  testWidgets('no network: the message and « Réessayer », the same reason '
+      'sent again', (tester) async {
     final backend = _backend();
     await open(tester, backend);
     await tester.tap(find.text('Empêchement'));
@@ -320,13 +323,19 @@ void main() {
       find.text('Vérifiez votre connexion Internet, puis réessayez.'),
       findsOneWidget,
     );
+    // Worth a retry: the reason stays.
+    expect(confirmEnabled(tester), isTrue);
 
     backend.on(
       'POST',
       _cancel,
       PortalReply.fixture('clinics.paris.appointment.cancel.post.200.json'),
     );
-    await tapVisible(tester, find.text('Annuler le rendez-vous'));
+    await tapVisible(tester, find.text('Réessayer'));
     expect(find.text('Rendez-vous annulé'), findsOneWidget);
+    expect(
+      backend.requestsTo(_cancel).map((request) => utf8.decode(request.body)),
+      ['{"reason":"unavailable"}', '{"reason":"unavailable"}'],
+    );
   });
 }

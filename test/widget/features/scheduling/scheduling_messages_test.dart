@@ -149,7 +149,7 @@ void main() {
 
     expect(
       careWarning(_l10n, item('vaccination', nextYear), 'Oslo', _today),
-      'Le rappel CHPL de Oslo est à faire avant le 5 sept. 2027. Reporter '
+      'Le rappel CHPL est à faire avant le 5 sept. 2027 pour Oslo. Reporter '
       'évite un retard de vaccination.',
     );
     expect(
@@ -159,16 +159,17 @@ void main() {
         'Oslo',
         _today,
       ),
-      'Le traitement CHPL de Oslo est à faire avant le 1 déc.. Reporter '
+      'Le traitement CHPL est à faire avant le 1 déc. pour Oslo. Reporter '
       'évite un retard de vermifugation.',
     );
     expect(
       careWarning(_l10n, item('external_parasite', nextYear), 'Oslo', _today),
-      endsWith('Reporter évite un retard de traitement antiparasitaire.'),
+      'Le traitement CHPL est à faire avant le 5 sept. 2027 pour Oslo. '
+      'Reporter évite un retard de traitement antiparasitaire.',
     );
     expect(
       careWarning(_l10n, item('dental', nextYear), 'Oslo', _today),
-      'Le soin CHPL de Oslo est à faire avant le 5 sept. 2027. Reporter '
+      'Le soin CHPL est à faire avant le 5 sept. 2027 pour Oslo. Reporter '
       'évite un retard de soin.',
     );
   });
@@ -222,7 +223,7 @@ void main() {
           statusCode: 422,
         ),
       ),
-      "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
+      "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
     );
     expect(
       message(const NotFoundFailure(code: 'not_found')),

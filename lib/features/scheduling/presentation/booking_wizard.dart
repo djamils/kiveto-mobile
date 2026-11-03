@@ -113,9 +113,9 @@ final class BookingWizard extends Notifier<BookingWizardState> {
 
   /// A new choice, the submission back to idle; none while a confirmation
   /// is on its way (its answer is for the draft sent, and a second
-  /// confirmation would book again with another key).
+  /// confirmation would book again with another key) nor once booked.
   void _choose(BookingDraft Function(BookingDraft draft) change) {
-    if (state.submission is BookingSubmitting) return;
+    if (state.submission case BookingSubmitting() || BookingDone()) return;
     state = BookingWizardState(draft: change(state.draft));
   }
 

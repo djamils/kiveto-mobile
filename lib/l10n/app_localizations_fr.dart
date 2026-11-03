@@ -57,10 +57,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get screenAccountTitle => 'Compte';
 
   @override
-  String get screenBookingPetTitle => 'Pour quel animal ?';
+  String get screenBookingPetTitle => 'Pour quel animal ?';
 
   @override
-  String get screenBookingMotifTitle => 'Quel est le motif ?';
+  String get screenBookingMotifTitle => 'Quel est le motif ?';
 
   @override
   String get screenBookingSlotTitle => 'Choisissez un créneau';
@@ -945,7 +945,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bookingPetFootnote =>
-      'Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.';
+      'Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.';
 
   @override
   String get bookingPetBarLabel => 'Rendez-vous pour';
@@ -988,11 +988,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bookingEmergency =>
-      'Urgence ? Ne réservez pas en ligne, appelez la clinique.';
+      'Urgence ? Ne réservez pas en ligne, appelez la clinique.';
 
   @override
   String get bookingEmergencyNoPhone =>
-      'Urgence ? Ne réservez pas en ligne, appelez directement la clinique.';
+      'Urgence ? Ne réservez pas en ligne, appelez directement la clinique.';
 
   @override
   String get bookingCall => 'Appeler';
@@ -1081,7 +1081,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bookingPendingTitle => 'Demande envoyée';
 
   @override
-  String get bookingSmsSent => 'Une confirmation vous a été envoyée par SMS.';
+  String get bookingSmsSent => 'Une confirmation vous a été envoyée.';
 
   @override
   String get bookingPendingNote =>
@@ -1167,7 +1167,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appointmentsWindowClosed =>
-      'Le délai d\'annulation en ligne est dépassé : contactez la clinique.';
+      'Le délai d\'annulation en ligne est dépassé : contactez la clinique.';
 
   @override
   String get appointmentsAddToCalendar => 'Ajouter à mon calendrier';
@@ -1199,7 +1199,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appointmentsBackToList => 'Retour à mes rendez-vous';
 
   @override
-  String get appointmentCancelTitle => 'Annuler ce rendez-vous ?';
+  String get appointmentCancelTitle => 'Annuler ce rendez-vous ?';
 
   @override
   String appointmentCancelSubtitle(String date, String pet, String motif) {
@@ -1217,7 +1217,7 @@ class AppLocalizationsFr extends AppLocalizations {
     String pet,
     String date,
   ) {
-    return 'Le rappel $label de $pet est à faire avant le $date. Reporter évite un retard de vaccination.';
+    return 'Le rappel $label est à faire avant le $date pour $pet. Reporter évite un retard de vaccination.';
   }
 
   @override
@@ -1226,7 +1226,7 @@ class AppLocalizationsFr extends AppLocalizations {
     String pet,
     String date,
   ) {
-    return 'Le traitement $label de $pet est à faire avant le $date. Reporter évite un retard de vermifugation.';
+    return 'Le traitement $label est à faire avant le $date pour $pet. Reporter évite un retard de vermifugation.';
   }
 
   @override
@@ -1235,12 +1235,12 @@ class AppLocalizationsFr extends AppLocalizations {
     String pet,
     String date,
   ) {
-    return 'Le traitement $label de $pet est à faire avant le $date. Reporter évite un retard de traitement antiparasitaire.';
+    return 'Le traitement $label est à faire avant le $date pour $pet. Reporter évite un retard de traitement antiparasitaire.';
   }
 
   @override
   String appointmentCancelCareOther(String label, String pet, String date) {
-    return 'Le soin $label de $pet est à faire avant le $date. Reporter évite un retard de soin.';
+    return 'Le soin $label est à faire avant le $date pour $pet. Reporter évite un retard de soin.';
   }
 
   @override
@@ -1274,8 +1274,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appointmentCancelDoneBody => 'La clinique a été prévenue.';
 
   @override
-  String get appointmentCancelDoneSms =>
-      'Une confirmation vous est envoyée par SMS.';
+  String get appointmentCancelDoneSms => 'Une confirmation vous est envoyée.';
 
   @override
   String get appointmentCancelNotModifiable =>
@@ -1318,4 +1317,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get rescheduleStillPending =>
       'La clinique doit confirmer le nouveau créneau.';
+
+  @override
+  String get rescheduleSlotGone =>
+      'Ce créneau n\'est plus proposé pour ce rendez-vous. Choisissez-en un autre.';
 }

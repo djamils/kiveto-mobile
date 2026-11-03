@@ -61,11 +61,11 @@
   "@screenAccountTitle": {
     "description": "Title of the account screen (6)."
   },
-  "screenBookingPetTitle": "Pour quel animal ?",
+  "screenBookingPetTitle": "Pour quel animal ?",
   "@screenBookingPetTitle": {
     "description": "Title of the booking step 1, the pet (12)."
   },
-  "screenBookingMotifTitle": "Quel est le motif ?",
+  "screenBookingMotifTitle": "Quel est le motif ?",
   "@screenBookingMotifTitle": {
     "description": "Title of the booking step 2, the reason (13)."
   },
@@ -1340,7 +1340,7 @@
   "@bookingNewPetSpecies": {
     "description": "Booking, pet step (12): accessible name of the species chips of a new pet."
   },
-  "bookingPetFootnote": "Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.",
+  "bookingPetFootnote": "Un nouvel animal est ajouté à votre dossier dès la réservation ; la clinique complète sa fiche lors de la visite.",
   "@bookingPetFootnote": {
     "description": "Booking, pet step (12): the footnote under the pets (the API creates a new pet with the booking)."
   },
@@ -1405,11 +1405,11 @@
   "@bookingNotOpenBody": {
     "description": "Booking, motif step (13): body of the error when the clinic closed online booking (422 booking_not_open)."
   },
-  "bookingEmergency": "Urgence ? Ne réservez pas en ligne, appelez la clinique.",
+  "bookingEmergency": "Urgence ? Ne réservez pas en ligne, appelez la clinique.",
   "@bookingEmergency": {
     "description": "Booking, motif step (13): the emergency callout, next to the clinic's call button."
   },
-  "bookingEmergencyNoPhone": "Urgence ? Ne réservez pas en ligne, appelez directement la clinique.",
+  "bookingEmergencyNoPhone": "Urgence ? Ne réservez pas en ligne, appelez directement la clinique.",
   "@bookingEmergencyNoPhone": {
     "description": "Booking, motif step (13): the emergency callout when the clinic gave no phone number."
   },
@@ -1537,7 +1537,7 @@
   "@bookingPendingTitle": {
     "description": "Booking, success (14): title when the clinic must confirm (pending_clinic_confirmation)."
   },
-  "bookingSmsSent": "Une confirmation vous a été envoyée par SMS.",
+  "bookingSmsSent": "Une confirmation vous a été envoyée.",
   "@bookingSmsSent": {
     "description": "Booking, success (14): note of a confirmed booking."
   },
@@ -1658,7 +1658,7 @@
       }
     }
   },
-  "appointmentsWindowClosed": "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
+  "appointmentsWindowClosed": "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
   "@appointmentsWindowClosed": {
     "description": "Appointments (4) and cancellation (16): the online cancellation window is over."
   },
@@ -1699,7 +1699,7 @@
     "description": "Cancellation (16) and reschedule success: back to the appointments."
   },
 
-  "appointmentCancelTitle": "Annuler ce rendez-vous ?",
+  "appointmentCancelTitle": "Annuler ce rendez-vous ?",
   "@appointmentCancelTitle": {
     "description": "Cancellation sheet (16): title."
   },
@@ -1735,7 +1735,7 @@
       }
     }
   },
-  "appointmentCancelCareVaccination": "Le rappel {label} de {pet} est à faire avant le {date}. Reporter évite un retard de vaccination.",
+  "appointmentCancelCareVaccination": "Le rappel {label} est à faire avant le {date} pour {pet}. Reporter évite un retard de vaccination.",
   "@appointmentCancelCareVaccination": {
     "description": "Cancellation sheet (16): warning when the motif covers a vaccination of the pet.",
     "placeholders": {
@@ -1753,7 +1753,7 @@
       }
     }
   },
-  "appointmentCancelCareInternalParasite": "Le traitement {label} de {pet} est à faire avant le {date}. Reporter évite un retard de vermifugation.",
+  "appointmentCancelCareInternalParasite": "Le traitement {label} est à faire avant le {date} pour {pet}. Reporter évite un retard de vermifugation.",
   "@appointmentCancelCareInternalParasite": {
     "description": "Cancellation sheet (16): warning when the motif covers a deworming of the pet.",
     "placeholders": {
@@ -1771,7 +1771,7 @@
       }
     }
   },
-  "appointmentCancelCareExternalParasite": "Le traitement {label} de {pet} est à faire avant le {date}. Reporter évite un retard de traitement antiparasitaire.",
+  "appointmentCancelCareExternalParasite": "Le traitement {label} est à faire avant le {date} pour {pet}. Reporter évite un retard de traitement antiparasitaire.",
   "@appointmentCancelCareExternalParasite": {
     "description": "Cancellation sheet (16): warning when the motif covers a flea and tick treatment of the pet.",
     "placeholders": {
@@ -1789,7 +1789,7 @@
       }
     }
   },
-  "appointmentCancelCareOther": "Le soin {label} de {pet} est à faire avant le {date}. Reporter évite un retard de soin.",
+  "appointmentCancelCareOther": "Le soin {label} est à faire avant le {date} pour {pet}. Reporter évite un retard de soin.",
   "@appointmentCancelCareOther": {
     "description": "Cancellation sheet (16): warning when the motif covers another care item of the pet.",
     "placeholders": {
@@ -1847,7 +1847,7 @@
   "@appointmentCancelDoneBody": {
     "description": "Cancellation sheet (16): body once cancelled."
   },
-  "appointmentCancelDoneSms": "Une confirmation vous est envoyée par SMS.",
+  "appointmentCancelDoneSms": "Une confirmation vous est envoyée.",
   "@appointmentCancelDoneSms": {
     "description": "Cancellation sheet (16): added to the body when the appointment was confirmed."
   },
@@ -1926,5 +1926,9 @@
   "rescheduleStillPending": "La clinique doit confirmer le nouveau créneau.",
   "@rescheduleStillPending": {
     "description": "Reschedule success: note when the appointment still waits for the clinic's confirmation."
+  },
+  "rescheduleSlotGone": "Ce créneau n'est plus proposé pour ce rendez-vous. Choisissez-en un autre.",
+  "@rescheduleSlotGone": {
+    "description": "Reschedule: the slot or the practitioner is no longer offered for the appointment (404 on the reschedule)."
   }
 }

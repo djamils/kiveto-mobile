@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart' show deviceToday;
@@ -95,7 +97,7 @@ class _CancelAppointmentSheetState
         _sending = false;
         _error = error;
         // Refused for good: no reason left to send again.
-        if (isClosedAppointment(error)) _reason = null;
+        if (isStaleAppointment(error)) _reason = null;
       });
     }
   }
@@ -184,6 +186,8 @@ class _CancelAppointmentSheetState
               error,
               notFound: l10n.appointmentGone,
             ),
+            actionLabel: isTransientFailure(error) ? l10n.commonRetry : null,
+            onAction: () => unawaited(_cancel()),
           ),
         ],
         _gap,

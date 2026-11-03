@@ -129,6 +129,15 @@ Finder _iconButton(LucideGlyph glyph) => find.byWidgetPredicate(
   (widget) => widget is KivetoIconButton && widget.glyph == glyph,
 );
 
+/// The `nextCursor` of the first page of the past appointments.
+String _pastCursor() =>
+    (jsonDecode(
+          File(
+            '$portalFixtures/clinics.paris.appointments.past.page1.get.200.json',
+          ).readAsStringSync(),
+        ) as Map<String, Object?>)['nextCursor']!
+        as String;
+
 /// [text] in the upcoming card of [appointmentId].
 Finder _inCard(String appointmentId, String text) => find.descendant(
   of: find.byKey(
@@ -158,9 +167,8 @@ Future<void> _tapInFlow(WidgetTester tester, Finder finder) async {
 void main() {
   testWidgets('from the home: Oslo, Consultation, Dr Marc Dupont, Monday '
       "10:00, confirmed; one POST with the draft's key and the slot's "
-      'startAt; « Plus tard » shows the home with the new appointment', (
-    tester,
-  ) async {
+      'startAt; « Plus tard » shows the home with the new appointment, and '
+      'the Rendez-vous tab its card', (tester) async {
     final keys = _Keys();
     var booked = false;
     final backend = _julien(booked: () => booked)
@@ -169,6 +177,18 @@ void main() {
         return PortalReply.fixture(
           'clinics.paris.appointments.post.201.json',
           status: 201,
+        );
+      })
+      ..onRequest('GET', '$_base/appointments?scope=upcoming', (request) {
+        final created = jsonDecode(
+          File('$portalFixtures/clinics.paris.appointments.post.201.json')
+              .readAsStringSync(),
+        );
+        return PortalReply.json(
+          jsonEncode({
+            'items': [if (booked) created],
+            'nextCursor': null,
+          }),
         );
       });
     final container = await pumpKivetoApp(
@@ -223,6 +243,12 @@ void main() {
     expect(_location(container), AppRoutes.home);
     expect(find.text('Lun. 9 nov. · 10:00'), findsOneWidget);
     expect(backend.requestsTo('$_base/home'), hasLength(2));
+
+    await tester.tap(find.text('Rendez-vous'));
+    await tester.pumpAndSettle();
+    expect(_location(container), AppRoutes.appointments);
+    expect(_inCard(_booked, '10:00 · Oslo'), findsOneWidget);
+    expect(_inCard(_booked, 'Consultation'), findsOneWidget);
   });
 
   testWidgets('the steps go back: the chips and backs of steps 2 to 4, '
@@ -406,6 +432,29 @@ void main() {
     final draft = container.read(bookingWizardProvider).draft;
     expect(draft.pet, isNull);
     expect(draft.key, isNot(first));
+
+    // X on step 4, the four steps stacked over the tab: the tab again.
+    await tester.tap(find.widgetWithText(KivetoButton, 'Continuer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Consultation'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(KivetoButton, 'Continuer'));
+    await tester.pumpAndSettle();
+    await _tapInFlow(tester, find.byKey(const ValueKey('day-2026-11-09')));
+    await _tapInFlow(
+      tester,
+      find.byKey(const ValueKey('slot-2026-11-09T10:00:00+01:00')),
+    );
+    await _tapInFlow(tester, find.widgetWithText(KivetoButton, 'Continuer'));
+    expect(find.text('Étape 4 sur 4'), findsOneWidget);
+
+    await _tapInFlow(tester, _iconButton(LucideGlyph.x));
+
+    expect(_location(container), AppRoutes.appointments);
+    expect(find.byType(AppointmentsPage), findsOneWidget);
+    for (var step = 1; step <= 4; step++) {
+      expect(find.text('Étape $step sur 4'), findsNothing);
+    }
   });
 
   testWidgets('the Rendez-vous tab: the upcoming cards, the past ones page '
@@ -501,13 +550,21 @@ void main() {
           }),
         );
       })
+      // After the cancellation the past list holds it (`cancelled_by_client`).
       ..onRequest('GET', '$_base/appointments?scope=past', (request) {
         return cancelled
             ? PortalReply.fixture(
-                'clinics.paris.appointments.past.page2.get.200.json',
+                'clinics.paris.appointments.past.page1.get.200.json',
               )
             : PortalReply.json('{"items":[],"nextCursor":null}');
       })
+      ..on(
+        'GET',
+        '$_base/appointments?scope=past&cursor=${_pastCursor()}',
+        PortalReply.fixture(
+          'clinics.paris.appointments.past.page2.get.200.json',
+        ),
+      )
       ..on(
         'GET',
         '$_base/appointments/$_booked',
@@ -552,6 +609,14 @@ void main() {
       ],
     );
 
+    // « Passés » read before the cancellation: nothing yet.
+    await tester.tap(find.text('Passés'));
+    await tester.pumpAndSettle();
+    expect(find.text('Aucun rendez-vous passé'), findsOneWidget);
+    await tester.tap(find.text('À venir'));
+    await tester.pumpAndSettle();
+    expect(backend.requestsTo('$_base/home'), hasLength(1));
+
     // The calendar of the portal booking (the second card).
     await _tapInFlow(tester, _inCard(_booked, 'Ajouter à mon calendrier'));
     expect(shared.single.fileName, 'rendez-vous-2026-11-11.ics');
@@ -566,7 +631,7 @@ void main() {
     // tab.
     await _tapInFlow(tester, _inCard(_booked, 'Annuler'));
     await _tapInFlow(tester, find.text('Reporter plutôt'));
-    expect(find.text('Annuler ce rendez-vous ?'), findsNothing);
+    expect(find.text('Annuler ce rendez-vous ?'), findsNothing);
     expect(_top(container), AppRoutes.reschedule(_booked));
     await tester.tap(_iconButton(LucideGlyph.chevronLeft));
     await tester.pumpAndSettle();
@@ -604,9 +669,15 @@ void main() {
       backend.requestsTo('$_base/appointments?scope=upcoming'),
       hasLength(2),
     );
+    // The home read again after the reschedule.
+    await tester.tap(find.text('Accueil'));
+    await tester.pumpAndSettle();
+    expect(backend.requestsTo('$_base/home'), hasLength(2));
+    await tester.tap(find.text('Rendez-vous'));
+    await tester.pumpAndSettle();
 
     await _tapInFlow(tester, _inCard(_booked, 'Annuler'));
-    expect(find.text('Annuler ce rendez-vous ?'), findsOneWidget);
+    expect(find.text('Annuler ce rendez-vous ?'), findsOneWidget);
     await tester.tap(find.text('Empêchement'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Annuler le rendez-vous'));
@@ -628,11 +699,23 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Passés'));
     await tester.pumpAndSettle();
-    expect(find.text('Annulé par la clinique'), findsOneWidget);
+    // The cancelled appointment, under « Passés ».
+    final past = find.byKey(
+      const ValueKey((AppointmentScope.past, AppointmentId(_booked))),
+    );
+    expect(past, findsOneWidget);
+    expect(
+      find.descendant(of: past, matching: find.text('Annulé')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: past, matching: find.text('Consultation')),
+      findsOneWidget,
+    );
+    // The home read again after the cancellation.
     await tester.tap(find.text('Accueil'));
     await tester.pumpAndSettle();
-    // The home read again after the changes (the revision).
-    expect(backend.requestsTo('$_base/home'), hasLength(2));
+    expect(backend.requestsTo('$_base/home'), hasLength(3));
     expect(find.text('Lun. 9 nov. · 10:00'), findsOneWidget);
   });
 }

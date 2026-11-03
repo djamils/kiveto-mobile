@@ -377,7 +377,7 @@ void main() {
         initialLocation: AppRoutes.bookingPet,
       );
       expect(find.byType(BookingPetPage), findsOneWidget);
-      expect(find.text('Pour quel animal ?'), findsOneWidget);
+      expect(find.text('Pour quel animal ?'), findsOneWidget);
       expect(find.text('Accueil'), findsNothing);
 
       await tester.tap(

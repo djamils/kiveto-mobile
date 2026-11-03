@@ -151,7 +151,7 @@ void main() {
     );
     expect(
       find.text(
-        'Une confirmation vous a été envoyée par SMS.\n'
+        'Une confirmation vous a été envoyée.\n'
         "Annulation en ligne possible jusqu'au dim. 8 nov. à 10:00.",
       ),
       findsOneWidget,
@@ -175,8 +175,9 @@ void main() {
     );
   });
 
-  testWidgets('a confirmation on its way: no choice changes the draft, no '
-      'second POST; its answer for the draft sent', (tester) async {
+  testWidgets('a confirmation on its way: no exit and no choice changes '
+      'the draft, no second POST; its answer for the draft sent; once '
+      'booked, no choice either', (tester) async {
     final answer = Completer<PortalReply>();
     final backend = julienBackend()
       ..onRequest('POST', _book, (request) => answer.future);
@@ -204,6 +205,15 @@ void main() {
     );
     expect(await wizard.confirm(), BookingOutcome.ignored);
 
+    // Back, X, « Modifier » and the system back stay on the recap.
+    await tester.tap(iconButton(LucideGlyph.chevronLeft));
+    await tester.tap(iconButton(LucideGlyph.x));
+    await tester.tap(find.text('Modifier'));
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(exits, isEmpty);
+    expect(find.text('Vérifiez et confirmez'), findsOneWidget);
+
     answer.complete(
       PortalReply.fixture(
         'clinics.paris.appointments.post.201.json',
@@ -214,10 +224,17 @@ void main() {
     expect(find.text('Rendez-vous confirmé'), findsOneWidget);
     expect(backend.requestsTo(_book), hasLength(1));
     expect(container.read(bookingWizardProvider).draft, same(draft));
+
+    // Booked: a late choice (from a step left under the success) keeps the
+    // booking done, its key and its draft.
+    wizard.chooseSlot(dupont, ClinicInstant.parse('2026-11-09T10:30:00+01:00'));
+    final done = container.read(bookingWizardProvider);
+    expect(done.draft, same(draft));
+    expect(done.submission, isA<BookingDone>());
   });
 
   testWidgets('a motif the clinic confirms (capture): « Demande envoyée », '
-      'no SMS promised', (tester) async {
+      'no confirmation promised', (tester) async {
     final backend = julienBackend()
       ..on(
         'POST',
@@ -241,7 +258,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.textContaining('SMS'), findsNothing);
+    expect(find.textContaining('Une confirmation'), findsNothing);
   });
 
   testWidgets('a new pet (capture): its line, with-new-pet, the pets read '
