@@ -122,6 +122,40 @@ Fixtures in `test/support/fixtures/portal_api/`; `testNow` = 2026-11-03 (today).
 - Given the Animaux tab, when it is opened, then the first pet of `GET /pets` shows; given ≥ 3 pets, the switcher scrolls horizontally and selecting a segment shows that pet without navigating.
 - Given `make ci`, when it runs on the branch, then it is green (format, analyze, architecture, coverage 100 % on the gated files, scripts, api-check).
 
+### Review Findings
+
+Code review (bmad-code-review, 2026-11-03, branch diff against `master` 7bf776a, generated code excluded): 31 findings — 0 decision-needed, 15 patch (14 entries, applied), 6 defer (4 entries), 10 rejected.
+
+- [x] [Review][Patch] go_router logs a warning and drops the non-serialisable `extra: Object()` on every pet navigation — an `int` token per `_goPet` [lib/app/routing/app_router.dart:76]
+- [x] [Review][Patch] A clinic switch (and back) brings the switcher's old choice back — `_selected` dropped when the pets list no longer contains it (`ref.listen`, no mutation in build); grouped with the acceptance auditor's « reset when the clinic's pet list changes » [lib/features/patient/presentation/pet_page.dart:65]
+- [x] [Review][Patch] A 404 on one pet's sheet or care items retries the same 404 — invalidates `petsProvider` and `/me` [lib/features/patient/presentation/pet_page.dart:466]
+- [x] [Review][Patch] The 60-day threshold is two literals — one named constant [lib/features/patient/presentation/pet_messages.dart:124]
+- [x] [Review][Patch] Non-exhaustive appointment status switch (`_ =>`) — the 8 generated values listed [lib/features/home/infrastructure/portal_home_repository.dart:52]
+- [x] [Review][Patch] Pet cards and tappable kit rows not announced as buttons — `Semantics(button: true)` [lib/features/home/presentation/pet_cards.dart:91]
+- [x] [Review][Patch] `petsProvider` exported with no user outside patient — export removed [lib/features/patient/patient.dart]
+- [x] [Review][Patch] Switcher sheet never tested with a pending clinic — test [test/widget/features/home/home_page_test.dart]
+- [x] [Review][Patch] « Mes animaux » hidden on an empty pets list untested — test [test/widget/features/home/home_page_test.dart]
+- [x] [Review][Patch] Identity grid and care items « retry in flight » untested — tests [test/widget/features/patient/pet_page_test.dart]
+- [x] [Review][Patch] Late next timeline page after a clinic switch untested — test [test/widget/features/consultation/pet_timeline_section_test.dart]
+- [x] [Review][Patch] AC « Accueil active » not asserted — `currentIndex` 0 asserted [test/widget/app/home_flow_test.dart]
+- [x] [Review][Patch] Capture `clinics.lyon.home.garnier.get.200.json` unused — mapped in the home repository test [test/unit/features/home/infrastructure/]
+- [x] [Review][Patch] `CONTRIBUTING.md` §0 lacks slice 3 — row added with the validation record [CONTRIBUTING.md:29]
+- [x] [Review][Defer] Contract pinned to the unmerged backend commit `bcb8d8b1` (blind-hunter + acceptance auditor) [contracts/SOURCE:4] — deferred: the backend merge was refused by the permission system; needs the user's go-ahead (deferred-work.md)
+- [x] [Review][Defer] « Today » is the device's date, not the clinic's (blind-hunter + edge-case hunter) [lib/features/patient/presentation/pet_messages.dart:19] — deferred: needs a time-zone package decision (CLAUDE.md §7)
+- [x] [Review][Defer] Header / « Carnet PDF » / sheet mark blink while `/me` reloads (edge-case hunter, carried from the build review) [lib/features/home/presentation/home_header.dart:29] — deferred: pre-existing « never `.value` » pattern
+- [x] [Review][Defer] A failed store write reverts the clinic at the next `/me` reload (edge-case hunter) [lib/features/client/presentation/client_providers.dart] — deferred: pre-existing (slice 1)
+
+Rejected:
+- `low` (blind-hunter) The home's overdue rows read « Avant le 13 oct. » next to « En retard » — the intent's rule for home rows; the pill carries the lateness.
+- `low` (blind-hunter) Test helpers (`_cursorOf`, `_fakePdfView`, JSON editors) copied across test files — test-only, no divergence named.
+- `false` (blind-hunter) No empty state for a fully empty home — the intent: « header + À prévoir CTA, nothing else » (sections hide, API guide).
+- `false` (acceptance auditor) `PetPage(request:)`, `_backOrHome` differ from the Code Map — fixing it means editing the spec; the triage log records them.
+- `low` (acceptance auditor) Reselecting the Animaux tab on `/pets` keeps the switcher's pick — the shell keeps every tab root's state (Documents keeps its filter too); opening the tab from elsewhere is AC 5's case.
+- `low` (edge-case hunter) A reloaded first page whose cursor answers `cursor_invalid` again loops — the contract's cursor is valid by construction; carried from the build review (same as slice 2).
+- `low` (edge-case hunter) An invoice currency that is not 3 upper-case letters fails the whole home — the contract sends ISO codes; same as the documents mapper.
+- `low` (edge-case hunter) Countdowns stale across midnight — carried from the build review.
+- `low` (edge-case hunter) Blank `motifLabel` leaves a dangling separator; `PlaceholderKind.pushed` dead — carried from the build review (server sends labels; the kind is kept for later pushed pages).
+
 ## Spec Change Log
 
 ## Review Triage Log
