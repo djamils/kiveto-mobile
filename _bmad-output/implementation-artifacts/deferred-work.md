@@ -25,10 +25,6 @@
   evidence: App code is out of phase 2 by the frozen boundary (review finding 21).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-toolchain-bootstrap.md`
-  summary: On macOS, report an Xcode whose licence or first launch is pending (`xcodebuild` exit 69) as such, with `sudo xcodebuild -license accept` / `-runFirstLaunch`, instead of "Xcode not found".
-  evidence: Unverified (needs a Mac); if true, medium: every new Mac setup meets it (review finding 41).
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-toolchain-bootstrap.md`
   summary: Add an NDK check to `make doctor` (the version Flutter asks for, under `ndk/`), with the Android CLI or SDK Manager fix; add it to `make-targets.md` first.
   evidence: On Windows with cmdline-tools 23.0, AGP cannot auto-install the NDK (`sdkmanager.bat` splits `ndk;<version>`), and doctor reports ready before a failing first build (review finding 46).
 

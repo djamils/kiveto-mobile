@@ -25,6 +25,21 @@ warning() {
 
 if [ "$QUIET" = 0 ]; then step "Checking prerequisites ($KV_OS)..."; fi
 
+# --- Xcode licence (macOS) --------------------------------------------------
+# Until the Xcode licence is accepted, the xcrun shims (/usr/bin/make, git,
+# xcrun) exit 69 instead of running, so make doctor itself cannot start:
+# name that cause here instead of "not found" below.
+
+xcode_licence_ok=1
+if [ "$KV_OS" = macos ] && command -v xcodebuild >/dev/null 2>&1; then
+  licence_rc=0
+  xcodebuild -license check >/dev/null 2>&1 || licence_rc=$?
+  if [ "$licence_rc" = 69 ]; then
+    xcode_licence_ok=0
+    blocker "Xcode licence not accepted (/usr/bin/make, /usr/bin/git and xcrun refuse to run)" "sudo xcodebuild -license accept, then sudo xcodebuild -runFirstLaunch"
+  fi
+fi
+
 # --- Shell, make, git -------------------------------------------------------
 
 if version_ge "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}" 3.2; then
@@ -38,7 +53,9 @@ if [ -z "$make_version" ] && command -v make >/dev/null 2>&1; then
   make_version=$(make --version 2>/dev/null | sed -n 's/^GNU Make \([0-9.]*\).*/\1/p') || make_version=''
 fi
 make_fix='winget install ezwinports.make (Windows), /usr/bin/make from the Xcode Command Line Tools (macOS)'
-if [ -z "$make_version" ]; then
+if [ -z "$make_version" ] && [ "$xcode_licence_ok" = 0 ]; then
+  warning "GNU Make not checked" "/usr/bin/make waits for the Xcode licence"
+elif [ -z "$make_version" ]; then
   blocker "GNU Make not found" "$make_fix"
 elif version_ge "$make_version" 3.81; then
   pass "GNU Make $make_version"
@@ -48,6 +65,8 @@ fi
 
 if git_version=$(git --version 2>/dev/null); then
   pass "$git_version"
+elif [ "$xcode_licence_ok" = 0 ]; then
+  warning "git not checked" "/usr/bin/git waits for the Xcode licence"
 else
   blocker "git not found" "install Git"
 fi
@@ -190,8 +209,14 @@ if [ "$KV_OS" = macos ]; then
     fi
   fi
 
+  if [ "$xcode_licence_ok" = 1 ] && [ -n "$xcode" ] && ! xcodebuild -checkFirstLaunchStatus >/dev/null 2>&1; then
+    blocker "Xcode first launch not done (system components missing)" "sudo xcodebuild -runFirstLaunch"
+  fi
+
   runtimes=$(xcrun simctl list runtimes 2>/dev/null | grep -E '^iOS ') || runtimes=''
-  if [ -n "$runtimes" ]; then
+  if [ "$xcode_licence_ok" = 0 ]; then
+    warning "iOS simulator runtimes not checked" "xcrun waits for the Xcode licence"
+  elif [ -n "$runtimes" ]; then
     pass "iOS simulator runtime: ${runtimes%%"$NL"*}"
   else
     warning "No iOS simulator runtime" "Xcode › Settings › Components"

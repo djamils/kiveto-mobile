@@ -2,7 +2,7 @@
 
 Application Flutter (Android et iOS) du **Portal Kiveto**, l'espace des propriétaires d'animaux. Elle est cliente de l'API Portal du backend Kiveto (dépôt [djamils/kiveto](https://github.com/djamils/kiveto), contrat `openapi/portal.v1.yaml`).
 
-> **Bootstrap en cours — phase 1 terminée, phase 2 sur 6 terminée sous Windows ; validation macOS en attente.** Le dépôt contient ses fondations (conventions, BMAD, Claude Code, décisions d'architecture), le projet Flutter Android et iOS (`app.kiveto.portal`, nom affiché « Kiveto »), Flutter 3.47.9 épinglé avec FVM et le `Makefile`. Les contrôles qualité (`make ci`) arrivent en phase 3 ; l'état à jour est dans [CONTRIBUTING.md](./CONTRIBUTING.md#0-bootstrap-status).
+> **Bootstrap en cours — phases 1 et 2 sur 6 terminées, phase 2 validée sous Windows et macOS.** Le dépôt contient ses fondations (conventions, BMAD, Claude Code, décisions d'architecture), le projet Flutter Android et iOS (`app.kiveto.portal`, nom affiché « Kiveto »), Flutter 3.47.9 épinglé avec FVM et le `Makefile`. Les contrôles qualité (`make ci`) arrivent en phase 3 ; l'état à jour est dans [CONTRIBUTING.md](./CONTRIBUTING.md#0-bootstrap-status).
 
 ---
 
@@ -18,7 +18,7 @@ Windows 11 (Android seulement) ou macOS (Android et iOS).
 | Mode développeur | Paramètres › Système › Pour les développeurs (liens symboliques de FVM) | — |
 | Android Studio | SDK, cmdline-tools, un émulateur, licences acceptées, et NDK (Side by side) 28.2.13676358, la version demandée par Flutter 3.47.9 : SDK Manager › SDK Tools › NDK (Side by side) avec « Show Package Details », ou `android --no-metrics sdk install ndk/28.2.13676358` depuis `cmdline-tools/latest/bin` (sous Windows avec cmdline-tools 23.0, Gradle ne peut pas l'installer seul : `sdkmanager.bat` coupe `ndk;28.2.13676358` au `;`) | idem |
 | JDK ≥ 17 | celui d'Android Studio ou un JDK installé (un JRE ne suffit pas) | idem |
-| Xcode ≥ 26 | — | App Store |
+| Xcode ≥ 26 | — | App Store, puis `sudo xcodebuild -license accept` et `sudo xcodebuild -runFirstLaunch` (tant que la licence n'est pas acceptée, `/usr/bin/make` et `/usr/bin/git` refusent de tourner : lancer `bash scripts/doctor.sh`), et un runtime de simulateur iOS (Xcode › Settings › Components) |
 | Node ≥ 20.12 et uv | pour BMAD uniquement | idem |
 
 Cloner le dépôt sur un disque local, dans un chemin sans espaces.
