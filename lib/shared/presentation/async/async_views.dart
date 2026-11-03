@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show ProviderException;
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/kiveto_icon.dart';
@@ -51,12 +52,19 @@ class LoadingView extends StatelessWidget {
   );
 }
 
+/// The error a provider failed with: an error that reached it through
+/// another provider (a dependency, `selectAsync`) arrives wrapped in
+/// [ProviderException]s.
+Object _cause(Object error) =>
+    error is ProviderException ? _cause(error.exception) : error;
+
 /// The title and body of an error, in French: one pair per [ApiFailure]
-/// subtype, a generic one for any other error.
+/// subtype (also when a provider wrapped it), a generic one for any other
+/// error.
 (String title, String body) failureMessage(
   AppLocalizations l10n,
   Object error,
-) => switch (error) {
+) => switch (_cause(error)) {
   NetworkFailure() => (l10n.errorNetworkTitle, l10n.errorNetworkBody),
   UnauthorizedFailure() => (
     l10n.errorUnauthorizedTitle,
@@ -103,7 +111,7 @@ class ErrorView extends StatelessWidget {
     final (defaultTitle, body) = failureMessage(l10n, error);
     final onRetry = this.onRetry;
     return EmptyState(
-      glyph: switch (error) {
+      glyph: switch (_cause(error)) {
         NetworkFailure() => LucideGlyph.wifiOff,
         RateLimitedFailure() => LucideGlyph.clock,
         _ => LucideGlyph.circleAlert,

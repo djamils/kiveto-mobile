@@ -68,6 +68,21 @@ dependencies:
   # package:flutter/material.dart, so that there is one MaterialApp, one
   # Theme and one MaterialLocalizations.
   material_ui: 1.9.0
+  # Slice 2 (document): the in-app PDF viewer of the documents (and, later,
+  # of the vaccination booklet), checked on pub.dev on 2026-11-03 and pinned
+  # exactly: latest, publisher espresso3389.jp, 160/160 points, ~610 k
+  # downloads in 30 days, `sdk: ^3.13.0`, `flutter: >=3.47.0`; it depends on
+  # material_ui ^1.0.0 and imports only material_ui (never
+  # flutter/material.dart). Its native-assets hook (pdfium_dart) builds a
+  # small C gate and downloads PDFium chromium/8125 (unverified archive,
+  # deferred-work) on every first build, `flutter test` included: a C
+  # toolchain and network are needed then (CONTRIBUTING §5). It brings
+  # into the lock pdfrx_engine 0.9.0, pdfium_dart 0.4.1, pdfium_flutter
+  # 0.4.1, native_toolchain_c 0.19.5, archive 4.6.0, glob 2.2.0, http 1.6.0,
+  # image 4.12.0, posix 6.5.4, process 5.0.6, rxdart 0.28.0 and synchronized
+  # 3.5.0. Rejected: pdfx, which re-exports photo_view 0.15.0 (unmaintained
+  # since 2024-04), which imports flutter/material.dart.
+  pdfrx: 2.11.0
   # Slice 1 (identity_access, client), versions checked on pub.dev on
   # 2026-11-03 (both latest, flutter.dev, Dart >= 3.11, resolution checked
   # with `fvm flutter pub add --dry-run`) and pinned exactly:

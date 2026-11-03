@@ -10,6 +10,7 @@ import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
 import 'package:kiveto_mobile/app/routing/placeholder_page.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
+import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:material_ui/material_ui.dart';
@@ -177,9 +178,13 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
         ),
         StatefulShellBranch(
           routes: [
-            _page(
-              AppRoutes.documents,
-              (l10n) => l10n.screenDocumentsTitle,
+            GoRoute(
+              path: AppRoutes.documents,
+              builder: (context, state) => DocumentsPage(
+                onRequestRenewal: (context, prescriptionId) => unawaited(
+                  context.push(AppRoutes.prescriptionRenewal(prescriptionId)),
+                ),
+              ),
               routes: [
                 fullScreen(
                   'prescriptions/:prescriptionId/renewal',

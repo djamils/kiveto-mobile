@@ -155,3 +155,35 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-identity-access.md`
   summary: Sign-in pages and sheets were checked on one 411-dp Android emulator only; check them with large text (accessibility font scale) and on a ~360-dp phone (the welcome screen scrolls once the keyboard is up; the OTP boxes shrink with the width).
   evidence: Slice 1 widget tests run on the 390 × 844 mockup frame; the walk ran on `Medium_Phone_API_37.0`.
+
+## Deferred from: spec-document.md (slice 2, 2026-11-03)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Let the owner keep or share a document outside the app (save the PDF, "Ouvrir avec…", share sheet): the in-app viewer (`pdf_file_page.dart`, pdfrx) only shows it.
+  evidence: Out of the slice 2 intent; needs a share/save package (share_plus or the platform's document picker) checked under CLAUDE.md §7.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Screen 17 (slice 6): after `requestRenewal` succeeds, refresh the documents lists (expose a refresh from `features/document/document.dart`, e.g. invalidating `documentListProvider`), so the prescription card and sheet show « Renouvellement demandé » instead of the button.
+  evidence: Code review (blind-hunter), maybe-false until slice 6 exists, if true medium: the renewal route's exit discards the push future (`app_router.dart`) and the lists keep their state until a pull-to-refresh, a clinic or session change.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: pdfrx's native-assets hook downloads the PDFium archive (`bblanchon/pdfium-binaries`, `chromium/8125`) without a checksum on every first build, `flutter test` included; decide whether to vendor or verify it, cache `.dart_tool/hooks_runner/` in the GitHub Actions job (which needs gcc/clang and network), and build iOS once (pdfium_flutter's XCFramework is untested).
+  evidence: Code review (blind-hunter), verified: `pdfium_dart-0.4.1/hook/build.dart` fetches the `.tgz` over HTTPS and only checks the HTTP status; `make ci` on Windows compiled `pdfrx_pdfium_gate` with MSVC and downloaded `pdfium.dll`. CONTRIBUTING §5 now lists the prerequisite.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Design question: invoices show « 68,00 € · Payée · 14 oct. » without the year (mockup 05), so an owner with several years of invoices (Garnier's go back to 2023) cannot tell 2025's from 2026's; show the year when it is not the current one, or always.
+  evidence: Code review (blind-hunter, edge-case hunter), verified; kept as the mockup draws it (the intent asks `dayMonth` for invoices).
+
+## Deferred from: code review of spec-document.md (2026-11-03, bmad-code-review)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Register the PDFium notices (BSD-3 and its third-party licences: FreeType, libjpeg-turbo, OpenJPEG, lcms, zlib…) on the app's licence page before the first store build: pdfrx ships the native PDFium library in the app, and only the Dart wrappers' MIT licences reach `LicenseRegistry` (`app/bootstrap/asset_licenses.dart` registers DM Sans and Lucide only).
+  evidence: Code review (blind-hunter), verified, medium: the pdfium-binaries archive (`bblanchon/pdfium-binaries`, `chromium/8125`) carries `LICENSE` and a `licenses/` folder; the native-assets hook only extracts the library.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Make `make doctor` (`scripts/doctor.sh`) check the C toolchain pdfrx's native-assets hook needs (MSVC on Windows, Xcode Command Line Tools on macOS, gcc/clang on Linux), so a fresh clone gets a clear blocker instead of a failure inside the hook on the first `make ci`.
+  evidence: Code review (blind-hunter), verified, low: CONTRIBUTING §5 lists the prerequisite; the doctor checks the NDK and Xcode only.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
+  summary: Check screen 5, the prescription sheet and the PDF viewer with large text (accessibility font scale ≥ 1.3) and on a ~360-dp phone: the C-30 card holds a 40-px tile, a wrapping title, a 44-px button and a full-width renewal button; the viewer title is one line.
+  evidence: Code review (blind-hunter); slice 2 was checked on the 411-dp emulator and the 390 × 844 test frame only (the same gap as slice 1's entry).
