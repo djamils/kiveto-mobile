@@ -259,6 +259,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
   summary: A deleted (or signed-out) account leaves its `client.activeClinic.<accountId>` key in the platform preferences: `ActiveClinicStore` has no removal and `DeleteAccount` only closes the session; a cleanup needs a seam from identity_access to client (identity_access cannot import client).
   evidence: Build review (blind hunter), verified, low, pre-existing since slice 1 (its hand-over lists the per-account keys as never cleaned); the key holds a clinic id, not a secret.
+  update: 2026-11-04 — `feature/ios-support` keeps the iOS install marker (`kiveto.install.marker`, `ReinstallGuard`) in the same platform preferences: a clean-up must remove its own keys, never `clear()` the store, or iOS users are signed out again at the next launch.
 
 ## Deferred from: code review of spec-client-account.md (2026-11-04)
 
@@ -290,7 +291,7 @@
 ## Deferred from: spec-ios-support.md (iOS step 1, 2026-11-04)
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
-  summary: Release and Profile builds keep the `CFBundleURLTypes` entry `app.kiveto.portal.dev` of `ios/Runner/Info.plist` with an empty scheme string (`$(KIVETO_DEV_URL_SCHEME)` is set in `ios/Flutter/Debug.xcconfig` only). An empty scheme matches no URL, so no `kiveto-dev` link opens a release build; whether App Store validation accepts an empty `CFBundleURLSchemes` item is unverified. Check the built Release plist (`plutil -p`, step 2) and the App Store Connect validation (step 3); if refused, give Release its own `INFOPLIST_FILE` (a pbxproj change) or strip the entry in a build phase.
+  summary: Release and Profile builds keep the `CFBundleURLTypes` entry `app.kiveto.portal.dev` of `ios/Runner/Info.plist` with an empty scheme string (`$(KIVETO_DEV_URL_SCHEME)` is set in `ios/Flutter/Debug.xcconfig` only). An empty scheme matches no URL, so no `kiveto-dev` link opens a release build; whether App Store validation accepts an empty `CFBundleURLSchemes` item is unverified. Check the built Release plist (`plutil -p`, step 2) and the App Store Connect validation (step 3); if refused, give Release its own `INFOPLIST_FILE` (a pbxproj change), strip the entry in a build phase, or preprocess the plist (`INFOPLIST_PREPROCESS = YES` in both xcconfigs, `INFOPLIST_PREPROCESSOR_DEFINITIONS = KIVETO_DEV=1` in `Debug.xcconfig` only, the dev blocks in `#ifdef KIVETO_DEV`; check how the preprocessor treats `//` in plist strings and whether Xcode and the Flutter tool still read the source plist).
   evidence: Code review of `feature/ios-support` (blind hunter, edge-case hunter, verification gap, intent auditor), maybe-false, if true medium: `test/integration/ios_project_test.dart` reads the source files only; no Xcode build ran.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
@@ -300,3 +301,13 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
   summary: Set `BYPASS_PERMISSION_LOCATION_ALWAYS=1` in every iOS build that does not go through `make start` once they exist: `flutter build ios/ipa` for TestFlight and the App Store, and an iOS CI job (step 3). Only release and archive builds reach App Review, where the compiled-in « always » API matters.
   evidence: Code review of `feature/ios-support` (blind hunter): `scripts/start.sh` exports it for debug runs; CONTRIBUTING « iOS (macOS) » says other builds must set it; no release path exists yet.
+
+## Deferred from: code review of spec-ios-support.md (2026-11-04, bmad-code-review)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
+  summary: Refuse a plain `http://` API base URL outside debug builds (e.g. in `apiConfigFromDefines` or `ApiConfig` when `kReleaseMode`), or allow `http` only for the dev hosts (loopback, `*.local`, `10.0.2.2`). dart:io sockets are not subject to App Transport Security on iOS, so a release build given an `http` base URL would send the tokens in clear text; Android's cleartext policy may not stop dart:io either.
+  evidence: Code review (blind hunter), maybe-false, if true medium: `ApiConfig` accepts `http` in every build mode; release builds have no env config yet (D11), so nothing ships with `http` today. Settle with the first release configuration (step 3): check whether dart:io honours Android's `cleartextTrafficPermitted=false` and decide the guard.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
+  summary: Revoke on the server the session that `ReinstallGuard` drops on the first launch after an iOS install (the Keychain kept it from the previous install): read the stale pair before `clear()`, then send `POST /auth/logout` best-effort once the HTTP client exists after `runApp`. Today that refresh family stays live until it expires (90 days of inactivity), as after any uninstall on Android too.
+  evidence: Code review (blind hunter), low: the limit is only written in the `resolved:` line of the phase-5 reinstall entry; `SignOut` (identity_access) already bounds a logout to 5 s; core/security cannot call identity_access, so the hand-off needs a seam in `app/bootstrap`.
