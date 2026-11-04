@@ -118,6 +118,48 @@ deferred: []
 - Given a retry after a network failure of the same content, when the owner sends again, then the same `Idempotency-Key` is sent; after the content changed, a new one.
 - `make ci` is green; the architecture tests pass; every new gated file is at 100 %.
 
+### Review Findings
+
+Code review (bmad-code-review, 2026-11-04) of `master...feature/portal-requests` after the build, the review pass above and the emulator walk (commit `e2822da`): 35 findings (blind hunter 15, edge-case hunter 7, verification gap 3, acceptance auditor 10) — 0 decision-needed, 13 patch entries, 0 deferred, 22 rejected.
+
+- [x] [Review][Patch] A request that answers after its page or sheet closed is never tested (the revision bump on 15, the documents reload on 17, the requests reload of the sheet are applied before the mounted check) [test/widget/features/scheduling/questionnaire_page_test.dart, test/widget/features/document/renewal_page_test.dart, test/widget/features/patient/pet_change_sheet_test.dart]
+- [x] [Review][Patch] The reload of every documents filter after a renewal is only checked for the unfiltered list [test/widget/features/document/renewal_page_test.dart]
+- [x] [Review][Patch] The questionnaire without an active clinic (« Rendez-vous introuvable », no retry) is never run [test/widget/features/scheduling/questionnaire_page_test.dart]
+- [x] [Review][Patch] A `note` violation on 17 shows in the callout instead of under the note field (Design Notes « Errors ») [lib/features/document/presentation/renewal_page.dart]
+- [x] [Review][Patch] The date inside the subtitle of 15 (« lun. 9 nov. à 14:15 ») keeps breakable spaces, unlike 17's [lib/features/scheduling/presentation/questionnaire_page.dart]
+- [x] [Review][Patch] The app-level test of AC1 asserts the banner of 4 is gone although its stub never shows it (`questionnaireStatus` forced to `submitted` before the PUT) [test/widget/app/home_flow_test.dart]
+- [x] [Review][Patch] The 429 copy promises « demain » although the quota is a rolling 24 h with `Retry-After` [lib/l10n/app_fr.arb `requestRateLimited`]
+- [x] [Review][Patch] `prescription_not_renewable` drops the server's reason (`detail`: « …refusée il y a moins de 7 jours ») [lib/features/document/presentation/renewal_page.dart]
+- [x] [Review][Patch] A renewal answered 404 (prescription gone) leaves the documents lists stale, the card keeps its button [lib/features/document/presentation/renewal_page.dart]
+- [x] [Review][Patch] After a `questionnaire_locked`, the re-read (an `AsyncData` with `isLoading`) keeps the editable form live with « Envoyer » enabled [lib/features/scheduling/presentation/questionnaire_page.dart]
+- [x] [Review][Patch] `AppointmentsRevision.bump()`'s doc still lists only bookings, moves and cancellations [lib/features/scheduling/presentation/scheduling_providers.dart]
+- [x] [Review][Patch] `document.dart` and `scheduling.dart` export the new domain files (the renewal repository contract included) with no consumer outside their feature; `patient.dart` keeps its own private [lib/features/document/document.dart, lib/features/scheduling/scheduling.dart]
+- [x] [Review][Patch] A renewal retry test asserts « a callout » after a condition change, which the warning callout satisfies [test/widget/features/document/renewal_page_test.dart]
+
+Rejected:
+- `low` (acceptance) the closed-questionnaire copy differs from the matrix and Design Notes — the build's review made it neutral on purpose (triage log above); the fix would edit this spec.
+- `low` (acceptance) `IntentKey` keeps every content's key rather than only the last one's — deliberate (triage log above, it avoids a duplicate after A → B → A); the fix would edit this spec.
+- `low` (acceptance) `PetChangeRequest` lacks `resolvedAt` / `resolutionMessage` — removed on purpose (unused); the fix would edit this spec.
+- `low` (acceptance) the residual risk about the callout at the end of the body is stale — fixed by `e2822da`; the fix would edit this spec (recorded in the Auto Run Result addendum).
+- `low` (acceptance) the spec says `done` while its manual check was pending — the walk ran afterwards (Auto Run Result addendum); the fix would edit this spec.
+- `low` (acceptance) two repository helpers throw `ArgumentError` for an `unknown` enum — unreachable: the forms never hold `unknown`; a loud failure on an impossible input is correct.
+- `low` (acceptance) « Signaler une modification » greys for the instant `/me` reloads (`_ReportChange` reads `AsyncData` of the whole clinic) — brief and rare (a `/me` reload while the pet sheet shows); a clinic-id provider for one button adds a provider.
+- `low` (blind) the disabled state of « Signaler une modification » is untested — without an active clinic the pet list is empty, so the button never shows; the state is not reachable on the sheet.
+- `low` (blind) a `questionnaire_locked` send gives no « not sent » message — the closed view's callout « Ce questionnaire ne peut plus être modifié. » says it; the race is rare (the GET already says `editable`).
+- `low` (blind) read-only chips of the closed view are announced as disabled buttons — the closed view is reachable only through the lock race (no screen links a past appointment to 15); a semantics rewrite of the chips is more than a direct fix.
+- `low` (blind) the change sheet does not warn about a pending request for the chosen field — the pending block sits right behind the sheet; the server caps open requests (3 per field); a warning adds a provider read and a branch.
+- `low` (blind) a future change field reads « Autre : … » in « Demandes en cours » — needs the server to add a field this build does not know.
+- `low` (blind) `maxLength` counts characters, the server code points — a 500-character note full of composed emoji; the server's 422 shows then.
+- `low` (blind) the four copies of the fixture-editing helper in the tests — test-only duplication, no divergence today.
+- `low` (blind) the spec text lags the review patches — fixing it would edit this spec (the triage log records each change).
+- `low` (blind) the Auto Run Result's counts differ from the triage log (patch rows, ARB keys) — corrected in the Auto Run Result addendum; otherwise a spec edit.
+- `low` (edge) a page or sheet closed during the send drops a later failure silently — the owner chose to leave; guarding the exits while sending adds `PopScope` / sheet flags for a sub-second window.
+- `low` (edge) a stale list lets 17 resend for an already open request, answered 202 with the open one (the new condition and note are not recorded) — the card hides the button for an open request; only a stale list reaches it.
+- `low` (edge) `showDatePicker` asserts if the device date moves back after a day was picked — a time-zone change while the sheet is open.
+- `low` (edge) commit `8ffec95` says « a retry never duplicates a request » although the key ends with the sheet (a timeout, then a reopened sheet, draws a new key) — a new sheet is a new intent; at worst the clinic sees two equal requests (3 open per field); keeping keys beyond the sheet needs a shared store; the hand-over note states the limit.
+- `low` (edge) the spec's residual risk line is stale — a spec edit (see above).
+- `low` (edge) the spec's closed-questionnaire copy is stale — a spec edit (see above).
+
 ## Spec Change Log
 
 ## Review Triage Log
@@ -197,3 +239,17 @@ Change request: sheet title « Signaler une modification », subtitle « Pour {p
 **Verification.** `make ci` green after the build (4 min 32 s) and again after the review patches (4 min 28 s): format, analyze, architecture, tests with coverage, the gate (every gated file at 100 %), the bash checks, api-check. Every matrix row has a passing widget or unit test (questionnaire_page_test, renewal_page_test, pet_change_sheet_test, pet_page_test, questionnaire_test). The emulator walk is the slice's next step (spec Manual checks).
 
 **Residual risks.** The pending list reads the first 50 requests only; the questionnaire's SnackBar relies on the root `ScaffoldMessenger` (seen in the home flow test, to check on the device); an error callout sits at the end of the scrolling body on 15 and 17 (as on 14); the locked view of 15 has no entry in the app (tests only); iOS not built.
+
+### Addendum — emulator walk and code review (2026-11-04)
+
+**Corrections to the summary above.** The first review pass logged 19 `[patch]` rows (in 9 entries) and 13 `[reject]` rows (3 false, 10 low), not « 22 / 10 »; the ARB gained 85 keys, not 84. The residual risk « an error callout sits at the end of the scrolling body » no longer holds: since `e2822da` it sits in the sticky bar above the button. Since the same pass, `IntentKey` keeps a key per content for its lifetime (A → B → A sends A's key), `PetChangeRequest` has no `resolvedAt` / `resolutionMessage`, and the closed-questionnaire copy is « Ce questionnaire ne peut plus être modifié. » / « Le questionnaire n'a pas été rempli. » (the matrix and Design Notes above keep the planned wording).
+
+**Emulator walk** (Medium_Phone_API_37.0, debug build of the branch, local backend; screenshots in the notes folder `shots-portal-requests/`):
+- Julien (read only): 15 from the home hero on his 2026-11-09 Oslo appointment (header, exclusivity, « Oui » → « Lequel ? »; sent once without network: the failure callout with « Réessayer » shows above the button, nothing reached the server); Oslo's « Demandes en cours » (weight 25,1 kg pending); the change sheet (fields, « Pesé le » picker, sterilization labels) closed unsent.
+- Nina (test client): booked Gribouille's vaccination in the wizard, « Remplir le questionnaire maintenant » → 15 → sent → screen 4 with the SnackBar and no banner; both of her appointments cancelled; a 200 kg weight refused under its field; a sterilization change sent → « Demande envoyée » → the pending row.
+- Garnier: ORD-36 → 17 (lines read-only, the warning for « Pas d'amélioration ») → sent → « Renouvellement demandé » on the card at once; ORD-07 → 17 → the server's refusal; Filou (deceased) → the change refused with « pet_not_eligible »'s message; the banner of 4 → 15 (Pepito) left unsent.
+- Fix found by the walk: the refusal callout of 17 was half hidden under the bottom bar → moved into the bar on 15 and 17 (`e2822da`).
+
+**Code review** (bmad-code-review, four layers on `master...HEAD` at `e2822da`): 35 findings, 13 patch entries applied (`b0a133e`), 0 deferred, 22 rejected with their reasons (« Review Findings » above). `make ci` green on the patched tree (4 min 32 s).
+
+**Residual risks (current).** The pending list reads the first 50 requests only; an `IntentKey` ends with its sheet or page (a reopened sheet after a timeout draws a new key); the closed view of 15 has no entry in the app (lock race only, widget-tested); iOS not built.
