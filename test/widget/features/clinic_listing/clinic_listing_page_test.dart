@@ -228,13 +228,16 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Appeler la clinique'), findsNothing);
+    // No « décrirez votre animal » promise for a clinic closed to new
+    // clients.
+    expect(find.textContaining('Vous décrirez votre animal'), findsNothing);
     expect(find.text('Horaires'), findsNothing);
     expect(find.textContaining('Ouvert'), findsNothing);
     expect(find.textContaining('Fermé'), findsNothing);
   });
 
-  testWidgets('the motifs refused (booking_not_open, capture): the info '
-      'callout and the call', (tester) async {
+  testWidgets('the motifs refused (booking_not_open, capture): the white '
+      'card and the call', (tester) async {
     await pump(
       tester,
       _backend()..on(
@@ -247,7 +250,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(KivetoCallout), findsOneWidget);
+    expect(find.byType(KivetoCallout), findsNothing);
     expect(
       find.textContaining('ne propose pas encore la prise de rendez-vous'),
       findsOneWidget,

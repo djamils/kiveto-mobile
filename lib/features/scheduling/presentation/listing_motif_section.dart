@@ -9,8 +9,8 @@ import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/listing_id.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/formatters/kiveto_format.dart';
+import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
-import 'package:kiveto_mobile/shared/presentation/kit/feedback.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
@@ -89,16 +89,28 @@ class ListingMotifSection extends ConsumerWidget {
     );
   }
 
+  /// A white card on the sheet's canvas (an info box, C-33a, would not
+  /// stand out from it): why, then « Appeler la clinique » (C-4b with the
+  /// phone glyph, as the unlisted card of 10).
   Widget _closed(BuildContext context, WidgetRef ref, String message) {
     final phone = this.phone;
-    return KivetoCallout.info(
-      body: message,
-      actionLabel: phone == null
-          ? null
-          : AppLocalizations.of(context).listingMotifCall,
-      onAction: phone == null
-          ? null
-          : () => unawaited(callClinic(context, ref, phone)),
+    return KivetoCard(
+      padding: const EdgeInsets.all(KivetoSpace.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(message, style: KivetoText.bodySmall.copyWith(height: 1.45)),
+          if (phone != null) ...[
+            const SizedBox(height: KivetoSpace.m),
+            KivetoButton.outline(
+              label: AppLocalizations.of(context).listingMotifCall,
+              icon: LucideGlyph.phone,
+              expand: true,
+              onPressed: () => unawaited(callClinic(context, ref, phone)),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

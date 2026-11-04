@@ -88,7 +88,9 @@ class KivetoListRow extends StatelessWidget {
          size: 18,
          color: KivetoColors.inkMuted,
        ),
-       padding = const EdgeInsets.symmetric(horizontal: 14),
+       // The mockup draws one-line metas; a meta that wraps keeps 8 above
+       // and below (one-line rows stay 52 high).
+       padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
        _minHeight = 52,
        _metaGap = 1;
 

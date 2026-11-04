@@ -139,11 +139,17 @@ class _ClinicListingPageState extends ConsumerState<ClinicListingPage> {
                 selected: _visitor,
                 onSelected: (visitor) => setState(() => _visitor = visitor),
               ),
-              const SizedBox(height: KivetoSpace.m),
-              KivetoFootnote(
-                known ? l10n.clinicListingKnownHint : l10n.clinicListingNewHint,
-                small: true,
-              ),
+              // The new-client hint announces the next step: none when the
+              // clinic takes no new client online (its block says why).
+              if (known || clinic.onlineBooking) ...[
+                const SizedBox(height: KivetoSpace.m),
+                KivetoFootnote(
+                  known
+                      ? l10n.clinicListingKnownHint
+                      : l10n.clinicListingNewHint,
+                  small: true,
+                ),
+              ],
               const SizedBox(height: KivetoSpace.xl2),
               if (known)
                 _KnownClient(

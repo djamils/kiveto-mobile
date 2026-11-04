@@ -170,11 +170,23 @@ Future<GeoPoint> _locateDevice() async {
           geo.LocationPermission.unableToDetermine:
         throw const LocationFailure(LocationProblem.denied);
     }
+    const accuracy = geo.LocationAccuracy.low;
+    const timeLimit = Duration(seconds: 15);
     final position = await geo.Geolocator.getCurrentPosition(
-      locationSettings: const geo.LocationSettings(
-        accuracy: geo.LocationAccuracy.low,
-        timeLimit: Duration(seconds: 15),
-      ),
+      // Android: the platform's location manager, not Google Play
+      // services, whose settings check asks the owner to turn on Google's
+      // « Location Accuracy » (a data-collection consent) before any fix,
+      // even for a coarse position.
+      locationSettings: defaultTargetPlatform == TargetPlatform.android
+          ? geo.AndroidSettings(
+              accuracy: accuracy,
+              timeLimit: timeLimit,
+              forceLocationManager: true,
+            )
+          : const geo.LocationSettings(
+              accuracy: accuracy,
+              timeLimit: timeLimit,
+            ),
     );
     return GeoPoint(_coarse(position.latitude), _coarse(position.longitude));
   } on LocationFailure {

@@ -5,6 +5,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
@@ -85,6 +86,25 @@ void main() {
     expect(platform.requests, 0);
     expect(platform.settings?.accuracy, LocationAccuracy.low);
     expect(platform.settings?.timeLimit, const Duration(seconds: 15));
+    // Android (the tests' default platform): the platform's location
+    // manager, never Google Play services' settings check.
+    expect(
+      platform.settings,
+      isA<AndroidSettings>().having(
+        (settings) => settings.forceLocationManager,
+        'forceLocationManager',
+        isTrue,
+      ),
+    );
+  });
+
+  test('elsewhere: the plain settings', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    expect(await locate(), const GeoPoint(48.88, 2.34));
+    expect(platform.settings, isNot(isA<AndroidSettings>()));
+    expect(platform.settings?.accuracy, LocationAccuracy.low);
   });
 
   test('not decided yet: asked, then granted', () async {
