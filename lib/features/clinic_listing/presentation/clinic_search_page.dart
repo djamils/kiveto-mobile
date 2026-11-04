@@ -378,7 +378,12 @@ class _ClinicSearchPageState extends ConsumerState<ClinicSearchPage> {
           return ClinicCard(
             key: ValueKey(clinic.id),
             clinic: clinic,
-            onOpen: () => widget.onOpenListing(context, clinic.id.value),
+            onOpen: () {
+              // The field let go first: the route's scope would give it
+              // back its focus (and the keyboard) on the way back from 11.
+              FocusManager.instance.primaryFocus?.unfocus();
+              widget.onOpenListing(context, clinic.id.value);
+            },
             onCall: (phone) => unawaited(callClinic(context, ref, phone)),
           );
         },

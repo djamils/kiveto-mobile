@@ -361,6 +361,29 @@ void main() {
     expect(find.text('3 cliniques'), findsOneWidget);
   });
 
+  testWidgets('a search typed, then a clinic opened: the field lets go of '
+      'its focus first, so the keyboard does not come back with the page', (
+    tester,
+  ) async {
+    final backend = _backend()
+      ..on(
+        'GET',
+        '$_listings?q=Lyon',
+        PortalReply.fixture('clinic-listings.search.get.200.json'),
+      );
+    await pump(tester, backend);
+    await type(tester, 'Lyon');
+    final field = tester.widget<EditableText>(find.byType(EditableText));
+    expect(field.focusNode.hasFocus, isTrue);
+
+    await tester.tap(_card('Clinique Vétérinaire de Lyon'));
+    await tester.pump();
+
+    expect(opened, [_lyon]);
+    expect(field.focusNode.hasFocus, isFalse);
+    expect(tester.testTextInput.isVisible, isFalse);
+  });
+
   testWidgets("a short query: the server's message in place of the results", (
     tester,
   ) async {

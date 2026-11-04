@@ -127,7 +127,7 @@ void _serveFile(FakePortalBackend backend, String documentId) {
 }
 
 Finder _card(String title) => find.ancestor(
-  // textContaining: an unread title ends with its dot (a WidgetSpan).
+  // textContaining: the title is matched within its text.
   of: find.textContaining(title),
   matching: find.byType(DocumentCard),
 );

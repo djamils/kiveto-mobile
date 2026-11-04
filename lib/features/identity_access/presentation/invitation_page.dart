@@ -29,7 +29,8 @@ import 'package:material_ui/material_ui.dart';
 ///
 /// Exits: [onDone] to the home once the session is open (or from an
 /// unusable link, signed in); [onSignIn] to the welcome page ("Rattacher
-/// cette clinique", "Se connecter avec mon numéro").
+/// cette clinique", "Se connecter avec mon numéro"). The system back takes
+/// [onDone] when signed in, [onSignIn] otherwise.
 class InvitationPage extends ConsumerStatefulWidget {
   const new({
     required this.token,
@@ -117,6 +118,24 @@ class _InvitationPageState extends ConsumerState<InvitationPage> {
   @override
   Widget build(BuildContext context) {
     final signedIn = ref.watch(sessionStatusProvider) == SessionStatus.signedIn;
+    // Opened by a link, the page is the only route: the system back leaves
+    // through the page's own way out (the welcome page, or the home when
+    // signed in) instead of closing the app.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (signedIn) {
+          widget.onDone(context);
+        } else {
+          widget.onSignIn(context);
+        }
+      },
+      child: _view(context, signedIn),
+    );
+  }
+
+  Widget _view(BuildContext context, bool signedIn) {
     if (widget.token == null) {
       return _ClosedView(
         reason: InvitationClosedReason.invalid,
