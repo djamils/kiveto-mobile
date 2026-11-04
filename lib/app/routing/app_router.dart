@@ -6,21 +6,24 @@ import 'package:go_router/go_router.dart';
 import 'package:kiveto_mobile/app/routing/app_routes.dart';
 import 'package:kiveto_mobile/app/routing/app_shell.dart';
 import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
+import 'package:kiveto_mobile/app/routing/no_clinic_page.dart';
 import 'package:kiveto_mobile/app/routing/placeholder_page.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/features/client/client.dart';
+import 'package:kiveto_mobile/features/clinic_listing/clinic_listing.dart';
 import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/home/home.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart';
 import 'package:kiveto_mobile/features/scheduling/scheduling.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
+import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The router: the public screens, the 5-tab shell, the full-screen flows
 /// over it, the debug kit gallery; redirected by the session and the
-/// clinic seam ([redirectFor]). Placeholder pages until the slices.
+/// clinic seam ([redirectFor]).
 final routerProvider = Provider<GoRouter>((ref) {
   final session = ref.watch(sessionManagerProvider);
   final hasConfirmedClinic = ValueNotifier<bool?>(null);
@@ -40,10 +43,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       signedIn: session.status == SessionStatus.signedIn,
       hasConfirmedClinic: hasConfirmedClinic.value,
     ),
-    errorBuilder: (context, state) => PlaceholderPage(
-      title: AppLocalizations.of(context).routeNotFoundTitle,
-      kind: PlaceholderKind.notFound,
-    ),
+    errorBuilder: (context, state) =>
+        PlaceholderPage(title: AppLocalizations.of(context).routeNotFoundTitle),
     routes: _routes(rootNavigatorKey),
   );
   ref.onDispose(() {
@@ -52,21 +53,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   });
   return router;
 });
-
-/// A placeholder route whose title comes from the ARB.
-GoRoute _page(
-  String path,
-  String Function(AppLocalizations l10n) title, {
-  PlaceholderKind kind = PlaceholderKind.tab,
-  GlobalKey<NavigatorState>? parentNavigatorKey,
-  List<RouteBase> routes = const [],
-}) => GoRoute(
-  path: path,
-  parentNavigatorKey: parentNavigatorKey,
-  routes: routes,
-  builder: (context, state) =>
-      PlaceholderPage(title: title(AppLocalizations.of(context)), kind: kind),
-);
 
 // The exits of the feature pages, on the paths of the app (features never
 // import app/).
@@ -84,6 +70,7 @@ void _goPet(BuildContext context, String petId) =>
 void _goAppointments(BuildContext context) =>
     context.go(AppRoutes.appointments);
 void _goDocuments(BuildContext context) => context.go(AppRoutes.documents);
+void _goClinics(BuildContext context) => context.go(AppRoutes.clinics);
 void _pushQuestionnaire(BuildContext context, String appointmentId) =>
     unawaited(context.push(AppRoutes.questionnaire(appointmentId)));
 void _pushBooking(BuildContext context) =>
@@ -125,6 +112,37 @@ void _backToBookingStep(BuildContext context, String name) =>
           !_bookingRoutes.contains(route.settings.name),
     );
 
+/// The names of the new-client booking's steps over a clinic's sheet (11).
+const _listingSlot = 'listingSlot';
+const _listingConfirm = 'listingConfirm';
+const Set<String> _listingRoutes = {_listingSlot, _listingConfirm};
+
+/// Closes the new-client booking: every step is popped, back on the
+/// clinic's sheet.
+void _closeListingBooking(BuildContext context) =>
+    Navigator.of(context, rootNavigator: true).popUntil(
+      (route) => !_listingRoutes.contains(route.settings.name) || route.isFirst,
+    );
+
+/// Back to the new-client booking's step [name]: the steps above it are
+/// popped.
+void _backToListingStep(BuildContext context, String name) =>
+    Navigator.of(context, rootNavigator: true).popUntil(
+      (route) =>
+          route.settings.name == name ||
+          route.isFirst ||
+          !_listingRoutes.contains(route.settings.name),
+    );
+
+/// Back from a clinic's sheet: pops it, else the clinic search.
+void _backOrClinics(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(AppRoutes.clinics);
+  }
+}
+
 void _pushReschedule(BuildContext context, String appointmentId) =>
     unawaited(context.push(AppRoutes.reschedule(appointmentId)));
 
@@ -156,14 +174,6 @@ void _backOrDocuments(BuildContext context) {
 }
 
 List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
-  GoRoute fullScreen(String path, String Function(AppLocalizations) title) =>
-      _page(
-        path,
-        title,
-        kind: PlaceholderKind.fullScreen,
-        parentNavigatorKey: root,
-      );
-
   return [
     GoRoute(
       path: AppRoutes.welcome,
@@ -227,7 +237,13 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
                 onSeeAllDocuments: _goDocuments,
               ),
             ),
-            _page(AppRoutes.clinics, (l10n) => l10n.screenClinicsTitle),
+            GoRoute(
+              path: AppRoutes.clinics,
+              builder: (context, state) => ClinicSearchPage(
+                onOpenListing: (context, listingId) =>
+                    unawaited(context.push(AppRoutes.clinicListing(listingId))),
+              ),
+            ),
           ],
         ),
         StatefulShellBranch(
@@ -236,7 +252,8 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
           routes: [
             GoRoute(
               path: AppRoutes.pets,
-              builder: (context, state) => const PetPage(onBack: _backOrHome),
+              builder: (context, state) =>
+                  _petsGate(context, const PetPage(onBack: _backOrHome)),
             ),
             GoRoute(
               path: '${AppRoutes.pets}/:petId',
@@ -256,6 +273,7 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
                 onBook: _pushBooking,
                 onReschedule: _pushReschedule,
                 onFillQuestionnaire: _pushQuestionnaire,
+                onFindClinic: _goClinics,
               ),
               routes: [
                 GoRoute(
@@ -284,9 +302,14 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
           routes: [
             GoRoute(
               path: AppRoutes.documents,
-              builder: (context, state) => DocumentsPage(
-                onRequestRenewal: (context, prescriptionId) => unawaited(
-                  context.push(AppRoutes.prescriptionRenewal(prescriptionId)),
+              builder: (context, state) => ClinicTabGate(
+                title: AppLocalizations.of(context).screenDocumentsTitle,
+                body: AppLocalizations.of(context).noClinicDocumentsBody,
+                glyph: LucideGlyph.fileText,
+                child: DocumentsPage(
+                  onRequestRenewal: (context, prescriptionId) => unawaited(
+                    context.push(AppRoutes.prescriptionRenewal(prescriptionId)),
+                  ),
                 ),
               ),
               routes: [
@@ -365,9 +388,54 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
         onClose: _closeBooking,
       ),
     ),
-    fullScreen(
-      '/clinic-listings/:listingId',
-      (l10n) => l10n.screenClinicListingTitle,
+    // A clinic of the directory (11) and its new-client booking (step 1,
+    // the slot; step 2, the pet and the request), over the shell.
+    GoRoute(
+      path: '/clinic-listings/:listingId',
+      parentNavigatorKey: root,
+      builder: (context, state) => ClinicListingPage(
+        listingId: state.pathParameters['listingId']!,
+        onBack: _backOrClinics,
+        onChooseMotif: (context) => unawaited(
+          context.push(
+            AppRoutes.listingSlot(state.pathParameters['listingId']!),
+          ),
+        ),
+        onBookAsClient: _pushBooking,
+        onFindRecord: _goClinics,
+      ),
+      routes: [
+        GoRoute(
+          name: _listingSlot,
+          path: 'booking/slot',
+          parentNavigatorKey: root,
+          builder: (context, state) => ListingSlotPage(
+            listingId: state.pathParameters['listingId']!,
+            onContinue: (context) => unawaited(
+              context.push(
+                AppRoutes.listingConfirm(state.pathParameters['listingId']!),
+              ),
+            ),
+            onEditMotif: _closeListingBooking,
+            onBack: _closeListingBooking,
+            onClose: _closeListingBooking,
+          ),
+        ),
+        GoRoute(
+          name: _listingConfirm,
+          path: 'booking/confirm',
+          parentNavigatorKey: root,
+          builder: (context, state) => ListingConfirmPage(
+            listingId: state.pathParameters['listingId']!,
+            onSeeAppointments: _goAppointments,
+            onBackToDirectory: _goClinics,
+            onSlotTaken: (context) => _backToListingStep(context, _listingSlot),
+            onBookAsClient: _pushBooking,
+            onBack: (context) => _backToListingStep(context, _listingSlot),
+            onClose: _closeListingBooking,
+          ),
+        ),
+      ],
     ),
     // Debug builds only: the page is tree-shaken from release builds.
     if (kDebugMode)
@@ -377,4 +445,17 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
         builder: (context, state) => const KitGalleryPage(),
       ),
   ];
+}
+
+/// The Animaux tab of an account without a confirmed clinic says why it is
+/// empty; else the pet's sheet. (A pet's own path is redirected without a
+/// confirmed clinic.)
+Widget _petsGate(BuildContext context, Widget page) {
+  final l10n = AppLocalizations.of(context);
+  return ClinicTabGate(
+    title: l10n.navPets,
+    body: l10n.noClinicPetsBody,
+    glyph: LucideGlyph.pawPrint,
+    child: page,
+  );
 }

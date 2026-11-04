@@ -6,6 +6,7 @@ import 'package:kiveto_mobile/features/patient/patient.dart' show deviceToday;
 import 'package:kiveto_mobile/features/scheduling/di.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/booking_venue.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/appointment_card.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/booking_layout.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_messages.dart';
@@ -219,7 +220,7 @@ class _ReschedulePageState extends ConsumerState<ReschedulePage> {
             onAction: () => unawaited(_confirm(clinicId)),
           ),
         SlotPicker(
-          clinicId: clinicId,
+          venue: ClinicVenue(clinicId),
           motifId: motifId,
           today: deviceToday(ref.watch(clockProvider)),
           selectedPractitionerId:

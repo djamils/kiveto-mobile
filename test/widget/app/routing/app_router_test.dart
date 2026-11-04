@@ -12,12 +12,14 @@ import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
+import 'package:kiveto_mobile/features/clinic_listing/clinic_listing.dart';
 import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart';
 import 'package:kiveto_mobile/features/scheduling/scheduling.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
@@ -81,29 +83,35 @@ void main() {
       expect(_redirect(AppRoutes.onboardingInvitations), isNull);
     });
 
-    test('signed in without a confirmed clinic: the clinic-scoped pages go '
-        'to /clinics', () {
+    test('signed in without a confirmed clinic: the home, the booking and '
+        'the pages under the clinic tabs go to /clinics; the tab roots, the '
+        'directory and its new-client booking stay', () {
       for (final path in [
         AppRoutes.home,
-        AppRoutes.pets,
         AppRoutes.pet('x'),
-        AppRoutes.appointments,
         AppRoutes.questionnaire('a'),
-        AppRoutes.documents,
+        AppRoutes.reschedule('a'),
         AppRoutes.prescriptionRenewal('p'),
         AppRoutes.bookingPet,
         AppRoutes.bookingConfirm,
+        '/booking',
       ]) {
         expect(_redirect(path, clinic: false), AppRoutes.clinics, reason: path);
       }
       for (final path in [
+        AppRoutes.pets,
+        AppRoutes.appointments,
+        AppRoutes.documents,
         AppRoutes.account,
         AppRoutes.clinics,
         AppRoutes.clinicListing('l'),
+        AppRoutes.listingSlot('l'),
+        AppRoutes.listingConfirm('l'),
         AppRoutes.invitation,
         AppRoutes.onboardingInvitations,
         AppRoutes.kitGallery,
         '/homework',
+        '/petsitter',
       ]) {
         expect(_redirect(path, clinic: false), isNull, reason: path);
       }
@@ -145,6 +153,8 @@ void main() {
     // An id is one encoded path segment.
     expect(AppRoutes.pet('a/b c'), '/pets/a%2Fb%20c');
     expect(AppRoutes.clinicListing('x?y'), '/clinic-listings/x%3Fy');
+    expect(AppRoutes.listingSlot('l'), '/clinic-listings/l/booking/slot');
+    expect(AppRoutes.listingConfirm('l'), '/clinic-listings/l/booking/confirm');
   });
 
   testWidgets('an encoded id reaches its page decoded', (tester) async {
@@ -200,7 +210,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(_location(container), AppRoutes.clinics);
-        expect(find.text('Trouver une clinique'), findsOneWidget);
+        expect(find.byType(ClinicSearchPage), findsOneWidget);
       },
     );
 
@@ -214,8 +224,78 @@ void main() {
       );
 
       expect(_location(container), AppRoutes.clinics);
-      expect(find.text('Trouver une clinique'), findsOneWidget);
+      expect(find.byType(ClinicSearchPage), findsOneWidget);
       expect(find.text('Accueil'), findsOneWidget);
+    });
+
+    testWidgets('no confirmed clinic: Animaux and Documents say why they are '
+        'empty, « Trouver une clinique » goes to /clinics; Rendez-vous is its '
+        'page', (tester) async {
+      final container = await pumpKivetoApp(
+        tester,
+        session: await memorySession(pair('A')),
+        seams: false,
+        overrides: [hasConfirmedClinicProvider.overrideWithValue(false)],
+      );
+      final router = container.read(routerProvider);
+
+      for (final (path, title, body) in [
+        (
+          AppRoutes.pets,
+          'Animaux',
+          "Vos animaux apparaîtront ici dès qu'une clinique vous aura "
+              'rattaché.',
+        ),
+        (
+          AppRoutes.documents,
+          'Documents',
+          'Les documents partagés par votre clinique apparaîtront ici.',
+        ),
+      ]) {
+        router.go(path);
+        await tester.pumpAndSettle();
+        expect(_location(container), path);
+        expect(find.byType(PetPage), findsNothing);
+        expect(find.byType(DocumentsPage), findsNothing);
+        expect(find.widgetWithText(KivetoPageHeader, title), findsOneWidget);
+        expect(find.text('Aucune clinique rattachée'), findsOneWidget);
+        expect(find.text(body), findsOneWidget);
+
+        await tester.tap(
+          find.widgetWithText(KivetoButton, 'Trouver une clinique'),
+        );
+        await tester.pumpAndSettle();
+        expect(_location(container), AppRoutes.clinics, reason: path);
+      }
+
+      router.go(AppRoutes.appointments);
+      await tester.pumpAndSettle();
+      expect(_location(container), AppRoutes.appointments);
+      expect(find.byType(AppointmentsPage), findsOneWidget);
+
+      // Under a tab: still the clinic search.
+      router.go(AppRoutes.pet('moka'));
+      await tester.pumpAndSettle();
+      expect(_location(container), AppRoutes.clinics);
+    });
+
+    testWidgets('a clinic not known yet: the tabs show their feature page', (
+      tester,
+    ) async {
+      final container = await pumpKivetoApp(
+        tester,
+        session: await memorySession(pair('A')),
+        seams: false,
+        overrides: [hasConfirmedClinicProvider.overrideWithValue(null)],
+      );
+      final router = container.read(routerProvider)..go(AppRoutes.pets);
+      await tester.pumpAndSettle();
+      expect(find.byType(PetPage), findsOneWidget);
+
+      router.go(AppRoutes.documents);
+      await tester.pumpAndSettle();
+      expect(find.byType(DocumentsPage), findsOneWidget);
+      expect(find.text('Aucune clinique rattachée'), findsNothing);
     });
 
     for (final signedIn in [false, true]) {
@@ -550,19 +630,44 @@ void main() {
       expect(_location(container), AppRoutes.home);
     });
 
-    testWidgets('every placeholder route builds', (tester) async {
+    testWidgets('the directory routes build their pages, over the shell for '
+        'the sheet and its booking', (tester) async {
       final container = await pumpKivetoApp(
         tester,
         session: await memorySession(pair('A')),
       );
       final router = container.read(routerProvider);
-      for (final (path, title) in [
-        (AppRoutes.clinicListing('l'), 'Fiche clinique'),
+      for (final (path, page, shell) in [
+        (AppRoutes.clinics, ClinicSearchPage, true),
+        (AppRoutes.clinicListing('l'), ClinicListingPage, false),
+        (AppRoutes.listingSlot('l'), ListingSlotPage, false),
+        (AppRoutes.listingConfirm('l'), ListingConfirmPage, false),
       ]) {
         router.go(path);
         await tester.pumpAndSettle();
-        expect(find.text(title), findsWidgets, reason: path);
+        expect(find.byType(page), findsOneWidget, reason: path);
+        expect(
+          find.text('Accueil'),
+          shell ? findsOneWidget : findsNothing,
+          reason: path,
+        );
       }
+
+      // The booking reached directly: close pops back to the sheet, whose
+      // back goes to the clinic search.
+      await tester.tap(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is KivetoIconButton && widget.glyph == LucideGlyph.x,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(_location(container), AppRoutes.clinicListing('l'));
+      expect(find.byType(ClinicListingPage), findsOneWidget);
+
+      await tester.tap(find.byType(KivetoIconButton).first);
+      await tester.pumpAndSettle();
+      expect(_location(container), AppRoutes.clinics);
     });
 
     testWidgets('/appointments/:id/questionnaire is screen 15 over the '

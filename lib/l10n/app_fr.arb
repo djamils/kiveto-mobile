@@ -89,19 +89,11 @@
   "@screenPrescriptionRenewalTitle": {
     "description": "Title of the prescription renewal screen (17)."
   },
-  "screenClinicListingTitle": "Fiche clinique",
-  "@screenClinicListingTitle": {
-    "description": "Title of the clinic sheet of the directory (11)."
-  },
   "screenKitGalleryTitle": "Kit d'interface",
   "@screenKitGalleryTitle": {
     "description": "Title of the debug-only gallery of the UI kit."
   },
 
-  "placeholderBody": "Cet écran arrive dans une prochaine version.",
-  "@placeholderBody": {
-    "description": "Body of a screen not built yet."
-  },
   "welcomeKitGalleryLink": "Ouvrir le kit d'interface",
   "@welcomeKitGalleryLink": {
     "description": "Debug builds only: the link from the welcome screen to the UI kit gallery."
@@ -2914,5 +2906,398 @@
         "example": "12,4"
       }
     }
+  },
+
+  "clinicSearchSubtitle": "Trouvez votre clinique pour prendre rendez-vous.",
+  "@clinicSearchSubtitle": {
+    "description": "Clinic search (10): the subtitle under the greeting."
+  },
+  "clinicSearchFieldLabel": "Rechercher une clinique",
+  "@clinicSearchFieldLabel": {
+    "description": "Clinic search (10): accessible name of the search field (visually hidden)."
+  },
+  "clinicSearchFieldHint": "Nom ou ville",
+  "@clinicSearchFieldHint": {
+    "description": "Clinic search (10): hint of the search field."
+  },
+  "clinicSearchNearMe": "Autour de moi",
+  "@clinicSearchNearMe": {
+    "description": "Clinic search (10): the chip that searches around the device position."
+  },
+  "clinicSearchLocating": "Localisation…",
+  "@clinicSearchLocating": {
+    "description": "Clinic search (10): the near-me chip, disabled while the position is read."
+  },
+  "clinicSearchCount": "{count, plural, =0{Aucune clinique} =1{1 clinique} other{{count} cliniques}}",
+  "@clinicSearchCount": {
+    "description": "Clinic search (10): how many clinics are listed (by name).",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "clinicSearchNearCount": "{count, plural, =0{Aucune clinique à proximité} =1{1 clinique à proximité} other{{count} cliniques à proximité}}",
+  "@clinicSearchNearCount": {
+    "description": "Clinic search (10): how many clinics are listed around the position.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "clinicSearchMoreCount": "{count, plural, =1{Plus d'une clinique} other{Plus de {count} cliniques}}",
+  "@clinicSearchMoreCount": {
+    "description": "Clinic search (10): the clinics listed so far (by name) while a next page exists.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "20"
+      }
+    }
+  },
+  "clinicSearchMoreNearCount": "{count, plural, =1{Plus d'une clinique à proximité} other{Plus de {count} cliniques à proximité}}",
+  "@clinicSearchMoreNearCount": {
+    "description": "Clinic search (10): the clinics listed so far around the position while a next page exists.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "20"
+      }
+    }
+  },
+  "clinicSearchOnline": "RDV en ligne",
+  "@clinicSearchOnline": {
+    "description": "Clinic search (10): pill of a clinic that takes new clients online."
+  },
+  "clinicSearchUnlisted": "Pas encore sur Kiveto",
+  "@clinicSearchUnlisted": {
+    "description": "Clinic search (10): pill of a clinic only listed (not on Kiveto)."
+  },
+  "clinicSearchNextSlot": "Prochain créneau : {slot}",
+  "@clinicSearchNextSlot": {
+    "description": "Clinic search (10): the next slot open to a new client (no-break space before the colon).",
+    "placeholders": {
+      "slot": {
+        "type": "String",
+        "example": "Mar. 4 nov. · 17:20"
+      }
+    }
+  },
+  "clinicSearchEmptyTitle": "Aucune clinique trouvée",
+  "@clinicSearchEmptyTitle": {
+    "description": "Clinic search (10): no clinic matches the search."
+  },
+  "clinicSearchEmptyBody": "Essayez un autre nom ou une autre ville.",
+  "@clinicSearchEmptyBody": {
+    "description": "Clinic search (10): body of the empty search."
+  },
+  "clinicSearchEmptyNearBody": "Aucune clinique de l'annuaire autour de vous. Touchez « Autour de moi » pour chercher par nom.",
+  "@clinicSearchEmptyNearBody": {
+    "description": "Clinic search (10): body of an empty search around the position (no-break spaces inside the quotes)."
+  },
+  "clinicSearchLocationDenied": "Autorisez l'accès à votre position pour voir les cliniques autour de vous.",
+  "@clinicSearchLocationDenied": {
+    "description": "Clinic search (10): SnackBar when the location permission is refused."
+  },
+  "clinicSearchLocationDeniedForever": "L'accès à votre position est refusé pour Kiveto : autorisez-le dans les réglages du téléphone.",
+  "@clinicSearchLocationDeniedForever": {
+    "description": "Clinic search (10): SnackBar when the location permission is refused for good (the system no longer asks; no-break space before the colon)."
+  },
+  "clinicSearchLocationDisabled": "Activez la localisation de votre téléphone pour voir les cliniques autour de vous.",
+  "@clinicSearchLocationDisabled": {
+    "description": "Clinic search (10): SnackBar when the location service is off."
+  },
+  "clinicSearchLocationFailed": "Votre position n'a pas pu être déterminée. Réessayez.",
+  "@clinicSearchLocationFailed": {
+    "description": "Clinic search (10): SnackBar when no position could be read in time."
+  },
+  "linkSuggestionTitle": "{clinic} a un dossier à votre numéro",
+  "@linkSuggestionTitle": {
+    "description": "Clinic search (10): title of a clinic record found at the account phone number (no article before the clinic name).",
+    "placeholders": {
+      "clinic": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Paris"
+      }
+    }
+  },
+  "linkSuggestionBody": "Rattachez-le pour retrouver vos animaux et votre historique.",
+  "@linkSuggestionBody": {
+    "description": "Clinic search (10): body of a record found at the account phone number."
+  },
+  "linkSuggestionAccept": "Rattacher ce dossier",
+  "@linkSuggestionAccept": {
+    "description": "Clinic search (10): asks to be linked to the record found."
+  },
+  "linkSuggestionGone": "Ce dossier n'est plus proposé.",
+  "@linkSuggestionGone": {
+    "description": "Clinic search (10): SnackBar when the record is no longer offered (404)."
+  },
+  "linkSuggestionsError": "Impossible de vérifier les dossiers à votre numéro.",
+  "@linkSuggestionsError": {
+    "description": "Clinic search (10): the records at the account phone number could not be read."
+  },
+  "linkPendingTitle": "Rattachement demandé : {clinic}",
+  "@linkPendingTitle": {
+    "description": "Clinic search (10): title of a link the clinic has yet to confirm (no-break space before the colon).",
+    "placeholders": {
+      "clinic": {
+        "type": "String",
+        "example": "Clinique Vétérinaire de Lyon"
+      }
+    }
+  },
+  "linkPendingBody": "La clinique doit confirmer le rattachement. Vos animaux et votre historique apparaîtront dès sa confirmation.",
+  "@linkPendingBody": {
+    "description": "Clinic search (10): body of a link the clinic has yet to confirm."
+  },
+  "clinicListingOpenUntil": "Ouvert · ferme à {time}",
+  "@clinicListingOpenUntil": {
+    "description": "Clinic sheet (11): open now (device clock), until when.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "19:00"
+      }
+    }
+  },
+  "clinicListingOpensLater": "Fermé · ouvre à {time}",
+  "@clinicListingOpensLater": {
+    "description": "Clinic sheet (11): closed now, opening later today.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "14:00"
+      }
+    }
+  },
+  "clinicListingOpensTomorrow": "Fermé · ouvre demain à {time}",
+  "@clinicListingOpensTomorrow": {
+    "description": "Clinic sheet (11): closed until tomorrow.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "09:00"
+      }
+    }
+  },
+  "clinicListingOpensOn": "Fermé · ouvre {day} à {time}",
+  "@clinicListingOpensOn": {
+    "description": "Clinic sheet (11): closed until another day of the week (lower case).",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "lundi"
+      },
+      "time": {
+        "type": "String",
+        "example": "09:00"
+      }
+    }
+  },
+  "clinicListingWho": "Vous êtes",
+  "@clinicListingWho": {
+    "description": "Clinic sheet (11): title of the known / new client choice."
+  },
+  "clinicListingKnownClient": "Déjà client",
+  "@clinicListingKnownClient": {
+    "description": "Clinic sheet (11): who card of a known client."
+  },
+  "clinicListingKnownClientSub": "de cette clinique",
+  "@clinicListingKnownClientSub": {
+    "description": "Clinic sheet (11): second line of the known client card."
+  },
+  "clinicListingNewClient": "Nouveau client",
+  "@clinicListingNewClient": {
+    "description": "Clinic sheet (11): who card of a new client."
+  },
+  "clinicListingNewClientSub": "première visite",
+  "@clinicListingNewClientSub": {
+    "description": "Clinic sheet (11): second line of the new client card."
+  },
+  "clinicListingNewHint": "Vous décrirez votre animal à l'étape suivante. La clinique confirme les rendez-vous des nouveaux clients.",
+  "@clinicListingNewHint": {
+    "description": "Clinic sheet (11): hint of the new client choice."
+  },
+  "clinicListingKnownHint": "Si la clinique a votre numéro de mobile, votre dossier vous est proposé dans « Trouver une clinique » : rattachez-le. Déjà rattaché ? Prenez rendez-vous depuis votre espace.",
+  "@clinicListingKnownHint": {
+    "description": "Clinic sheet (11): hint of the known client choice (no-break spaces inside the quotes, before the colon and the question mark)."
+  },
+  "clinicListingFindRecord": "Retrouver mon dossier",
+  "@clinicListingFindRecord": {
+    "description": "Clinic sheet (11): known client, back to the clinic search (its record suggestions)."
+  },
+  "clinicListingHours": "Horaires",
+  "@clinicListingHours": {
+    "description": "Clinic sheet (11): title of the opening hours."
+  },
+  "clinicListingClosed": "Fermé",
+  "@clinicListingClosed": {
+    "description": "Clinic sheet (11): a closed day of the opening hours."
+  },
+  "clinicListingGoneTitle": "Clinique introuvable",
+  "@clinicListingGoneTitle": {
+    "description": "Clinic sheet (11): the clinic is not in the directory (404)."
+  },
+  "clinicListingGoneBody": "Cette clinique n'est plus dans l'annuaire.",
+  "@clinicListingGoneBody": {
+    "description": "Clinic sheet (11): body of the clinic not found."
+  },
+  "listingMotifUrgency": "Urgence ? Appelez directement la clinique au {phone}.",
+  "@listingMotifUrgency": {
+    "description": "Clinic sheet (11): emergency hint under the motifs (no-break space before the question mark; the phone kept on one line).",
+    "placeholders": {
+      "phone": {
+        "type": "String",
+        "example": "04 78 92 01 45"
+      }
+    }
+  },
+  "listingMotifNotOpen": "Cette clinique ne propose pas encore la prise de rendez-vous en ligne aux nouveaux clients.",
+  "@listingMotifNotOpen": {
+    "description": "Clinic sheet (11): the clinic takes no online request of new clients."
+  },
+  "listingMotifNoNewClients": "Cette clinique n'accepte pas de nouveaux clients pour le moment.",
+  "@listingMotifNoNewClients": {
+    "description": "Clinic sheet (11): the clinic takes no new client."
+  },
+  "listingMotifCall": "Appeler la clinique",
+  "@listingMotifCall": {
+    "description": "Clinic sheet (11): calls the clinic."
+  },
+  "listingMotifEmpty": "Aucun motif n'est ouvert en ligne aux nouveaux clients.",
+  "@listingMotifEmpty": {
+    "description": "Clinic sheet (11): no motif open online to new clients."
+  },
+  "listingBookingStepLabel": "Étape {step} sur 2",
+  "@listingBookingStepLabel": {
+    "description": "New-client booking: the step counter of the header.",
+    "placeholders": {
+      "step": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "listingBookingPetTitle": "Votre animal",
+  "@listingBookingPetTitle": {
+    "description": "New-client booking, step 2: title."
+  },
+  "listingBookingNoMotif": "Choisissez d'abord un motif.",
+  "@listingBookingNoMotif": {
+    "description": "New-client booking, step 1: reached without a motif chosen."
+  },
+  "listingBookingSlotLabel": "Créneau",
+  "@listingBookingSlotLabel": {
+    "description": "New-client booking, step 1: label of the bottom bar."
+  },
+  "listingBookingSlotEmpty": "À choisir",
+  "@listingBookingSlotEmpty": {
+    "description": "New-client booking, step 1: bottom bar value before a slot is chosen."
+  },
+  "listingBookingFootnote": "La clinique confirme les rendez-vous des nouveaux clients. Vous suivez votre demande dans Rendez-vous.",
+  "@listingBookingFootnote": {
+    "description": "New-client booking, step 2: footnote."
+  },
+  "listingBookingSentMessage": "La clinique doit confirmer votre rendez-vous du {date} à {time}.",
+  "@listingBookingSentMessage": {
+    "description": "New-client booking: success message (the date with no-break spaces).",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "jeu. 12 nov."
+      },
+      "time": {
+        "type": "String",
+        "example": "14:00"
+      }
+    }
+  },
+  "listingBookingSentNote": "Vous suivez votre demande dans Rendez-vous. Si la clinique ne peut pas la confirmer, vous en êtes informé.",
+  "@listingBookingSentNote": {
+    "description": "New-client booking: success note."
+  },
+  "listingBookingSeeAppointments": "Voir mes rendez-vous",
+  "@listingBookingSeeAppointments": {
+    "description": "New-client booking: opens the Rendez-vous tab (success, request limit)."
+  },
+  "listingBookingBackToDirectory": "Retour à l'annuaire",
+  "@listingBookingBackToDirectory": {
+    "description": "New-client booking: back to the clinic search after the success."
+  },
+  "listingBookingAlreadyLinked": "Vous êtes déjà client de cette clinique : prenez rendez-vous depuis votre espace.",
+  "@listingBookingAlreadyLinked": {
+    "description": "New-client booking: refused, the account is already a client of the clinic (422 already_linked)."
+  },
+  "listingBookingLimit": "Vous avez déjà des demandes de rendez-vous en attente : attendez la réponse des cliniques.",
+  "@listingBookingLimit": {
+    "description": "New-client booking: refused, too many pending requests (422 booking_request_limit)."
+  },
+  "listingBookingNotOpen": "Cette clinique ne prend plus de demandes en ligne de nouveaux clients.",
+  "@listingBookingNotOpen": {
+    "description": "New-client booking: refused, online requests closed (422 booking_not_open)."
+  },
+  "listingBookingNotFound": "Cette clinique ou ce créneau n'est plus disponible.",
+  "@listingBookingNotFound": {
+    "description": "New-client booking: refused, the clinic or the choice is gone (404)."
+  },
+  "listingBookingRateLimited": "Trop de demandes en peu de temps : réessayez plus tard.",
+  "@listingBookingRateLimited": {
+    "description": "New-client booking: refused, too many requests (429)."
+  },
+  "appointmentRequestsTitle": "Demandes de rendez-vous",
+  "@appointmentRequestsTitle": {
+    "description": "Appointments (4): title of the new-client booking requests."
+  },
+  "appointmentRequestDeclined": "Refusée",
+  "@appointmentRequestDeclined": {
+    "description": "Appointments (4): pill of a request the clinic refused."
+  },
+  "appointmentRequestExpired": "Expirée",
+  "@appointmentRequestExpired": {
+    "description": "Appointments (4): pill of a request left without an answer."
+  },
+  "appointmentRequestCancelled": "Annulée",
+  "@appointmentRequestCancelled": {
+    "description": "Appointments (4): pill of a cancelled request."
+  },
+  "appointmentRequestPendingLine": "La clinique doit confirmer votre demande.",
+  "@appointmentRequestPendingLine": {
+    "description": "Appointments (4): status line of a pending request."
+  },
+  "appointmentRequestDeclinedLine": "La clinique n'a pas pu confirmer ce rendez-vous.",
+  "@appointmentRequestDeclinedLine": {
+    "description": "Appointments (4): status line of a refused request."
+  },
+  "appointmentRequestExpiredLine": "Sans réponse de la clinique à temps, la demande a expiré.",
+  "@appointmentRequestExpiredLine": {
+    "description": "Appointments (4): status line of an expired request."
+  },
+  "appointmentRequestCancelledLine": "La demande a été annulée.",
+  "@appointmentRequestCancelledLine": {
+    "description": "Appointments (4): status line of a cancelled request."
+  },
+  "appointmentRequestsError": "Impossible de charger vos demandes de rendez-vous.",
+  "@appointmentRequestsError": {
+    "description": "Appointments (4): the booking requests could not be read."
+  },
+  "noClinicTitle": "Aucune clinique rattachée",
+  "@noClinicTitle": {
+    "description": "The tabs of an account without a confirmed clinic (2, 4, 5): empty state title."
+  },
+  "noClinicAppointmentsBody": "Trouvez une clinique pour prendre un premier rendez-vous.",
+  "@noClinicAppointmentsBody": {
+    "description": "Appointments (4) without a confirmed clinic: empty state body."
+  },
+  "noClinicPetsBody": "Vos animaux apparaîtront ici dès qu'une clinique vous aura rattaché.",
+  "@noClinicPetsBody": {
+    "description": "Pets tab without a confirmed clinic: empty state body."
+  },
+  "noClinicDocumentsBody": "Les documents partagés par votre clinique apparaîtront ici.",
+  "@noClinicDocumentsBody": {
+    "description": "Documents tab without a confirmed clinic: empty state body."
   }
 }

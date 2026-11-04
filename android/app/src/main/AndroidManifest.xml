@@ -2,6 +2,10 @@
     <!-- The Portal API: release builds need it too (the template declares it
          for debug and profile only). -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- « Autour de moi » (screen 10): one coarse position sorts the
+         directory by distance (geolocator, low accuracy); no precise or
+         background location. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <!-- No cloud or adb backup of the app data. A copy that still reaches
          another device (the device-to-device transfer of Android 12+ ignores
          this flag) holds only values encrypted with a Keystore key that

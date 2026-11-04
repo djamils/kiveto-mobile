@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/booking_venue.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_messages.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_providers.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
-import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_instant.dart';
 import 'package:kiveto_mobile/shared/domain/local_date.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
@@ -26,8 +26,9 @@ const _pageDays = 7;
 
 /// The practitioner choice and C-25 (mockup 03): a week of days (7
 /// columns: the API answers every day, Sundays included), the morning and
-/// afternoon slots of the selected day; shared by the booking (3) and the
-/// reschedule. Only the slots the server answered are offered; the slots
+/// afternoon slots of the selected day; shared by the booking (3), the
+/// reschedule and the new-client booking of a clinic of the directory
+/// (its [venue]). Only the slots the server answered are offered; the slots
 /// seen taken ([takenSlots]) stay struck through in their day.
 ///
 /// The weeks are pages of 7 days from [today]; one availability request
@@ -36,7 +37,7 @@ const _pageDays = 7;
 /// practitioner when a slot is.
 class SlotPicker extends ConsumerStatefulWidget {
   const new({
-    required this.clinicId,
+    required this.venue,
     required this.motifId,
     required this.today,
     required this.selectedPractitionerId,
@@ -48,7 +49,8 @@ class SlotPicker extends ConsumerStatefulWidget {
     this.warning,
   });
 
-  final ClinicId clinicId;
+  /// A clinic of the account, or of the directory.
+  final BookingVenue venue;
   final MotifId motifId;
 
   /// The first day of the first page (the device's today).
@@ -102,7 +104,7 @@ class _SlotPickerState extends ConsumerState<SlotPicker> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final practitioners = ref.watch(
-      practitionersProvider((widget.clinicId, widget.motifId)),
+      practitionersProvider((widget.venue, widget.motifId)),
     );
     return switch (practitioners) {
       AsyncValue(isLoading: true, hasError: true) => const _Loading(),
@@ -113,7 +115,7 @@ class _SlotPickerState extends ConsumerState<SlotPicker> {
       AsyncError(:final error) => ErrorView(
         error: error,
         onRetry: () => ref.invalidate(
-          practitionersProvider((widget.clinicId, widget.motifId)),
+          practitionersProvider((widget.venue, widget.motifId)),
         ),
       ),
       _ => const _Loading(),
@@ -198,7 +200,7 @@ class _SlotPickerState extends ConsumerState<SlotPicker> {
     AvailabilityWindow? before;
     var start = widget.today;
     for (var window = 0; window <= kept; window++) {
-      final key = (widget.clinicId, widget.motifId, practitioner.id, start);
+      final key = (widget.venue, widget.motifId, practitioner.id, start);
       final value = ref.watch(availabilityProvider(key));
       if (window == needed) {
         shown = value;

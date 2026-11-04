@@ -7,6 +7,7 @@ import 'package:kiveto_mobile/features/patient/patient.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/booking_layout.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/booking_wizard.dart';
+import 'package:kiveto_mobile/features/scheduling/presentation/new_pet_form.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_messages.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
@@ -20,21 +21,8 @@ import 'package:kiveto_mobile/shared/presentation/kit/feedback.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
-import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
-import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_text.dart';
 import 'package:material_ui/material_ui.dart';
-
-/// The longest name the server takes for a new pet.
-const _maxNameLength = 80;
-
-/// The species a new pet may have.
-const List<Species> _species = [
-  Species.dog,
-  Species.cat,
-  Species.nac,
-  Species.other,
-];
 
 /// Screen 12, step 1 of the booking (mockup 12): the clinic (its chip opens
 /// the switcher when the account has several), « Pour quel animal ? », the
@@ -128,11 +116,11 @@ class _BookingPetPageState extends ConsumerState<BookingPetPage> {
                   listed.first)
               .pet;
     final name = _name.text.trim();
-    final species = _newSpecies;
     final pet = newPet
-        ? (name.isNotEmpty && name.length <= _maxNameLength && species != null
-              ? NewPet(name, species)
-              : null)
+        ? switch (newPetOf(_name.text, _newSpecies)) {
+            (final name, final species) => NewPet(name, species),
+            null => null,
+          }
         : switch (chosen) {
             final PetSummary chosen => ExistingPet(
               chosen.id.value,
@@ -217,7 +205,7 @@ class _BookingPetPageState extends ConsumerState<BookingPetPage> {
           const SizedBox(height: KivetoSpace.m),
         ],
         if (newPet)
-          _NewPetForm(
+          NewPetForm(
             name: _name,
             species: _newSpecies,
             onNameChanged: () => setState(() {}),
@@ -265,88 +253,6 @@ class _ClinicChip extends ConsumerWidget {
             child: chip,
           )
         : chip;
-  }
-}
-
-/// « Un autre animal », open: a selected card with the name field and the
-/// species chips.
-class _NewPetForm extends StatelessWidget {
-  const new({
-    required this.name,
-    required this.species,
-    required this.onNameChanged,
-    required this.onSpecies,
-  });
-
-  final TextEditingController name;
-  final Species? species;
-  final VoidCallback onNameChanged;
-  final ValueChanged<Species> onSpecies;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Semantics(
-      selected: true,
-      inMutuallyExclusiveGroup: true,
-      container: true,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(15, 11, 15, 15),
-        decoration: BoxDecoration(
-          color: KivetoColors.brandSubtle,
-          border: Border.all(color: KivetoColors.brand, width: 2),
-          borderRadius: BorderRadius.circular(KivetoRadius.xl),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 40),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.bookingNewPet,
-                      style: KivetoText.itemValue.copyWith(
-                        color: KivetoColors.brand,
-                      ),
-                    ),
-                  ),
-                  const RadioDot(selected: true),
-                ],
-              ),
-            ),
-            const SizedBox(height: KivetoSpace.sm),
-            KivetoTextField(
-              label: l10n.bookingNewPetName,
-              controller: name,
-              errorText: name.text.trim().length > _maxNameLength
-                  ? l10n.bookingNewPetNameTooLong(_maxNameLength)
-                  : null,
-              textInputAction: TextInputAction.done,
-              onChanged: (_) => onNameChanged(),
-            ),
-            const SizedBox(height: KivetoSpace.ml),
-            Semantics(
-              container: true,
-              label: l10n.bookingNewPetSpecies,
-              child: Wrap(
-                spacing: KivetoSpace.sm,
-                runSpacing: KivetoSpace.sm,
-                children: [
-                  for (final candidate in _species)
-                    KivetoChoiceChip(
-                      label: speciesLabel(l10n, candidate) ?? '',
-                      selected: candidate == species,
-                      onSelected: () => onSpecies(candidate),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

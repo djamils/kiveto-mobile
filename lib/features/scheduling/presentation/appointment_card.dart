@@ -5,6 +5,7 @@ import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_messag
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_providers.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
+import 'package:kiveto_mobile/shared/domain/local_date.dart';
 import 'package:kiveto_mobile/shared/domain/portal_file.dart';
 import 'package:kiveto_mobile/shared/presentation/formatters/kiveto_format.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/kiveto_icon.dart';
@@ -117,8 +118,8 @@ class AppointmentCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DateTile(
-                    appointment: appointment,
+                  AppointmentDateTile(
+                    date: appointment.startAt.date,
                     brand: upcoming && !appointment.isPending,
                   ),
                   const SizedBox(width: KivetoSpace.l),
@@ -209,17 +210,17 @@ class AppointmentCard extends StatelessWidget {
 }
 
 /// The date tile of C-28: 56 wide, the weekday (« MER »), the day, the
-/// month; brand for a confirmed appointment to come, neutral otherwise.
-class _DateTile extends StatelessWidget {
-  const new({required this.appointment, required this.brand});
+/// month of [date] (the clinic's day); brand for a confirmed appointment to
+/// come, neutral otherwise (a pending one, a past one, a booking request).
+class AppointmentDateTile extends StatelessWidget {
+  const new({required this.date, required this.brand, super.key});
 
-  final Appointment appointment;
+  final LocalDate date;
   final bool brand;
 
   @override
   Widget build(BuildContext context) {
     final colors = brand ? KivetoColorSets.indigo : KivetoColorSets.neutral;
-    final date = appointment.startAt.date;
     final foreground = brand ? colors.foreground : KivetoColors.inkSecondary;
     // The card's day, read out in full (« Mercredi 11 novembre »).
     return Semantics(

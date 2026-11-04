@@ -5,13 +5,13 @@ import 'package:kiveto_mobile/core/network/portal_results.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/scheduling_repository.dart';
+import 'package:kiveto_mobile/features/scheduling/infrastructure/booking_wire.dart';
 import 'package:kiveto_mobile/shared/domain/care_status.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_instant.dart';
 import 'package:kiveto_mobile/shared/domain/idempotency_key.dart';
 import 'package:kiveto_mobile/shared/domain/local_date.dart';
 import 'package:kiveto_mobile/shared/domain/portal_file.dart';
-import 'package:kiveto_mobile/shared/domain/species.dart';
 import 'package:kiveto_portal_api/kiveto_portal_api.dart' as api;
 import 'package:tonik_util/tonik_util.dart';
 
@@ -35,8 +35,8 @@ final class PortalSchedulingRepository implements SchedulingRepository {
       switch (await _api.listMotifs(clinicId: clinicId.value, petId: petId)) {
         TonikSuccess(value: api.ListMotifsResponse200(:final body)) => [
           for (final motif in body)
-            BookingMotif(
-              id: MotifId(motif.id),
+            bookingMotifOf(
+              id: motif.id,
               label: motif.label,
               description: motif.description,
               durationMin: motif.durationMin,
@@ -57,8 +57,8 @@ final class PortalSchedulingRepository implements SchedulingRepository {
   )) {
     TonikSuccess(value: api.ListPractitionersResponse200(:final body)) => [
       for (final practitioner in body)
-        Practitioner(
-          id: PractitionerId(practitioner.id),
+        practitionerOf(
+          id: practitioner.id,
           displayName: practitioner.displayName,
         ),
     ],
@@ -76,16 +76,11 @@ final class PortalSchedulingRepository implements SchedulingRepository {
     clinicId: clinicId.value,
     motifId: motifId.value,
     practitionerId: practitionerId.value,
-    from: _date(from),
-    to: _date(to),
+    from: dateWire(from),
+    to: dateWire(to),
   )) {
     TonikSuccess(value: api.GetAvailabilityResponse200(:final body)) => [
-      for (final day in body.days)
-        AvailabilityDay(
-          date: localDateOf(day.date),
-          open: day.open,
-          slots: [for (final slot in day.slots) clinicInstantOf(slot.startAt)],
-        ),
+      for (final day in body.days) availabilityDayOf(day),
     ],
     final other => throw apiFailureOf(other, _failures),
   };
@@ -103,24 +98,23 @@ final class PortalSchedulingRepository implements SchedulingRepository {
         petId: petId,
         motifId: request.motifId.value,
         practitionerId: request.practitionerId.value,
-        startAt: _wire(request.startAt),
+        startAt: slotWire(request.startAt),
       ),
     )) {
       TonikSuccess(value: api.BookAppointmentResponse201(:final body)) =>
         _booked(body),
       final other => throw apiFailureOf(other, _failures),
     },
-    NewPet(:final name, :final species) => switch (await _api
-        .bookAppointmentWithNewPet(
-          clinicId: clinicId.value,
-          idempotencyKey: key.value,
-          body: api.AppointmentBookingWithNewPet(
-            newPet: api.NewPet(name: name, species: _species(species)),
-            motifId: request.motifId.value,
-            practitionerId: request.practitionerId.value,
-            startAt: _wire(request.startAt),
-          ),
-        )) {
+    final NewPet pet => switch (await _api.bookAppointmentWithNewPet(
+      clinicId: clinicId.value,
+      idempotencyKey: key.value,
+      body: api.AppointmentBookingWithNewPet(
+        newPet: newPetWire(pet),
+        motifId: request.motifId.value,
+        practitionerId: request.practitionerId.value,
+        startAt: slotWire(request.startAt),
+      ),
+    )) {
       TonikSuccess(
         value: api.BookAppointmentWithNewPetResponse201(:final body),
       ) =>
@@ -173,7 +167,7 @@ final class PortalSchedulingRepository implements SchedulingRepository {
     clinicId: clinicId.value,
     appointmentId: id.value,
     body: api.AppointmentReschedule(
-      startAt: _wire(startAt),
+      startAt: slotWire(startAt),
       practitionerId: practitionerId.value,
     ),
   )) {
@@ -224,24 +218,6 @@ final class PortalSchedulingRepository implements SchedulingRepository {
           ),
         final other => throw apiFailureOf(other, _failures),
       };
-
-  /// A slot sent back as the availability answer gave it: its instant with
-  /// the clinic's offset (`2026-11-09T10:00:00+01:00`), never rebuilt from
-  /// a UTC `DateTime`.
-  static OffsetDateTime _wire(ClinicInstant slot) =>
-      OffsetDateTime.from(slot.instant, offset: slot.offset);
-
-  static Date _date(LocalDate date) => Date(date.year, date.month, date.day);
-
-  /// The species of a new pet; none sent for a species this app does not
-  /// know (the server records it as unknown).
-  static api.NewPetSpeciesModel? _species(Species species) => switch (species) {
-    Species.dog => api.NewPetSpeciesModel.dog,
-    Species.cat => api.NewPetSpeciesModel.cat,
-    Species.nac => api.NewPetSpeciesModel.nac,
-    Species.other => api.NewPetSpeciesModel.other,
-    Species.unknown => null,
-  };
 
   // The six views, field by field (their pet, care item and enum classes
   // differ; the references and the care item inside are shared).
@@ -334,12 +310,6 @@ final class PortalSchedulingRepository implements SchedulingRepository {
         care: view.relatedCareItem?.relatedCareItemView,
       );
 
-  /// The value of [values] named like [value]; [unknown] for a name it
-  /// lacks (a view's enum regenerated with a value the list view's has not
-  /// yet), never an error once the server acted.
-  static T _sameName<T extends Enum>(List<T> values, Enum value, T unknown) =>
-      values.asNameMap()[value.name] ?? unknown;
-
   /// One appointment, whichever view it came in. Each view's status,
   /// source and questionnaire enums have the list view's values under the
   /// same names: they are read as the list view's, every value (`unknown`
@@ -369,7 +339,7 @@ final class PortalSchedulingRepository implements SchedulingRepository {
     motifLabel: motif.label,
     practitionerId: PractitionerId(practitioner.id),
     practitionerName: practitioner.displayName,
-    status: switch (_sameName(
+    status: switch (sameName(
       api.AppointmentViewStatusModel.values,
       status,
       api.AppointmentViewStatusModel.unknown,
@@ -386,7 +356,7 @@ final class PortalSchedulingRepository implements SchedulingRepository {
       api.AppointmentViewStatusModel.noShow => AppointmentStatus.noShow,
       api.AppointmentViewStatusModel.unknown => AppointmentStatus.unknown,
     },
-    source: switch (_sameName(
+    source: switch (sameName(
       api.AppointmentViewSourceModel.values,
       source,
       api.AppointmentViewSourceModel.unknown,
@@ -399,7 +369,7 @@ final class PortalSchedulingRepository implements SchedulingRepository {
       final DateTime until => clinicInstantOf(until),
       null => null,
     },
-    questionnaire: switch (_sameName(
+    questionnaire: switch (sameName(
       api.AppointmentViewQuestionnaireStatusModel.values,
       questionnaire,
       api.AppointmentViewQuestionnaireStatusModel.unknown,

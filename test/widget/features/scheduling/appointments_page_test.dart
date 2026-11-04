@@ -79,6 +79,7 @@ void main() {
     onBook: (context) => exits.add('book'),
     onReschedule: (context, id) => exits.add('reschedule $id'),
     onFillQuestionnaire: (context, id) => exits.add('questionnaire $id'),
+    onFindClinic: (context) => exits.add('clinics'),
   );
 
   Future<ProviderContainer> pump(

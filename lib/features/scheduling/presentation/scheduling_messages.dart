@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/misc.dart' show ProviderException;
 import 'package:kiveto_mobile/features/patient/patient.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/appointment_request.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/questionnaire.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
@@ -241,3 +242,91 @@ String questionnaireFailureMessage(AppLocalizations l10n, Object error) =>
       NotFoundFailure() => l10n.questionnaireNotFoundBody,
       final other => failureMessage(l10n, other).$2,
     };
+
+/// The pill of a booking request of the account: « En attente » (neutral)
+/// while the clinic decides, « Refusée », « Expirée » or « Annulée »
+/// (danger) once declined; a status or a reason this app does not know is
+/// neutral (« En attente », « Refusée »).
+(String, StatusTone) appointmentRequestPill(
+  AppLocalizations l10n,
+  AppointmentRequest request,
+) => switch ((request.status, request.declineReason)) {
+  (AppointmentRequestStatus.declined, DeclineReason.declined) => (
+    l10n.appointmentRequestDeclined,
+    StatusTone.danger,
+  ),
+  (AppointmentRequestStatus.declined, DeclineReason.expired) => (
+    l10n.appointmentRequestExpired,
+    StatusTone.danger,
+  ),
+  (
+    AppointmentRequestStatus.declined,
+    DeclineReason.cancelled || DeclineReason.accountDeleted,
+  ) =>
+    (l10n.appointmentRequestCancelled, StatusTone.danger),
+  (AppointmentRequestStatus.declined, _) => (
+    l10n.appointmentRequestDeclined,
+    StatusTone.neutral,
+  ),
+  _ => (l10n.appointmentsStatusPending, StatusTone.neutral),
+};
+
+/// The status line of a booking request of the account; none for a status
+/// or a reason this app does not know.
+String? appointmentRequestLine(
+  AppLocalizations l10n,
+  AppointmentRequest request,
+) => switch ((request.status, request.declineReason)) {
+  (AppointmentRequestStatus.pending, _) => l10n.appointmentRequestPendingLine,
+  (AppointmentRequestStatus.declined, DeclineReason.declined) =>
+    l10n.appointmentRequestDeclinedLine,
+  (AppointmentRequestStatus.declined, DeclineReason.expired) =>
+    l10n.appointmentRequestExpiredLine,
+  (
+    AppointmentRequestStatus.declined,
+    DeclineReason.cancelled || DeclineReason.accountDeleted,
+  ) =>
+    l10n.appointmentRequestCancelledLine,
+  _ => null,
+};
+
+/// The French message of a new-client request the server refused or that
+/// did not reach it: its business codes, the first violation of a
+/// validation not shown under its field ([shown]: the property paths the
+/// form shows itself; null when only those were refused), else the
+/// shared message of the failure kind.
+String? listingFailureMessage(
+  AppLocalizations l10n,
+  Object error, {
+  Set<String> shown = const {},
+}) => switch (failureCause(error)) {
+  ConflictFailure(code: 'slot_taken') => l10n.bookingSlotTaken,
+  ValidationFailure(:final violations) when violations.isNotEmpty =>
+    violations
+        .where((violation) => !shown.contains(violation.propertyPath))
+        .firstOrNull
+        ?.message,
+  ApiFailure(code: 'already_linked') => l10n.listingBookingAlreadyLinked,
+  ApiFailure(code: 'booking_request_limit') => l10n.listingBookingLimit,
+  ApiFailure(code: 'booking_not_open') => l10n.listingBookingNotOpen,
+  NotFoundFailure() => l10n.listingBookingNotFound,
+  RateLimitedFailure() => l10n.listingBookingRateLimited,
+  final other => failureMessage(l10n, other).$2,
+};
+
+/// The server's word on a property of a refused request (its first
+/// violation of [propertyPath]), shown under its field.
+String? violationOf(Object error, String propertyPath) =>
+    switch (failureCause(error)) {
+      ValidationFailure(:final violations) =>
+        violations
+            .where((violation) => violation.propertyPath == propertyPath)
+            .firstOrNull
+            ?.message,
+      _ => null,
+    };
+
+/// The day of a slot inside a sentence, kept on one line (« jeu. 12
+/// nov. » with no-break spaces).
+String slotDayInSentence(ClinicInstant slot) =>
+    KivetoFormat.dayShort(slot.date, capitalized: false).replaceAll(' ', ' ');
