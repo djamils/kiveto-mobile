@@ -130,6 +130,38 @@ Existing (read, reuse):
 - Given a successful deletion, when the 202 arrives, then the local session is closed, the app is on `/welcome` and the confirmation SnackBar is visible there.
 - Given `make ci`, then format, analyze (fatal infos), architecture rules, all tests and the coverage gate (100% of new domain/application/infrastructure files) pass.
 
+### Review Findings
+
+Code review of the branch (bmad-code-review, 2026-11-04, full mode, four layers: blind hunter, edge-case hunter, verification gap, acceptance auditor; 32 findings, the generated `app_localizations*.dart` left out of the diff). Unattended: every patch applied.
+
+- [x] [Review][Patch] The e-mail sheet had no clear way on after a spent SMS code and reused a kept code past its expiry: « Renvoyer le code » stayed (a 404 again for an unknown challenge), « Continuer » sent the dead code, and « Recevoir un code » went back to a kept challenge after its `expiresAt` (blind hunter, edge-case hunter ×3, verification gap, acceptance auditor) [lib/features/identity_access/presentation/email_change_sheet.dart] — now as on the deletion sheet: on a spent code « Recevoir un nouveau code » is the one way on (resend hidden, submit disabled); a kept challenge is reused only before its `expiresAt`.
+- [x] [Review][Patch] The deletion sheet still sent a spent code once six digits were typed again (edge-case hunter ×2) [lib/features/identity_access/presentation/account_deletion_sheet.dart] — `_delete` and « Supprimer mon compte » are disabled while the code is spent.
+- [x] [Review][Patch] The profile sheet popped after a save even when it was already closing, which would pop the page under it (edge-case hunter) [lib/features/client/presentation/profile_edit_sheet.dart] — pops only while its route is current.
+- [x] [Review][Patch] The profile form's last field said « suivant » and submitted nothing; no autofill group (blind hunter) [lib/features/client/presentation/profile_edit_sheet.dart] — « Ville » ends with done and saves; the fields are one `AutofillGroup`.
+- [x] [Review][Patch] The profile card's meta line could break inside the masked phone (verification gap, other) [lib/features/client/presentation/profile_card.dart] — no-break spaces, as in the sheets.
+- [x] [Review][Patch] The ARB descriptions of `identityEmailEdit` and `identityAccountNewCode` no longer said what the strings do (blind hunter) [lib/l10n/app_fr.arb] — rewritten.
+- [x] [Review][Patch] A consent PUT failing while another kind is saving was untested (verification gap) [test/widget/features/client/account_page_test.dart] — test added.
+- [x] [Review][Patch] The account-scoped providers across sessions were untested (`dataExportsProvider` signed out, the consents of another account) (blind hunter) [test/widget/features/client/] — tests added.
+- [x] [Review][Patch] CONTRIBUTING §0 row 10 still said the walk was pending (blind hunter, acceptance auditor) [CONTRIBUTING.md] — « Done » with the accounts walked.
+- [x] [Review][Defer] The device-calendar conversion of the account's instants (`deviceDateOf`, `deviceTimeOf`) cannot fail a test: every instant is at midday UTC and CI runs in UTC [lib/features/client/presentation/account_messages.dart] — deferred: closing it needs a non-UTC `TZ` for the test step of `make ci`, a repo-wide test-infrastructure choice (patient's `deviceToday` has the same blind spot).
+
+Rejected:
+- `low` The deletion button shows a spinner while a new code is requested (shared `_busy`) — only after a spent code, for a second; the fix adds a flag.
+- `low` A failed background `GET /me` after a consent change swaps the page for the error view — rare right after a success, the view offers a retry; keeping stale data needs the same-session test of slice 3's deferred « blink » entry.
+- `low` A name-less account shows the masked phone twice — such accounts are unlikely (registration requires names); the fix adds a branch.
+- `low` The profile sheet loses edits when dismissed — the app's sheets all close freely; a guard adds a confirm step.
+- `low` A 409 on one kind drops another kind's pending answer — a concurrent modification during another PUT is rare; carrying pending kinds across rebuilds is not a direct fix (same as the build review).
+- `low` `DeleteAccount` reports a failed local sign-out as a failed deletion — a secure-storage failure right after the 202 is unlikely; the next call signs out anyway (refresh refused).
+- `low` The spec's Design Notes, matrix and deviation record lag behind the code (history link, footnote, `onVerified`, inline export lines) — its fix is editing the spec under review; the hand-over records the shipped behaviour.
+- `low` `ConsentHistoryEntry.source` and `DataExport.readyAt` are mapped but not shown — contract mapping covered by tests, no user harm.
+- `false` Step 3 would show an `email` violation under the code boxes — `POST /me/email-change/verify` carries no `email`, so no such violation can come from it.
+- `low` The « Active » pill and the consents header blink while `/me` reloads — the known pattern of slice 3's deferred entry (`activeClinicProvider` awaits `/me`).
+- `low` « Modifier l'adresse » during a resend lets the resent challenge come back — the resent challenge is valid (a fresh code), so nothing breaks.
+- `low` `showEmailChangeSheet` returns `void` with `onVerified` instead of the spec's `bool` — spec edit; the build review changed it on purpose (a verification after the sheet closed).
+- `low` Export failures show inline, the matrix says SnackBar — spec edit; a SnackBar sits behind the modal sheet.
+- `low` The history link is a 13-px text link without the kit's 44-px hit area — mockup 06 draws it so, like the kit's other standalone links (« Ajouter une clinique », « Tout voir »); the kit-level hit area is slice 3's deferred entry.
+- `low` `email_taken` shows under the e-mail code boxes, not on the address field — the matrix row (message + « Modifier l'adresse ») is met; carrying it to the field adds state.
+
 ## Spec Change Log
 
 ## Review Triage Log
