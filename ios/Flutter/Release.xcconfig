@@ -1,1 +1,5 @@
 #include "Generated.xcconfig"
+
+// Release and Profile builds register no dev URL scheme:
+// KIVETO_DEV_URL_SCHEME (set in Debug.xcconfig only) stays undefined here,
+// so the $(KIVETO_DEV_URL_SCHEME) of Info.plist expands to an empty string.

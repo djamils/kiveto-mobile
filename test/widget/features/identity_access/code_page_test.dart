@@ -18,6 +18,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/keyboard.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 
@@ -79,6 +80,20 @@ String? _otpError(WidgetTester tester) =>
     tester.widget<KivetoOtpField>(find.byType(KivetoOtpField)).errorText;
 
 void main() {
+  testWidgets(
+    'iOS: the number pad has no return key, a drag on the page closes it',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await _pump(tester);
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.byType(TextField),
+        from: find.text('Entrez le code reçu'),
+      );
+    },
+  );
+
   testWidgets('without its flow: back to the start', (tester) async {
     final (_, exits, _) = await _pump(tester, flow: false);
 

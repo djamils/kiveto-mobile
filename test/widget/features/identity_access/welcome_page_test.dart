@@ -1,6 +1,6 @@
 // Screen 7: the layout of the mockup, the number formatted and complete
 // for its prefix, the code request and its refusals, the country sheet,
-// the invitation link sheet.
+// the invitation link sheet, the phone pad closed by a drag on iOS.
 
 import 'dart:convert';
 
@@ -14,6 +14,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/keyboard.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 
@@ -353,6 +354,20 @@ void main() {
     expect(find.text('6 92 12 34 56'), findsOneWidget);
     expect(_cta(tester).onPressed, isNotNull);
   });
+
+  testWidgets(
+    'iOS: the phone pad has no return key, a drag on the page closes it',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await _pump(tester);
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: _phoneInput,
+        from: find.text('La santé de vos animaux, avec votre clinique'),
+      );
+    },
+  );
 
   testWidgets('debug builds: the kit gallery link', (tester) async {
     final (_, exits) = await _pump(tester, kitGallery: true);

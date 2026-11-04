@@ -249,6 +249,37 @@ pub_get_if_needed() {
   ok "Dart dependencies resolved"
 }
 
+# --- Environment files ------------------------------------------------------
+# make start passes one file of config/env/ to flutter run
+# (--dart-define-from-file): <ENV>.json on Android, <ENV>.ios.json on iOS.
+# The two dev files differ by the backend address: the Android emulator
+# reaches the host at 10.0.2.2, the iOS simulator shares the Mac's network
+# (127.0.0.1). make install creates the missing ones from their .dist.
+
+# env_file_for <platform> <env>: the environment file make start passes.
+env_file_for() {
+  case $1 in
+    ios) printf 'config/env/%s.ios.json\n' "$2" ;;
+    *) printf 'config/env/%s.json\n' "$2" ;;
+  esac
+}
+
+# create_env_files: each config/env/*.json.dist copied to its .json when
+# that file is missing; an existing one is kept (never overwritten).
+create_env_files() {
+  local dist file
+  for dist in config/env/*.json.dist; do
+    if [ ! -f "$dist" ]; then continue; fi
+    file=${dist%.dist}
+    if [ -f "$file" ]; then
+      ok "$file kept"
+    else
+      cp "$dist" "$file"
+      ok "$file created from $dist"
+    fi
+  done
+}
+
 # --- Android SDK and JDK ----------------------------------------------------
 
 # android_sdk: the Android SDK directory (ANDROID_HOME, else the OS default).

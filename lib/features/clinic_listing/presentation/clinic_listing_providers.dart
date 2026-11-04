@@ -176,7 +176,11 @@ Future<GeoPoint> _locateDevice() async {
       // Android: the platform's location manager, not Google Play
       // services, whose settings check asks the owner to turn on Google's
       // « Location Accuracy » (a data-collection consent) before any fix,
-      // even for a coarse position.
+      // even for a coarse position. iOS keeps the plain settings:
+      // geolocator_apple's one-time position reads only the accuracy and
+      // never allows background updates, so `AppleSettings` (whose
+      // `allowBackgroundLocationUpdates` defaults to true, for streams)
+      // would add nothing.
       locationSettings: defaultTargetPlatform == TargetPlatform.android
           ? geo.AndroidSettings(
               accuracy: accuracy,

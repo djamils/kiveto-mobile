@@ -69,10 +69,13 @@ FakePortalBackend _backend() => julienBackend()
 void main() {
   late List<String> exits;
   late List<PortalFile> shared;
+  // The global rect each share received (the iPad popover anchor).
+  late List<Rect> origins;
 
   setUp(() {
     exits = [];
     shared = [];
+    origins = [];
   });
 
   Widget page() => AppointmentsPage(
@@ -92,8 +95,9 @@ void main() {
     backend: backend,
     clock: now == null ? null : FixedClock(now),
     overrides: [
-      calendarSharerProvider.overrideWithValue((file) async {
+      calendarSharerProvider.overrideWithValue((file, origin) async {
         shared.add(file);
+        origins.add(origin);
       }),
     ],
   );
@@ -410,8 +414,21 @@ void main() {
       );
     await pump(tester, backend);
 
-    await tapVisible(tester, _inCard(bookedId, 'Ajouter à mon calendrier'));
+    final link = find
+        .ancestor(
+          of: _inCard(bookedId, 'Ajouter à mon calendrier'),
+          matching: find.byType(InkWell),
+        )
+        .first;
+    await tester.ensureVisible(link);
+    await tester.pumpAndSettle();
+    final linkRect = tester.getRect(link);
+    await tester.tap(link);
+    await tester.pumpAndSettle();
     expect(shared.single.fileName, 'rendez-vous-2026-11-11.ics');
+    // The tapped link's global rect: the share sheet's anchor on iPad.
+    expect(origins.single, linkRect);
+    expect(linkRect.isEmpty, isFalse);
 
     backend.on(
       'GET',

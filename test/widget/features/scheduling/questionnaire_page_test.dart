@@ -24,6 +24,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/keyboard.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 import 'scheduling_support.dart';
@@ -181,6 +182,22 @@ void main() {
     expect(selected(tester, 'Toux'), isFalse);
     expect(selected(tester, 'Boiterie'), isFalse);
   });
+
+  testWidgets(
+    'iOS: a multiline field has no dismiss key, a drag on the page (the '
+    'flow scaffold) closes the keyboard',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pump(tester, _backend());
+      await tapVisible(tester, _chip('Oui'));
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.widgetWithText(KivetoTextField, 'Lequel ?'),
+        from: _chip('Non'),
+      );
+    },
+  );
 
   testWidgets('« Oui » asks « Lequel ? »; « Non » hides it', (tester) async {
     await pump(tester, _backend());

@@ -1,3 +1,5 @@
+import 'dart:ui' show Rect;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show AsyncNotifierProviderFamily;
@@ -233,10 +235,12 @@ final FutureProvider<List<DataExport>> dataExportsProvider =
 
 /// Hands an export's ZIP to the system share sheet (a seam for the tests:
 /// share_plus talks to the platform), as `kiveto-export.zip` when the
-/// server named none.
+/// server named none. `origin` is the global rect of the tapped
+/// « Télécharger »: on iPad the sheet is a popover anchored to it
+/// (`sharePositionOrigin`); the phones ignore it.
 final dataExportSharerProvider =
-    Provider<Future<void> Function(PortalFile file)>(
-      (ref) => (file) async {
+    Provider<Future<void> Function(PortalFile file, Rect origin)>(
+      (ref) => (file, origin) async {
         await SharePlus.instance.share(
           ShareParams(
             files: [
@@ -246,6 +250,7 @@ final dataExportSharerProvider =
               ),
             ],
             fileNameOverrides: [file.fileName ?? 'kiveto-export.zip'],
+            sharePositionOrigin: origin,
           ),
         );
       },

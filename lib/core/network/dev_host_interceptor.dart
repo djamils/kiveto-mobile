@@ -2,9 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:kiveto_mobile/core/network/api_config.dart';
 
 /// Dev only (installed when `ApiConfig.hostHeader` is set): the local
-/// backend's routes are bound to `portal.kiveto.local`, which an emulator
-/// cannot resolve, so requests go to `10.0.2.2:81` with that `Host`, and the
-/// redirects the backend writes for that host point back to the base URL.
+/// backend's routes are bound to `portal.kiveto.local`, which neither the
+/// Android emulator nor the iOS simulator resolves, so requests go to the
+/// base URL (`10.0.2.2:81` from the emulator, `127.0.0.1:81` from the
+/// simulator) with that `Host`, and the redirects the backend writes for
+/// that host point back to the base URL.
 final class DevHostInterceptor extends Interceptor {
   new(this._config);
 

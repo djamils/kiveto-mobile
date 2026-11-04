@@ -14,6 +14,7 @@ import 'package:kiveto_mobile/features/scheduling/presentation/reschedule_page.d
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_providers.dart';
 import 'package:kiveto_mobile/shared/domain/portal_file.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -42,10 +43,13 @@ FakePortalBackend _backend() => julienBackend()
 void main() {
   late List<String> exits;
   late List<PortalFile> shared;
+  // The global rect each share received (the iPad popover anchor).
+  late List<Rect> origins;
 
   setUp(() {
     exits = [];
     shared = [];
+    origins = [];
   });
 
   Future<ProviderContainer> pump(
@@ -60,8 +64,9 @@ void main() {
     ),
     backend: backend,
     overrides: [
-      calendarSharerProvider.overrideWithValue((file) async {
+      calendarSharerProvider.overrideWithValue((file, origin) async {
         shared.add(file);
+        origins.add(origin);
       }),
     ],
   );
@@ -137,9 +142,15 @@ void main() {
       findsOneWidget,
     );
 
+    final buttonRect = tester.getRect(
+      find.widgetWithText(KivetoButton, 'Ajouter à mon calendrier'),
+    );
     await tester.tap(find.text('Ajouter à mon calendrier'));
     await tester.pumpAndSettle();
     expect(shared.single.fileName, 'rendez-vous-2026-11-11.ics');
+    // The tapped button's global rect: the share sheet's anchor on iPad.
+    expect(origins.single, buttonRect);
+    expect(buttonRect.isEmpty, isFalse);
 
     await tester.tap(find.text('Retour à mes rendez-vous'));
     await tester.binding.handlePopRoute();

@@ -1,5 +1,6 @@
 // The app boots with the bootstrap values overridden: title, French,
-// DM Sans; the bootstrap pieces; the core providers.
+// DM Sans, dark status-bar content; the bootstrap pieces; the core
+// providers.
 
 import 'dart:convert';
 
@@ -10,6 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/app/bootstrap/app_environment.dart';
 import 'package:kiveto_mobile/app/bootstrap/asset_licenses.dart';
+import 'package:kiveto_mobile/app/kiveto_app.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/di/debug_probe.dart';
 import 'package:kiveto_mobile/core/di/system_clock.dart';
@@ -54,6 +56,42 @@ void main() {
     expect(theme.scaffoldBackgroundColor, const Color(0xFFF6F6FA));
   });
 
+  for (final signedIn in [false, true]) {
+    testWidgets(
+      'the status bar: dark content over the '
+      '${signedIn ? 'shell (canvas)' : 'welcome page (white)'}, the '
+      'navigation bar left to the platform',
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+      (tester) async {
+        // A light style first, so that the app's own is what is read.
+        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+        await tester.pump();
+        expect(SystemChrome.latestStyle, SystemUiOverlayStyle.light);
+
+        await pumpKivetoApp(
+          tester,
+          session: await memorySession(signedIn ? pair('A') : null),
+        );
+
+        final style = SystemChrome.latestStyle;
+        expect(style?.statusBarBrightness, Brightness.light);
+        expect(style?.statusBarIconBrightness, Brightness.dark);
+        expect(style?.statusBarColor, isNull);
+        expect(style?.systemNavigationBarColor, isNull);
+        expect(style?.systemNavigationBarIconBrightness, isNull);
+      },
+    );
+  }
+
+  testWidgets('the status bar on Android: dark icons', (tester) async {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+    await tester.pump();
+
+    await pumpKivetoApp(tester);
+
+    expect(SystemChrome.latestStyle, KivetoApp.statusBarStyle);
+  });
+
   group('apiConfigFromDefines', () {
     test('reads the base URL and the dev Host header', () {
       final config = apiConfigFromDefines(
@@ -70,14 +108,18 @@ void main() {
     });
 
     test('no base URL (no define in tests): a StateError naming make '
-        'start', () {
+        'start and both dev files', () {
       expect(
         apiConfigFromDefines,
         throwsA(
           isA<StateError>().having(
             (e) => e.message,
             'message',
-            contains('make start'),
+            allOf(
+              contains('make start'),
+              contains('config/env/dev.json'),
+              contains('config/env/dev.ios.json'),
+            ),
           ),
         ),
       );

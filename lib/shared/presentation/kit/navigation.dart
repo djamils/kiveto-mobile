@@ -455,10 +455,14 @@ class KivetoSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final subtitle = this.subtitle;
     // Above the keyboard, and scrollable when the content is taller than
-    // the room left.
+    // the room left. iOS phone and number pads have no return key: when
+    // the sheet scrolls, a drag on it closes them; a sheet that fits shows
+    // all its content above the keyboard. (No always-scrollable physics:
+    // it would take the modal sheet's own swipe-down.)
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: EdgeInsets.fromLTRB(
           KivetoSpace.gutter,
           10,

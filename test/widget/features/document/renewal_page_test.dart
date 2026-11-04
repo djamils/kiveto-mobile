@@ -27,6 +27,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/keyboard.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 
@@ -129,6 +130,21 @@ void main() {
     await tester.tap(finder);
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'iOS: the note has no dismiss key, a drag on the page closes the '
+    'keyboard',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pump(tester, _backend());
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.byType(KivetoTextField),
+        from: find.text('Ça va mieux'),
+      );
+    },
+  );
 
   testWidgets('ORD-36 (capture): the header, its line read-only, the '
       'conditions, the note and the footnote; « Envoyer la demande » once a '

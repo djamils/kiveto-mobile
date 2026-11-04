@@ -163,7 +163,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         backgroundColor: KivetoColors.surface,
         body: SafeArea(
           bottom: false,
+          // iOS phone and number pads have no return key: a drag closes them.
           child: CustomScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             slivers: [
               SliverFillRemaining(
                 hasScrollBody: false,

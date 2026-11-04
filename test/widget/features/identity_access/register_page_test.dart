@@ -17,6 +17,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/keyboard.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 
@@ -119,6 +120,20 @@ String? _errorOf(WidgetTester tester, String label) =>
     tester.widget<KivetoTextField>(_field(label)).errorText;
 
 void main() {
+  testWidgets(
+    'iOS: a drag on the page closes the keyboard',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await _pump(tester);
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: _field('Prénom'),
+        from: find.text('Créez votre compte'),
+      );
+    },
+  );
+
   testWidgets('without its flow: back to the start', (tester) async {
     final (_, exits, _) = await _pump(tester, flow: false);
 

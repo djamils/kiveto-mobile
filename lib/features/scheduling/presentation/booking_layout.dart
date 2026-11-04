@@ -31,7 +31,12 @@ class FlowScaffold extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
+              // A drag closes the keyboard (an iOS multiline field has no
+              // dismiss key), also when the content fits.
               child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(
                   KivetoSpace.gutter,
                   KivetoSpace.xl,

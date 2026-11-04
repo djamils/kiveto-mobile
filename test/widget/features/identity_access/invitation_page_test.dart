@@ -19,6 +19,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/keyboard.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 
@@ -125,6 +126,20 @@ String? _codeError(WidgetTester tester) =>
     tester.widget<KivetoCodeField>(find.byType(KivetoCodeField)).errorText;
 
 void main() {
+  testWidgets(
+    'iOS: the number pad has no return key, a drag on the page closes it',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await _pump(tester);
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.byType(KivetoCodeField),
+        from: find.text('Code reçu par SMS au +33 6 •• •• •• 55'),
+      );
+    },
+  );
+
   testWidgets('a valid link (Roussel): the clinic, the pets, the read-only '
       'email, the code sent at once to the masked mobile; accepted, the '
       'session opens, home', (tester) async {

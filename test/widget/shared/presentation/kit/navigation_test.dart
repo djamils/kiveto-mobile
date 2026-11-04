@@ -4,6 +4,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
@@ -11,6 +12,7 @@ import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../support/fakes.dart';
+import '../../../../support/keyboard.dart';
 
 List<KivetoNavItem> _items(int documents) => [
   const KivetoNavItem(label: 'Accueil', glyph: LucideGlyph.house),
@@ -338,6 +340,44 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(SingleChildScrollView), findsWidgets);
   });
+
+  testWidgets(
+    'KivetoSheet taller than the room above the keyboard: on iOS a drag '
+    'on it closes the pad',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pumpKit(
+        tester,
+        Builder(
+          builder: (context) => KivetoButton.outline(
+            label: 'Ouvrir',
+            onPressed: () => showKivetoSheet<void>(
+              context: context,
+              builder: (context) => KivetoSheet(
+                title: 'Code de vérification',
+                children: [
+                  const KivetoTextField(
+                    label: 'Code',
+                    keyboardType: TextInputType.number,
+                  ),
+                  for (var i = 0; i < 6; i++)
+                    KivetoButton.outline(label: 'Action $i', onPressed: () {}),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.byType(KivetoTextField),
+        from: find.text('Code de vérification'),
+      );
+    },
+  );
 
   testWidgets('the badge grows with large text', (tester) async {
     await pumpKit(

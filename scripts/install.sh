@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # make install: doctor blockers, pinned Flutter through FVM, pub get, git
-# hooks once .githooks/ exists, config/env/dev.json, summary. Idempotent:
-# a second run downloads nothing. Installs nothing system-wide.
+# hooks once .githooks/ exists, the missing config/env/*.json from their
+# .dist (dev.json for Android, dev.ios.json for iOS; an existing file is
+# kept), summary. Idempotent: a second run downloads nothing. Installs
+# nothing system-wide.
 
 . "$(dirname "$0")/lib.sh"
 
@@ -36,12 +38,7 @@ if [ -d .githooks ]; then
   ok "Git hooks active (core.hooksPath=.githooks, this repository only)"
 fi
 
-if [ -f config/env/dev.json ]; then
-  ok "config/env/dev.json kept"
-else
-  cp config/env/dev.json.dist config/env/dev.json
-  ok "config/env/dev.json created from config/env/dev.json.dist"
-fi
+create_env_files
 
 step "Install complete: Flutter $FLUTTER_VERSION through FVM $(fvm_version)"
 info "make start      run the app (PLATFORM=android|ios, DEVICE=<id>, ENV=dev)"

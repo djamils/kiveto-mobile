@@ -194,7 +194,11 @@ class _CodePageState extends ConsumerState<CodePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
+                // iOS number pads have no return key: a drag closes them
+                // (the submit stays pinned under the list, above the keyboard).
                 child: ListView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.fromLTRB(
                     KivetoSpace.authGutter,
                     KivetoSpace.xl,

@@ -622,7 +622,7 @@ void main() {
       backend: backend,
       initialLocation: AppRoutes.appointments,
       overrides: [
-        calendarSharerProvider.overrideWithValue((file) async {
+        calendarSharerProvider.overrideWithValue((file, _) async {
           shared.add(file);
         }),
       ],

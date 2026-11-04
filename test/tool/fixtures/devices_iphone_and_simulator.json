@@ -1,0 +1,26 @@
+[
+  {
+    "name": "iPhone de Djamil",
+    "id": "00008110-001A2C3E0A12801E",
+    "isSupported": true,
+    "targetPlatform": "ios",
+    "emulator": false,
+    "sdk": "iOS 26.1 23B85"
+  },
+  {
+    "name": "iPhone 17",
+    "id": "8A1F2C3D-0000-4000-8000-000000000001",
+    "isSupported": true,
+    "targetPlatform": "ios",
+    "emulator": true,
+    "sdk": "com.apple.CoreSimulator.SimRuntime.iOS-26-0 (simulator)"
+  },
+  {
+    "name": "macOS",
+    "id": "macos",
+    "isSupported": true,
+    "targetPlatform": "darwin",
+    "emulator": false,
+    "sdk": "macOS 26.1 25B78 darwin-arm64"
+  }
+]

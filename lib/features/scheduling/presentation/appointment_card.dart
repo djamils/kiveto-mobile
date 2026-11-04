@@ -20,11 +20,14 @@ import 'package:material_ui/material_ui.dart';
 /// Reads the `.ics` of [appointment] and hands it to the share sheet as
 /// one `text/calendar` file named after its day on the clinic's clock
 /// (`rendez-vous-2026-11-09.ics`); a SnackBar says when it could not.
+/// [origin] is the global rect of the tapped control ([globalRectOf]),
+/// the anchor of the sheet's popover on iPad.
 Future<void> shareAppointmentCalendar(
   BuildContext context,
   WidgetRef ref, {
   required ClinicId clinicId,
   required Appointment appointment,
+  required Rect origin,
 }) async {
   final messenger = ScaffoldMessenger.maybeOf(context);
   final failed = AppLocalizations.of(context).appointmentsCalendarError;
@@ -38,6 +41,7 @@ Future<void> shareAppointmentCalendar(
         contentType: file.contentType,
         fileName: 'rendez-vous-${appointment.startAt.date}.ics',
       ),
+      origin,
     );
   } on Object catch (error) {
     debugPrint('Calendar not shared (${error.runtimeType})');
@@ -76,7 +80,10 @@ class AppointmentCard extends StatelessWidget {
   final VoidCallback onReschedule;
   final VoidCallback onCancel;
   final VoidCallback onFillQuestionnaire;
-  final VoidCallback onAddToCalendar;
+
+  /// « Ajouter à mon calendrier », with the global rect of the tapped link
+  /// (the share sheet's anchor on iPad).
+  final ValueChanged<Rect> onAddToCalendar;
 
   @override
   Widget build(BuildContext context) {
@@ -324,17 +331,17 @@ class _QuestionnaireBanner extends StatelessWidget {
 }
 
 /// « Ajouter à mon calendrier »: a 44 row, the calendar glyph and a brand
-/// label.
+/// label; a tap reports the row's global rect.
 class _CalendarLink extends StatelessWidget {
   const new({required this.onTap});
 
-  final VoidCallback onTap;
+  final ValueChanged<Rect> onTap;
 
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
     child: InkWell(
-      onTap: onTap,
+      onTap: () => onTap(globalRectOf(context)),
       splashFactory: NoSplash.splashFactory,
       overlayColor: const WidgetStatePropertyAll(KivetoColors.inkPressed),
       borderRadius: const BorderRadius.vertical(

@@ -201,7 +201,9 @@ class _InvitationPageState extends ConsumerState<InvitationPage> {
       backgroundColor: KivetoColors.surface,
       body: SafeArea(
         bottom: false,
+        // iOS number pads have no return key: a drag closes them.
         child: CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             SliverFillRemaining(
               hasScrollBody: false,

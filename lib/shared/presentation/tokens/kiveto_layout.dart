@@ -70,3 +70,13 @@ abstract final class KivetoMotion {
 /// so nothing sits under the system navigation.
 double kivetoBottomPadding(BuildContext context, double mockup) =>
     math.max(mockup, MediaQuery.viewPaddingOf(context).bottom + 8);
+
+/// The global (window) rect of [context]'s laid-out render box, e.g. the
+/// control that was tapped: the anchor of the share sheet's popover on
+/// iPad (`sharePositionOrigin`). [Rect.zero] when the context has no
+/// laid-out box (share_plus then centres the popover).
+Rect globalRectOf(BuildContext context) {
+  final box = context.findRenderObject();
+  if (box is! RenderBox || !box.attached || !box.hasSize) return Rect.zero;
+  return box.localToGlobal(Offset.zero) & box.size;
+}

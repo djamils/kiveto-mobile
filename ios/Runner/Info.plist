@@ -26,10 +26,30 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<!-- The dev URL scheme of the invitation link (kiveto-dev://portal.kiveto.local/invitation#t=<token>):
+	     KIVETO_DEV_URL_SCHEME is set in Flutter/Debug.xcconfig only, so Release
+	     and Profile builds register no scheme. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.kiveto.portal.dev</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(KIVETO_DEV_URL_SCHEME)</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- The purpose of iOS's local network prompt, shown when a debug build
+	     on a physical iPhone reaches the Mac's backend (<mac-name>.local).
+	     In every configuration: the key asks nothing by itself, and a
+	     release build talking to a public host never shows the prompt. -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Kiveto utilise le réseau local pour joindre le serveur de développement.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Kiveto utilise votre position pour trouver les cliniques autour de vous.</string>
 	<key>UIApplicationSceneManifest</key>
@@ -59,6 +79,11 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<!-- The status bar over the white launch screen: dark content. From its
+	     first frame Flutter drives it (lib/app/kiveto_app.dart), since
+	     UIViewControllerBasedStatusBarAppearance keeps its default, YES. -->
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDarkContent</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

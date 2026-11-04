@@ -1,3 +1,5 @@
+import 'dart:ui' show Rect;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart'
@@ -345,22 +347,26 @@ final class AppointmentListNotifier
 /// Hands an `.ics` to the system share sheet (a seam for the tests:
 /// share_plus talks to the platform). Android has no `text/calendar` VIEW
 /// handler worth relying on; its share sheet (ACTION_SEND) and iOS's (with
-/// « Ajouter au calendrier ») take the file.
-final calendarSharerProvider = Provider<Future<void> Function(PortalFile file)>(
-  (ref) => (file) async {
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [
-          XFile.fromData(
-            Uint8List.fromList(file.bytes),
-            mimeType: file.contentType,
+/// « Ajouter au calendrier ») take the file. `origin` is the global rect of
+/// the tapped control: on iPad the sheet is a popover anchored to it
+/// (`sharePositionOrigin`); the phones ignore it.
+final calendarSharerProvider =
+    Provider<Future<void> Function(PortalFile file, Rect origin)>(
+      (ref) => (file, origin) async {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [
+              XFile.fromData(
+                Uint8List.fromList(file.bytes),
+                mimeType: file.contentType,
+              ),
+            ],
+            fileNameOverrides: [file.fileName ?? 'rendez-vous.ics'],
+            sharePositionOrigin: origin,
           ),
-        ],
-        fileNameOverrides: [file.fileName ?? 'rendez-vous.ics'],
-      ),
+        );
+      },
     );
-  },
-);
 
 /// Opens a `tel:` link; true when an app took it (a seam for the tests:
 /// url_launcher talks to the platform).

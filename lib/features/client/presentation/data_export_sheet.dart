@@ -80,7 +80,9 @@ class _DataExportSheetState extends ConsumerState<DataExportSheet> {
     }
   }
 
-  Future<void> _download(DataExport export) async {
+  /// [origin]: the global rect of the tapped « Télécharger », the anchor
+  /// of the share sheet's popover on iPad.
+  Future<void> _download(DataExport export, Rect origin) async {
     if (_downloading != null) return;
     final l10n = AppLocalizations.of(context);
     final repository = ref.read(dataExportRepositoryProvider);
@@ -93,7 +95,7 @@ class _DataExportSheetState extends ConsumerState<DataExportSheet> {
     });
     String? failure;
     try {
-      await share(await repository.download(export.id));
+      await share(await repository.download(export.id), origin);
     } on NotFoundFailure {
       failure = l10n.accountExportGone;
       if (mounted) ref.invalidate(dataExportsProvider);
@@ -133,7 +135,7 @@ class _DataExportSheetState extends ConsumerState<DataExportSheet> {
                         export: export,
                         downloading: _downloading == export.id,
                         onDownload: _downloading == null
-                            ? () => unawaited(_download(export))
+                            ? (origin) => unawaited(_download(export, origin))
                             : null,
                       ),
                   ],
@@ -173,11 +175,14 @@ class _ExportRow extends StatelessWidget {
 
   final DataExport export;
   final bool downloading;
-  final VoidCallback? onDownload;
+
+  /// « Télécharger », with the global rect of the tapped button.
+  final ValueChanged<Rect>? onDownload;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final onDownload = this.onDownload;
     final pill = dataExportPill(l10n, export.status);
     final expiresAt = export.expiresAt;
     final ready = export.status == DataExportStatus.ready;
@@ -221,11 +226,17 @@ class _ExportRow extends StatelessWidget {
           ),
           if (ready) ...[
             const SizedBox(height: KivetoSpace.m),
-            KivetoButton.tonal(
-              label: l10n.accountExportDownload,
-              icon: LucideGlyph.download,
-              loading: downloading,
-              onPressed: onDownload,
+            // The Builder's context is the button's: its rect anchors the
+            // share sheet on iPad.
+            Builder(
+              builder: (button) => KivetoButton.tonal(
+                label: l10n.accountExportDownload,
+                icon: LucideGlyph.download,
+                loading: downloading,
+                onPressed: onDownload == null
+                    ? null
+                    : () => onDownload(globalRectOf(button)),
+              ),
             ),
           ],
         ],
