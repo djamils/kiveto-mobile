@@ -60,12 +60,12 @@ contract. This list replaces the first one (`session`, `pets`,
 | Feature | Screens and flows |
 |---|---|
 | `identity_access` | 7, 8, 9, 0; invitation onboarding, token refresh, logout, the e-mail change and account deletion flows of 6 |
-| `client` | 6 (profile, clinics, consents, export); the active clinic and its switcher; link suggestions |
+| `client` | 6 (profile, clinics, consents, export); the active clinic and its switcher; the link suggestions of 10 (read, accepted) |
 | `patient` | 2 (pet sheet), change requests, the pet list used for booking |
 | `consultation` | 2 (visit history) |
-| `scheduling` | 12, 13, 3, 14, 4, 16; reschedule, 15 (questionnaire), `.ics`, new-client booking requests |
+| `scheduling` | 12, 13, 3, 14, 4, 16; reschedule, 15 (questionnaire), `.ics`; the new-client booking of a clinic of the directory (the « Motif » block of 11, its slot and pet steps) and the account's booking requests on 4 |
 | `document` | 5, 17; prescription detail |
-| `clinic_listing` | 10, 11; new-client booking from the directory |
+| `clinic_listing` | 10, 11 (the directory: search, sheet, opening hours) |
 | `home` | 1; composes the others through their public APIs |
 
 Next to the features (§6): `lib/shared/` is the **shared kernel**

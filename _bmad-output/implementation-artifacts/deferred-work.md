@@ -273,3 +273,9 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-clinic-listing.md`
   summary: iOS: geolocator_apple compiles the « always » location API unless `BYPASS_PERMISSION_LOCATION_ALWAYS` is set (an environment variable read by its `Package.swift` under Swift Package Manager); the app only asks for when-in-use (`NSLocationWhenInUseUsageDescription`), so App Review may ask about an always-permission code path. Set it in the iOS build (make start / CI) when iOS is built.
   evidence: Build review (blind hunter), verified in the geolocator README, low; iOS is out of this effort's scope (never built).
+
+## Deferred from: code review of spec-clinic-listing.md (2026-11-04)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-clinic-listing.md`
+  summary: The « Ouvert · ferme à … » line of screen 11 is computed from `clockProvider.now().toLocal()`; on a UTC CI the local and UTC hours coincide, so dropping `.toLocal()` passes every test. Closed by the slice 5 entry « pin a non-UTC TZ for the test step of make ci » (same blind spot as `deviceToday` and the account's dates).
+  evidence: Code review (verification-gap layer), filed defer: `clinic_listing_page_test.dart` builds device-local instants (`DateTime(...).toUtc()`), correct in any zone but blind to a missing conversion under `TZ=UTC`.

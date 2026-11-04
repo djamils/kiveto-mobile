@@ -237,3 +237,49 @@ Status: done
 **Verification.** `make ci` green on the patched tree (4 min 58 s: format, analyze, architecture, unit/widget/integration/tool tests, coverage gate 100% on the gated files, plain-bash checks, api-check); `fvm flutter gen-l10n` leaves no diff. Not verified yet: the emulator walk (next step of the slice), iOS.
 
 **Residual risks.** The geolocator permission flow and the manifest only run on a device; the listing ↔ clinic name match; the open status on the device zone.
+
+## Emulator walk (2026-11-04)
+
+Walked on the Android emulator (`Medium_Phone_API_37.0`) against the local backend; screenshots in the notes folder's `shots-clinic-listing/`. Julien Girard (linked to Paris and Lyon): screen 10 from « Ajouter une clinique » with his Paris suggestion (not accepted), the search (« lyon », a one-letter query answered by the server's « Saisissez au moins 2 caractères. »), « Autour de moi » (the permission refused then granted once; the emulator's default position, Mountain View, sent rounded; the server answered no clinic within 150 km and the near-mode empty state showed); Lyon's sheet, the slot step, the pet step, the request refused `already_linked`, « Prendre rendez-vous » opening the known-client wizard on Lyon; « Déjà client »; the Paris (two ranges a day, not online) and Vercors (no new client) sheets. Élise Moreau (clinic-less): the three clinic-less tabs, her Paris suggestion accepted (the pending callout on 10, « En attente » on 6), a new-client request at Lyon sent (« Demande envoyée », then « En attente » on 4 without a refresh), a second one refused `booking_request_limit`. Hugo Masson: three declined requests on 4 with « Aucune clinique rattachée ».
+
+The walk changed three things (commit `e432459`): Android positions come from the platform's location manager (`forceLocationManager: true`), because Google Play services' settings check opened Google's « Location Accuracy » consent dialog before any fix; the closed-to-new-clients block of 11 is a white card with « Appeler la clinique » (an info box disappears on the canvas) and the new-client hint is hidden for a clinic closed to new clients online; a wrapping motif keeps 8 above and below in its C-11b row.
+
+### Review Findings
+
+Code review (bmad-code-review) of the branch against `master` (`2497c52`), head `e432459`: 4 layers (blind hunter, edge-case hunter, verification gap, acceptance auditor), 38 findings — high 0, medium 8, low 22, false 8. 0 decision-needed, 15 patch entries (18 findings), 1 defer, 19 rejected.
+
+- [x] [Review][Patch] The typed pet written into the draft on every keystroke broke the retry's key after an edit-and-revert and wiped a refusal on a re-tapped species (blind, edge) [lib/features/scheduling/presentation/listing_confirm_page.dart] — the draft takes the pet on « Envoyer » only; the typed pet lives beside the draft for the refill; the name error hides once the name differs from the one sent.
+- [x] [Review][Patch] Screen 11 rebuilt on every state change of the steps above it (blind) [lib/features/scheduling/presentation/listing_motif_section.dart] — kept alive with `ref.listen`.
+- [x] [Review][Patch] Step 2 said « Choisissez d'abord un motif. » with a motif but no slot, flashing during the pop after a 409 (edge, acceptance) [lib/features/scheduling/presentation/listing_confirm_page.dart] — « Choisissez d'abord un créneau. ».
+- [x] [Review][Patch] Every query change blanked the results behind a full-page spinner (blind) [lib/features/clinic_listing/presentation/clinic_search_page.dart] — the last results stay shown with a thin progress bar while the next search loads.
+- [x] [Review][Patch] « Plus de 0 cliniques » on an empty page with a next cursor (blind, edge) [lib/features/clinic_listing/presentation/clinic_search_page.dart] — no count line without items.
+- [x] [Review][Patch] Positions rounded to ~1 km while the cards print tenths of a km (blind) [lib/features/clinic_listing/presentation/clinic_listing_providers.dart] — 3 decimals (~100 m).
+- [x] [Review][Patch] A request confirmed by a clinic that is not the active one vanished from screen 4 (blind) [lib/features/scheduling/domain/appointment_request.dart] — kept, with « Confirmée », unless its clinic is the active one.
+- [x] [Review][Patch] A declined request without a reason got a neutral pill and no line (acceptance) [lib/features/scheduling/presentation/scheduling_messages.dart] — treated as declined.
+- [x] [Review][Patch] A 404 on accept left the pending link of an acceptance made elsewhere invisible (blind) [lib/features/client/presentation/link_suggestion_providers.dart] — `/me` re-read too.
+- [x] [Review][Patch] Two kit parameters without a caller (`KivetoCallout.info` optional title, `KivetoCallout.danger.actionLoading`) (acceptance) [lib/shared/presentation/kit/feedback.dart] — removed.
+- [x] [Review][Patch] architecture.md's D15 table still gave the new-client booking to `clinic_listing` (acceptance) [_bmad-output/planning-artifacts/architecture.md] — updated.
+- [x] [Review][Patch] The `/me` re-read before the `already_linked` name match was untested (verification) [test/widget/features/scheduling/listing_booking_test.dart] — test with a stale `/me`.
+- [x] [Review][Patch] The "exactly one match" rule was untested with two matches (verification) [test/widget/features/clinic_listing/clinic_listing_page_test.dart] — test added.
+- [x] [Review][Patch] The session scoping of the suggestions and the requests was untested (verification) [test/widget/features/clinic_listing/clinic_search_page_test.dart, test/widget/features/scheduling/appointment_requests_test.dart] — another-session tests.
+- [x] [Review][Patch] A `validation_failed` on another property than the name was never shown in a test (verification) [test/widget/features/scheduling/listing_booking_test.dart] — test added.
+- [x] [Review][Defer] The device-clock status of 11 cannot fail on a UTC CI if `.toLocal()` is dropped (verification) [lib/features/clinic_listing/presentation/clinic_listing_page.dart] — deferred: the existing deferred-work entry « pin a non-UTC TZ for the test step of make ci » closes it.
+
+Rejected:
+- `low` 24/7 and overnight clinics: the backend refuses closesAt ≤ opensAt and times after 23:59 (`OpeningSlot::TIME`), so no overnight range or 24:00 reaches the app; a 24/7 clinic encoded 00:00–23:59 would read « ferme à 23:59 » — rare, a cross-day status needs new branches (noted as a known issue).
+- `low` No settings action on the location SnackBars and no last-known position: the messages say what to do; an action needs a new seam.
+- `low` No call action when the motif list is empty or fails: `onlineBooking` already means a motif open to new clients; the error view retries.
+- `low` The `already_linked` action without a confirmed clinic after the re-read (blind, edge): needs `/me` to fail right after the server confirmed the link; the redirect to `/clinics` is a sane fallback.
+- `low` ARB keys shared between screens (`screenClinicsTitle` as a button, `homeGreeting`, `appointmentsMoreError` in `MoreFooter`): the texts are the same; naming only.
+- `low` `callClinic` and the dialer seam exported by scheduling for clinic_listing: works, no cycle; a move to shared is churn.
+- `false` The spec's context paths on one machine: every slice spec references the notes folder the same way (the effort's convention).
+- `low` The clinic's city mapped but not shown: names carry the city in the data; showing it adds UI.
+- `low` `/me` freshness on 11 and its silent failure on 10: the pull-to-refresh of 10 re-reads it; the greeting falls back to « Bonjour ».
+- `false` Overlapping ranges: the backend refuses overlapping slots.
+- `false` A day ending 24:00: the backend's times stop at 23:59.
+- `low` « ouvre mercredi à … » for the same weekday next week: a clinic open one day a week is rare.
+- `false` A pending request in the past: the server expires pending requests 2 h before their start.
+- `low` The new-client hint above a `booking_not_open` answer of the motifs: a race between the sheet and the motifs; rare.
+- `false` Edit the spec after the walk and the triage (acceptance ×2): the rule forbids fixing a finding by editing the spec under review; this section records the walk.
+- `false` A suggested motif's row shows its reason: the listing motifs are never suggested (« Sans animal, suggested est toujours false », contract).
+- `false` An accepted suggestion hidden for the page's life: a suggestion the clinic refused never comes back (contract).
