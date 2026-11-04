@@ -1,11 +1,13 @@
 // The French texts of the pet sheet and the care items: today on the
 // device, the species, sex and life labels, the pet's line, weights, ages,
-// care dates and sub-lines, the countdown and the care pill rule.
+// care dates and sub-lines, the countdown and the care pill rule; the
+// fields and values of the change requests.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kiveto_mobile/features/patient/domain/care_item.dart';
 import 'package:kiveto_mobile/features/patient/domain/pet.dart';
+import 'package:kiveto_mobile/features/patient/domain/pet_change.dart';
 import 'package:kiveto_mobile/features/patient/presentation/pet_messages.dart';
 import 'package:kiveto_mobile/l10n/app_localizations_fr.dart';
 import 'package:kiveto_mobile/shared/domain/care_status.dart';
@@ -281,5 +283,59 @@ void main() {
       StatusTone.danger,
     );
     expect(find.text('En retard'), findsOneWidget);
+  });
+
+  test('the change requests: the field labels, the sterilization by sex, '
+      'the values', () {
+    expect(
+      [
+        for (final field in PetChangeField.values)
+          petChangeFieldLabel(_l10n, field),
+      ],
+      ['Nom', 'Poids', 'Stérilisation', 'Puce', 'Autre', 'Autre'],
+    );
+    expect(
+      [
+        for (final sex in Sex.values)
+          for (final state in Sterilization.values)
+            sterilizationChoiceLabel(_l10n, state, sex),
+      ],
+      [
+        'Non castré',
+        'Castré',
+        '—',
+        'Non stérilisée',
+        'Stérilisée',
+        '—',
+        'Non stérilisé(e)',
+        'Stérilisé(e)',
+        '—',
+      ],
+    );
+    expect(
+      petChangeValueLabel(_l10n, PetChangeField.weight, '12,4', Sex.male),
+      '12,4\u00a0kg',
+    );
+    expect(
+      petChangeValueLabel(
+        _l10n,
+        PetChangeField.sterilization,
+        'neutered',
+        Sex.female,
+      ),
+      'Stérilisée',
+    );
+    expect(
+      petChangeValueLabel(_l10n, PetChangeField.sterilization, 'x', Sex.male),
+      'x',
+    );
+    for (final field in [
+      PetChangeField.name,
+      PetChangeField.chipNumber,
+      PetChangeField.other,
+      PetChangeField.unknown,
+    ]) {
+      expect(petChangeValueLabel(_l10n, field, 'Oslo', Sex.male), 'Oslo');
+    }
   });
 }

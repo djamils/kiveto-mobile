@@ -372,6 +372,38 @@ void main() {
     expect(height, greaterThanOrEqualTo(48));
   });
 
+  testWidgets('maxLength: enforced on both text fields, no counter shown', (
+    tester,
+  ) async {
+    final single = TextEditingController();
+    final multiline = TextEditingController();
+    addTearDown(single.dispose);
+    addTearDown(multiline.dispose);
+    await pumpKit(
+      tester,
+      Column(
+        children: [
+          KivetoTextField(label: 'Nom', controller: single, maxLength: 5),
+          KivetoTextField.multiline(
+            label: 'Note',
+            controller: multiline,
+            maxLength: 8,
+          ),
+        ],
+      ),
+    );
+
+    final inputs = find.byType(EditableText);
+    await tester.enterText(inputs.first, 'abcdefgh');
+    await tester.enterText(inputs.last, '1234567890');
+    await tester.pump();
+
+    expect(single.text, 'abcde');
+    expect(multiline.text, '12345678');
+    expect(find.text('5/5'), findsNothing);
+    expect(find.text('8/8'), findsNothing);
+  });
+
   testWidgets('radio cards, the radio dot, the add card, a dashed border', (
     tester,
   ) async {

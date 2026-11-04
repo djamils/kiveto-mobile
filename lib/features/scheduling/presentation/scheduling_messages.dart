@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/misc.dart' show ProviderException;
 import 'package:kiveto_mobile/features/patient/patient.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/questionnaire.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_instant.dart';
@@ -198,3 +199,45 @@ bool isTransientFailure(Object error) => switch (failureCause(error)) {
   NetworkFailure() || ServerFailure() => true,
   _ => false,
 };
+
+/// The chip of a symptom of the questionnaire; none for a symptom this app
+/// does not know.
+String? symptomLabel(AppLocalizations l10n, Symptom symptom) =>
+    switch (symptom) {
+      Symptom.none => l10n.questionnaireSymptomNone,
+      Symptom.cough => l10n.questionnaireSymptomCough,
+      Symptom.vomiting => l10n.questionnaireSymptomVomiting,
+      Symptom.diarrhea => l10n.questionnaireSymptomDiarrhea,
+      Symptom.appetiteLoss => l10n.questionnaireSymptomAppetiteLoss,
+      Symptom.itching => l10n.questionnaireSymptomItching,
+      Symptom.lameness => l10n.questionnaireSymptomLameness,
+      Symptom.unknown => null,
+    };
+
+/// The chip of a temperament of the questionnaire; none for a value this
+/// app does not know.
+String? temperamentLabel(AppLocalizations l10n, Temperament temperament) =>
+    switch (temperament) {
+      Temperament.calm => l10n.questionnaireTemperamentCalm,
+      Temperament.stressed => l10n.questionnaireTemperamentStressed,
+      Temperament.mayBite => l10n.questionnaireTemperamentMayBite,
+      Temperament.unknown => null,
+    };
+
+/// When the answers of a questionnaire were sent, on the clinic's clock:
+/// the date (« mar. 4 nov. », kept on one line) and the time.
+(String date, String time) questionnaireSentAt(ClinicInstant at) => (
+  KivetoFormat.dayShort(at.date, capitalized: false).replaceAll(' ', '\u00a0'),
+  KivetoFormat.time(at),
+);
+
+/// The French message of a questionnaire that could not be saved: the
+/// first violation of a validation, the 404 of an appointment gone, else
+/// the shared message of the failure kind.
+String questionnaireFailureMessage(AppLocalizations l10n, Object error) =>
+    switch (failureCause(error)) {
+      ValidationFailure(:final violations) when violations.isNotEmpty =>
+        violations.first.message,
+      NotFoundFailure() => l10n.questionnaireNotFoundBody,
+      final other => failureMessage(l10n, other).$2,
+    };

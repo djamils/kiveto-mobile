@@ -2,6 +2,7 @@
 // link, the shell: tabs with their own stack, badge and initials seams.
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -556,8 +557,6 @@ void main() {
       );
       final router = container.read(routerProvider);
       for (final (path, title) in [
-        (AppRoutes.questionnaire('a'), 'Avant la consultation'),
-        (AppRoutes.prescriptionRenewal('p'), 'Demander un renouvellement'),
         (AppRoutes.clinicListing('l'), 'Fiche clinique'),
       ]) {
         router.go(path);
@@ -566,17 +565,96 @@ void main() {
       }
     });
 
+    testWidgets('/appointments/:id/questionnaire is screen 15 over the '
+        'shell; back pops it, else the Rendez-vous tab', (tester) async {
+      final container = await pumpKivetoApp(
+        tester,
+        session: await memorySession(pair('A')),
+        initialLocation: AppRoutes.questionnaire('a'),
+      );
+
+      expect(find.byType(QuestionnairePage), findsOneWidget);
+      expect(find.text('Accueil'), findsNothing);
+
+      await tester.tap(find.byType(KivetoIconButton).first);
+      await tester.pumpAndSettle();
+      expect(
+        container
+            .read(routerProvider)
+            .routerDelegate
+            .currentConfiguration
+            .uri
+            .toString(),
+        AppRoutes.appointments,
+      );
+    });
+
+    testWidgets('/documents/prescriptions/:id/renewal is screen 17 over the '
+        'shell; back pops it, else the Documents tab', (tester) async {
+      final container = await pumpKivetoApp(
+        tester,
+        session: await memorySession(pair('A')),
+        initialLocation: AppRoutes.prescriptionRenewal('p'),
+      );
+
+      expect(find.byType(RenewalPage), findsOneWidget);
+      expect(find.text('Accueil'), findsNothing);
+
+      await tester.tap(find.byType(KivetoIconButton).first);
+      await tester.pumpAndSettle();
+      expect(
+        container
+            .read(routerProvider)
+            .routerDelegate
+            .currentConfiguration
+            .uri
+            .toString(),
+        AppRoutes.documents,
+      );
+    });
+
     testWidgets('/documents is the documents page; its renewal button pushes '
-        'screen 17 over the shell', (tester) async {
+        'screen 17 over the shell; once sent, back on the documents, the '
+        "card's sheet shows « Renouvellement demandé »", (tester) async {
+      const base = '/api/portal/v1/clinics/$_parisId';
+      const ord36 = '01a19a12-8b44-7c87-b043-5d82ad91c574';
+      var sent = false;
       final backend = FakePortalBackend()
         ..on('GET', '/api/portal/v1/me', PortalReply.fixture('me.get.200.json'))
+        ..onRequest('GET', '$base/documents', (_) {
+          final body = jsonDecode(
+            File(
+              '$portalFixtures/'
+              'clinics.paris.documents.prescriptions.get.200.json',
+            ).readAsStringSync(),
+          ) as Map<String, Object?>;
+          if (sent) {
+            final first =
+                (body['items']! as List<Object?>).first!
+                    as Map<String, Object?>;
+            (first['prescription']!
+                as Map<String, Object?>)['renewalStatus'] = {
+              'status': 'submitted',
+              'requestId': '01a19a12-87fc-7cd1-a51e-c25f03efc697',
+              'resultingPrescriptionId': null,
+            };
+          }
+          return PortalReply.json(jsonEncode(body));
+        })
         ..on(
           'GET',
-          '/api/portal/v1/clinics/$_parisId/documents',
+          '$base/prescriptions/$ord36',
           PortalReply.fixture(
-            'clinics.paris.documents.prescriptions.get.200.json',
+            'clinics.paris.prescriptions.renewable.get.200.json',
           ),
         )
+        ..onRequest('POST', '$base/prescriptions/$ord36/renewal-requests', (_) {
+          sent = true;
+          return PortalReply.fixture(
+            'clinics.paris.prescriptions.renewal-requests.post.202.json',
+            status: 202,
+          );
+        })
         ..on(
           'GET',
           '/api/portal/v1/clinics/$_parisId/pets',
@@ -608,8 +686,38 @@ void main() {
             .matchedLocation,
         AppRoutes.prescriptionRenewal('01a19a12-8b44-7c87-b043-5d82ad91c574'),
       );
+      expect(find.byType(RenewalPage), findsOneWidget);
       expect(find.text('Demander un renouvellement'), findsOneWidget);
       expect(find.text('Accueil'), findsNothing);
+
+      await tester.tap(find.text('Ça va mieux'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Envoyer la demande'));
+      await tester.pumpAndSettle();
+      expect(find.text('Demande envoyée'), findsOneWidget);
+
+      await tester.tap(find.text('Retour aux documents'));
+      await tester.pumpAndSettle();
+      expect(find.byType(RenewalPage), findsNothing);
+      expect(find.byType(DocumentsPage), findsOneWidget);
+      expect(backend.requestsTo('$base/documents'), hasLength(2));
+
+      await tester.tap(find.textContaining('Ordonnance ORD-2026-000036'));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Renouvellement demandé'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Demander un renouvellement'),
+        ),
+        findsNothing,
+      );
     });
   });
 }

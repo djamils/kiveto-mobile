@@ -18,10 +18,12 @@ import 'package:kiveto_mobile/features/consultation/consultation.dart';
 import 'package:kiveto_mobile/features/consultation/presentation/pet_timeline_section.dart';
 import 'package:kiveto_mobile/features/document/presentation/pdf_file_page.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart';
+import 'package:kiveto_mobile/features/patient/presentation/pet_change_sheet.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/feedback.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:material_ui/material_ui.dart';
@@ -33,6 +35,7 @@ import '../../../support/portal_api/portal_http_harness.dart';
 const _paris = '01960000-0000-7000-8000-000000000001';
 const _me = '$api/me';
 const _pets = '$api/clinics/$_paris/pets';
+const _requests = '$api/clinics/$_paris/requests?limit=50';
 const _oscar = '01a19a10-20d7-77bd-bbad-d251136402fc';
 const _nala = '01a19a10-214a-7baa-93c9-96d75aad7892';
 const _filou = '01a19a10-2291-7c4a-a837-900159faa98f';
@@ -49,12 +52,24 @@ final String _oscarCursor = _cursorOf(
   'clinics.paris.pet.timeline.garnier-oscar.get.200.json',
 );
 
+/// The capture [fixture] with [change] applied to its JSON body.
+PortalReply _edited(String fixture, void Function(Object? body) change) {
+  final body = jsonDecode(File('$portalFixtures/$fixture').readAsStringSync());
+  change(body);
+  return PortalReply.json(jsonEncode(body));
+}
+
 const _noVisit = 'clinics.paris.pet.timeline.get.200.json';
 
 /// Garnier signed in, Paris active: her pets, Oscar's, Nala's and Filou's
-/// sheets, care items and visits.
+/// sheets, care items and visits, her requests (none pending for them).
 FakePortalBackend _garnier() => FakePortalBackend()
   ..on('GET', _me, PortalReply.fixture('me.garnier.get.200.json'))
+  ..on(
+    'GET',
+    _requests,
+    PortalReply.fixture('clinics.paris.requests.garnier.get.200.json'),
+  )
   ..on(
     'GET',
     _pets,
@@ -107,9 +122,14 @@ FakePortalBackend _garnier() => FakePortalBackend()
   ..on('GET', '$_pets/$_filou/care-items', PortalReply.json('[]'))
   ..on('GET', '$_pets/$_filou/timeline', PortalReply.fixture(_noVisit));
 
-/// Julien signed in, Paris active: Oslo.
+/// Julien signed in, Paris active: Oslo, his weight change pending.
 FakePortalBackend _julien() => FakePortalBackend()
   ..on('GET', _me, PortalReply.fixture('me.get.200.json'))
+  ..on(
+    'GET',
+    _requests,
+    PortalReply.fixture('clinics.paris.requests.get.200.json'),
+  )
   ..on('GET', _pets, PortalReply.fixture('clinics.paris.pets.get.200.json'))
   ..on(
     'GET',
@@ -157,7 +177,6 @@ void main() {
         petId: value.$1,
         request: value.$2,
         onBack: (context) => exits.add('back'),
-        onReportChange: (context, id) => exits.add('report:$id'),
       ),
     ),
     session: session ?? await memorySession(pair('A')),
@@ -566,19 +585,262 @@ void main() {
     });
   });
 
-  testWidgets('« Signaler une modification » and back: the exits', (
-    tester,
-  ) async {
+  testWidgets('back is the exit; « Signaler une modification » opens the '
+      'change request sheet of the pet shown', (tester) async {
     await pump(tester, _garnier(), petId: _oscar);
 
-    await tester.tap(find.text('Signaler une modification'));
     await tester.tap(find.byType(KivetoIconButton));
+    expect(exits, ['back']);
 
-    expect(exits, ['report:$_oscar', 'back']);
+    await tester.tap(find.text('Signaler une modification'));
+    await tester.pumpAndSettle();
+
+    final sheet = find.byType(PetChangeSheet);
+    expect(sheet, findsOneWidget);
+    expect(
+      find.descendant(
+        of: sheet,
+        matching: find.text(
+          'Pour Oscar. La clinique vérifie chaque modification avant de '
+          'mettre à jour la fiche.',
+        ),
+      ),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('pull-to-refresh reads the pets, the sheet, the care items '
-      'and the visits again', (tester) async {
+  testWidgets('Filou, deceased: the button stays; the sheet shows the '
+      "server's pet_not_eligible (capture)", (tester) async {
+    final backend = _garnier()
+      ..on(
+        'POST',
+        '$_pets/$_filou/change-requests',
+        PortalReply.fixture(
+          'clinics.paris.pet.change-requests.not-eligible.post.422.json',
+          status: 422,
+        ),
+      );
+    await pump(tester, backend, petId: _filou);
+
+    await tester.tap(find.text('Signaler une modification'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PetChangeSheet), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(KivetoChoiceChip, 'Poids'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(KivetoTextField, 'Nouveau poids (kg)'),
+      '5,2',
+    );
+    await tester.pumpAndSettle();
+    final send = find.widgetWithText(KivetoButton, 'Envoyer la demande');
+    await tester.ensureVisible(send);
+    await tester.pumpAndSettle();
+    await tester.tap(send);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        "Cet animal ne peut plus faire l'objet d'une demande de "
+        'modification\u00a0: contactez la clinique.',
+      ),
+      findsOneWidget,
+    );
+    expect(backend.requestsTo('$_pets/$_filou/change-requests'), hasLength(1));
+  });
+
+  group('« Demandes en cours »', () {
+    testWidgets("Julien: Oslo's weight waiting for the clinic", (tester) async {
+      await pump(tester, _julien());
+
+      expect(find.text('Demandes en cours'), findsOneWidget);
+      expect(find.text('Poids\u00a0: 25,1\u00a0kg'), findsOneWidget);
+      expect(find.text('Envoyée le 2\u00a0nov.\u00a02026'), findsOneWidget);
+      expect(find.widgetWithText(StatusPill, 'En attente'), findsOneWidget);
+    });
+
+    testWidgets('Garnier: none for Oscar (his weight rejected, a '
+        "renewal); Pepito's chip number, Coco's other change", (tester) async {
+      final route = ValueNotifier<(String?, Object?)>((_oscar, null));
+      await pump(tester, _garnier(), route: route);
+
+      expect(find.text('Oscar'), findsWidgets);
+      expect(find.text('Demandes en cours'), findsNothing);
+
+      route.value = (_pepito, null);
+      await tester.pumpAndSettle();
+      expect(find.text('Demandes en cours'), findsOneWidget);
+      expect(find.text('Puce\u00a0: 250268731000453'), findsOneWidget);
+
+      route.value = ('01a19a10-221c-78b5-9b4f-9c333d05a6d0', null);
+      await tester.pumpAndSettle();
+      expect(find.text('Autre\u00a0: Allergie au vermifuge'), findsOneWidget);
+      expect(find.text('Puce\u00a0: 250268731000453'), findsNothing);
+    });
+
+    testWidgets('the requests fail: a callout and its retry; the rest of '
+        'the sheet stays', (tester) async {
+      var failing = true;
+      final backend = _julien()
+        ..onRequest(
+          'GET',
+          _requests,
+          (_) => failing
+              ? problem('service_unavailable', 503)
+              : PortalReply.fixture('clinics.paris.requests.get.200.json'),
+        );
+      await pump(tester, backend);
+
+      expect(
+        find.text("Impossible d'afficher vos demandes en cours."),
+        findsOneWidget,
+      );
+      expect(find.text('Vaccins et préventions'), findsOneWidget);
+
+      failing = false;
+      await tester.tap(find.widgetWithText(KivetoButton, 'Réessayer'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("Impossible d'afficher vos demandes en cours."),
+        findsNothing,
+      );
+      expect(find.text('Poids\u00a0: 25,1\u00a0kg'), findsOneWidget);
+      expect(backend.requestsTo(_requests), hasLength(2));
+    });
+
+    testWidgets('a weight sent from the sheet shows pending at once', (
+      tester,
+    ) async {
+      var sent = false;
+      final backend = _julien()
+        ..onRequest('POST', '$_pets/$_oslo/change-requests', (_) {
+          sent = true;
+          return PortalReply.fixture(
+            'clinics.paris.pet.change-requests.post.202.json',
+            status: 202,
+          );
+        })
+        ..onRequest(
+          'GET',
+          _requests,
+          (_) => sent
+              ? _edited(
+                  'clinics.paris.requests.get.200.json',
+                  (body) =>
+                      ((body! as Map<String, Object?>)['items']!
+                              as List<Object?>)
+                          .insert(0, {
+                            'id': '01a1a413-c972-7eb1-b861-3e83365ac982',
+                            'kind': 'pet_change',
+                            'petId': _oslo,
+                            'field': 'weight',
+                            'proposedValue': '26,2',
+                            'prescriptionId': null,
+                            'status': 'submitted',
+                            'submittedAt': '2026-11-03T11:22:40+01:00',
+                            'resolvedAt': null,
+                            'resolutionMessage': null,
+                            'resultingPrescriptionId': null,
+                          }),
+                )
+              : PortalReply.fixture('clinics.paris.requests.get.200.json'),
+        );
+      await pump(tester, backend);
+
+      await tester.tap(find.text('Signaler une modification'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(KivetoChoiceChip, 'Poids'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(KivetoTextField, 'Nouveau poids (kg)'),
+        '26,2',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(KivetoButton, 'Envoyer la demande'));
+      await tester.pumpAndSettle();
+      expect(find.text('Demande envoyée'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(KivetoButton, 'Fermer'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PetChangeSheet), findsNothing);
+      expect(find.text('Poids\u00a0: 26,2\u00a0kg'), findsOneWidget);
+      expect(find.text('Poids\u00a0: 25,1\u00a0kg'), findsOneWidget);
+      expect(find.text('Envoyée le 3\u00a0nov.\u00a02026'), findsOneWidget);
+      expect(backend.requestsTo(_requests), hasLength(2));
+    });
+  });
+
+  testWidgets('the sheet dismissed while the request is on its way: the '
+      'requests read again once it answers, the new one pending', (
+    tester,
+  ) async {
+    final answer = Completer<PortalReply>();
+    var sent = false;
+    final backend = _julien()
+      ..onRequest('POST', '$_pets/$_oslo/change-requests', (_) {
+        sent = true;
+        return answer.future;
+      })
+      ..onRequest(
+        'GET',
+        _requests,
+        (_) => sent
+            ? _edited(
+                'clinics.paris.requests.get.200.json',
+                (body) =>
+                    ((body! as Map<String, Object?>)['items']! as List<Object?>)
+                        .insert(0, {
+                          'id': '01a1a413-c972-7eb1-b861-3e83365ac982',
+                          'kind': 'pet_change',
+                          'petId': _oslo,
+                          'field': 'name',
+                          'proposedValue': 'Oslo II',
+                          'prescriptionId': null,
+                          'status': 'submitted',
+                          'submittedAt': '2026-11-03T11:22:40+01:00',
+                          'resolvedAt': null,
+                          'resolutionMessage': null,
+                          'resultingPrescriptionId': null,
+                        }),
+              )
+            : PortalReply.fixture('clinics.paris.requests.get.200.json'),
+      );
+    await pump(tester, backend);
+
+    await tester.tap(find.text('Signaler une modification'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(KivetoChoiceChip, 'Nom'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(KivetoTextField, 'Nouveau nom'),
+      'Oslo II',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(KivetoButton, 'Envoyer la demande'));
+    await tester.pump();
+
+    // The scrim tapped: the sheet goes, the request is still on its way.
+    await tester.tapAt(const Offset(195, 20));
+    await tester.pumpAndSettle();
+    expect(find.byType(PetChangeSheet), findsNothing);
+    expect(backend.requestsTo(_requests), hasLength(1));
+
+    answer.complete(
+      PortalReply.fixture(
+        'clinics.paris.pet.change-requests.post.202.json',
+        status: 202,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(backend.requestsTo(_requests), hasLength(2));
+    expect(find.text('Nom\u00a0: Oslo II'), findsOneWidget);
+  });
+
+  testWidgets('pull-to-refresh reads the pets, the sheet, the care items, '
+      'the requests and the visits again', (tester) async {
     final backend = _julien();
     await pump(tester, backend);
 
@@ -593,6 +855,7 @@ void main() {
       _pets,
       '$_pets/$_oslo',
       '$_pets/$_oslo/care-items',
+      _requests,
       '$_pets/$_oslo/timeline',
     ]) {
       expect(backend.requestsTo(path), hasLength(2), reason: path);

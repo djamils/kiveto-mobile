@@ -2,7 +2,6 @@ import 'package:go_router/go_router.dart';
 import 'package:kiveto_mobile/app/routing/app_routes.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
-import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
@@ -87,19 +86,3 @@ class PlaceholderPage extends StatelessWidget {
     }
   }
 }
-
-/// The placeholder of a sheet a later slice builds (the change request of a
-/// pet): its title and "Cet écran arrive dans une prochaine version."
-Future<void> showPlaceholderSheet(BuildContext context, String title) =>
-    showKivetoSheet<void>(
-      context: context,
-      builder: (context) => KivetoSheet(
-        title: title,
-        children: [
-          Text(
-            AppLocalizations.of(context).placeholderBody,
-            style: KivetoText.bodyLarge,
-          ),
-        ],
-      ),
-    );

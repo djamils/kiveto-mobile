@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:kiveto_mobile/features/patient/domain/care_item.dart';
 import 'package:kiveto_mobile/features/patient/domain/pet.dart';
+import 'package:kiveto_mobile/features/patient/domain/pet_change.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/domain/care_status.dart';
 import 'package:kiveto_mobile/shared/domain/clock.dart';
@@ -188,4 +189,60 @@ class CareStatusPill extends StatelessWidget {
     (final label, final tone) => StatusPill(label, tone: tone),
     null => const SizedBox.shrink(),
   };
+}
+
+/// The label of the field of a change request: « Nom », « Poids »,
+/// « Stérilisation », « Puce », « Autre » (also for a field this app does
+/// not know).
+String petChangeFieldLabel(AppLocalizations l10n, PetChangeField field) =>
+    switch (field) {
+      PetChangeField.name => l10n.petChangeFieldName,
+      PetChangeField.weight => l10n.petChangeFieldWeight,
+      PetChangeField.sterilization => l10n.petChangeFieldSterilization,
+      PetChangeField.chipNumber => l10n.petChangeFieldChipNumber,
+      PetChangeField.other ||
+      PetChangeField.unknown => l10n.petChangeFieldOther,
+    };
+
+/// A sterilization state for a pet of [sex]: « Castré » / « Non castré »
+/// (male), « Stérilisée » / « Non stérilisée » (female), « Stérilisé(e) » /
+/// « Non stérilisé(e) » otherwise; « — » for an unknown state.
+String sterilizationChoiceLabel(
+  AppLocalizations l10n,
+  Sterilization value,
+  Sex sex,
+) => switch ((value, sex)) {
+  (Sterilization.neutered, Sex.male) => l10n.petChangeNeuteredMale,
+  (Sterilization.intact, Sex.male) => l10n.petChangeIntactMale,
+  (Sterilization.neutered, Sex.female) => l10n.petChangeNeuteredFemale,
+  (Sterilization.intact, Sex.female) => l10n.petChangeIntactFemale,
+  (Sterilization.neutered, Sex.unknown) => l10n.petChangeNeuteredUnknown,
+  (Sterilization.intact, Sex.unknown) => l10n.petChangeIntactUnknown,
+  (Sterilization.unknown, _) => l10n.petNone,
+};
+
+/// The proposed value of a change request for a pet of [sex]: a weight in
+/// kilograms as typed (« 12,4 kg »), a sterilization by its label, any
+/// other value as received.
+String petChangeValueLabel(
+  AppLocalizations l10n,
+  PetChangeField field,
+  String value,
+  Sex sex,
+) {
+  switch (field) {
+    case PetChangeField.weight:
+      return l10n.petChangeWeightValue(value);
+    case PetChangeField.sterilization:
+      for (final MapEntry(key: state, value: code)
+          in sterilizationValues.entries) {
+        if (code == value) return sterilizationChoiceLabel(l10n, state, sex);
+      }
+      return value;
+    case PetChangeField.name ||
+        PetChangeField.chipNumber ||
+        PetChangeField.other ||
+        PetChangeField.unknown:
+      return value;
+  }
 }

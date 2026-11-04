@@ -131,6 +131,15 @@ void main() {
       expect(container.read(clockProvider), isA<SystemClock>());
       expect(container.read(clockProvider).now().isUtc, isTrue);
       expect(container.read(apiFailureMapperProvider), isNotNull);
+      // The keys of the request forms: a new UUID v4 at each call.
+      final newKey = container.read(idempotencyKeyFactoryProvider);
+      final (first, second) = (newKey(), newKey());
+      final uuidV4 = RegExp(
+        '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',
+      );
+      expect(first.value, matches(uuidV4));
+      expect(second.value, matches(uuidV4));
+      expect(first, isNot(second));
     });
 
     test('the downloader runs on the authenticated chain', () async {

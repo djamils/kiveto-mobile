@@ -166,6 +166,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
   summary: Screen 17 (slice 6): after `requestRenewal` succeeds, refresh the documents lists (expose a refresh from `features/document/document.dart`, e.g. invalidating `documentListProvider`), so the prescription card and sheet show « Renouvellement demandé » instead of the button.
   evidence: Code review (blind-hunter), maybe-false until slice 6 exists, if true medium: the renewal route's exit discards the push future (`app_router.dart`) and the lists keep their state until a pull-to-refresh, a clinic or session change.
+  update: 2026-11-04 — resolved by slice 6 (`spec-portal-requests.md`): `RenewalPage` invalidates the whole `documentListProvider` family after a request (and after a 404), through a container captured before the await; checked on the emulator (« Renouvellement demandé » on ORD-36's card at once) and by `renewal_page_test.dart` / `app_router_test.dart`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-document.md`
   summary: pdfrx's native-assets hook downloads the PDFium archive (`bblanchon/pdfium-binaries`, `chromium/8125`) without a checksum on every first build, `flutter test` included; decide whether to vendor or verify it, cache `.dart_tool/hooks_runner/` in the GitHub Actions job (which needs gcc/clang and network), and build iOS once (pdfium_flutter's XCFramework is untested).

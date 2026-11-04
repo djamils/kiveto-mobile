@@ -142,6 +142,7 @@ class KivetoTextField extends StatelessWidget {
     this.onChanged,
     this.onSubmitted,
     this.focusNode,
+    this.maxLength,
   }) : minLines = 1,
        maxLines = 1,
        optional = false,
@@ -163,6 +164,7 @@ class KivetoTextField extends StatelessWidget {
     this.enabled = true,
     this.onChanged,
     this.focusNode,
+    this.maxLength,
   }) : readOnly = false,
        keyboardType = TextInputType.multiline,
        textInputAction = TextInputAction.newline,
@@ -186,6 +188,10 @@ class KivetoTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final FocusNode? focusNode;
+
+  /// The most characters the field takes (the contract's `maxLength`):
+  /// enforced, no counter shown.
+  final int? maxLength;
 
   @override
   Widget build(BuildContext context) => _FieldColumn(
@@ -211,6 +217,8 @@ class KivetoTextField extends StatelessWidget {
         autofillHints: autofillHints,
         onChanged: onChanged,
         onSubmitted: onSubmitted,
+        maxLength: maxLength,
+        maxLengthEnforcement: MaxLengthEnforcement.enforced,
         style: KivetoText.input.copyWith(
           color: readOnly ? KivetoColors.inkSecondary : KivetoColors.ink,
         ),

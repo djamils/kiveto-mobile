@@ -7,6 +7,7 @@ import 'package:kiveto_mobile/core/network/portal_file_downloader.dart';
 import 'package:kiveto_mobile/core/network/portal_http.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/shared/domain/clock.dart';
+import 'package:kiveto_mobile/shared/domain/idempotency_key.dart';
 import 'package:kiveto_portal_api/kiveto_portal_api.dart';
 
 // The presentation compares the session status without importing
@@ -81,6 +82,12 @@ final secureStorageProvider = Provider<FlutterSecureStorage>(
 );
 
 final clockProvider = Provider<Clock>((ref) => const SystemClock());
+
+/// The `Idempotency-Key`s of the request forms (a seam for the tests: one
+/// key per intent, see `IntentKey`).
+final idempotencyKeyFactoryProvider = Provider<IdempotencyKey Function()>(
+  (ref) => IdempotencyKey.generate,
+);
 
 final apiFailureMapperProvider = Provider<ApiFailureMapper>(
   (ref) => ApiFailureMapper(clock: ref.watch(clockProvider)),

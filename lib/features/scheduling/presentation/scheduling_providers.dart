@@ -9,6 +9,7 @@ import 'package:kiveto_mobile/features/patient/patient.dart'
 import 'package:kiveto_mobile/features/scheduling/di.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/questionnaire.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/domain/local_date.dart';
@@ -23,7 +24,8 @@ import 'package:url_launcher/url_launcher.dart';
 // `.value`.
 
 /// The changes the owner made to the appointments in this run (a booking,
-/// a reschedule, a cancellation): the appointments lists and the home
+/// a reschedule, a cancellation, a questionnaire sent; or an appointment
+/// found closed or gone on the way): the appointments lists and the home
 /// watch it, so they reload after each change; [AppointmentsRevision.bump]
 /// also reloads the pets' care items (and the pets after a new one). Kept
 /// alive: a change that answers after its screen closed still refreshes.
@@ -35,7 +37,7 @@ final class AppointmentsRevision extends Notifier<int> {
   int build() => 0;
 
   /// An appointment was booked (for a new pet: [newPet]), moved or
-  /// cancelled.
+  /// cancelled, or its questionnaire was sent (or found closed or gone).
   void bump({bool newPet = false}) {
     state++;
     ref.invalidate(careItemsProvider);
@@ -137,6 +139,25 @@ appointmentProvider = FutureProvider.autoDispose
       return (
         clinicId: clinicId,
         appointment: await repository.appointment(clinicId, id),
+      );
+    });
+
+/// The pre-visit questionnaire of an appointment of the active clinic, with
+/// the clinic it belongs to (a [NotFoundFailure] without an active clinic).
+typedef ClinicQuestionnaire = ({
+  ClinicId clinicId,
+  Questionnaire questionnaire,
+});
+
+final FutureProviderFamily<ClinicQuestionnaire, AppointmentId>
+questionnaireProvider = FutureProvider.autoDispose
+    .family<ClinicQuestionnaire, AppointmentId>((ref, id) async {
+      final repository = ref.watch(questionnaireRepositoryProvider);
+      final clinicId = await activeClinicIdOf(ref);
+      if (clinicId == null) throw const NotFoundFailure();
+      return (
+        clinicId: clinicId,
+        questionnaire: await repository.questionnaire(clinicId, id),
       );
     });
 

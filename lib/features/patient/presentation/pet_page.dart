@@ -10,6 +10,8 @@ import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/patient/di.dart';
 import 'package:kiveto_mobile/features/patient/domain/care_item.dart';
 import 'package:kiveto_mobile/features/patient/domain/pet.dart';
+import 'package:kiveto_mobile/features/patient/domain/pet_change.dart';
+import 'package:kiveto_mobile/features/patient/presentation/pet_change_sheet.dart';
 import 'package:kiveto_mobile/features/patient/presentation/pet_messages.dart';
 import 'package:kiveto_mobile/features/patient/presentation/pet_providers.dart';
 import 'package:kiveto_mobile/l10n/app_localizations.dart';
@@ -34,16 +36,13 @@ import 'package:material_ui/material_ui.dart';
 /// clinic does not list, the first pet of `GET /pets`. With several pets a
 /// switcher shows another one without navigating.
 ///
-/// Exits: [onBack]; [onReportChange] with the pet's id (the change
-/// request, slice 6).
+/// « Signaler une modification » opens the change request sheet of the
+/// pet shown; the requests the clinic has not answered yet show under it
+/// (« Demandes en cours »).
+///
+/// Exit: [onBack].
 class PetPage extends ConsumerStatefulWidget {
-  const new({
-    required this.onBack,
-    required this.onReportChange,
-    super.key,
-    this.petId,
-    this.request,
-  });
+  const new({required this.onBack, super.key, this.petId, this.request});
 
   final String? petId;
 
@@ -51,7 +50,6 @@ class PetPage extends ConsumerStatefulWidget {
   /// to the sheet, the same pet included) drops the switcher's choice.
   final Object? request;
   final void Function(BuildContext context) onBack;
-  final void Function(BuildContext context, String petId) onReportChange;
 
   @override
   ConsumerState<PetPage> createState() => _PetPageState();
@@ -97,13 +95,14 @@ class _PetPageState extends ConsumerState<PetPage> {
     ref.invalidate(petsProvider);
   }
 
-  /// Pull-to-refresh: the pets, the sheets, the care items, the visits;
-  /// done when the list answered.
+  /// Pull-to-refresh: the pets, the sheets, the care items, the change
+  /// requests, the visits; done when the list answered.
   Future<void> _refresh() async {
     ref
       ..invalidate(petsProvider)
       ..invalidate(petDetailProvider)
       ..invalidate(careItemsProvider)
+      ..invalidate(petChangeRequestsProvider)
       ..invalidate(petTimelineProvider);
     try {
       await ref.read(petsProvider.future);
@@ -206,19 +205,14 @@ class _PetPageState extends ConsumerState<PetPage> {
                     const SizedBox(height: KivetoSpace.xl3),
                     _IdentityGrid(pet: pet),
                     const SizedBox(height: KivetoSpace.xl3),
-                    KivetoButton.outline(
-                      label: l10n.petReportChange,
-                      icon: LucideGlyph.penLine,
-                      expand: true,
-                      onPressed: () =>
-                          widget.onReportChange(context, pet.id.value),
-                    ),
+                    _ReportChange(pet: pet),
                     const SizedBox(height: KivetoSpace.s),
                     KivetoFootnote(
                       l10n.petReportChangeCaption,
                       small: true,
                       centered: true,
                     ),
+                    _PendingChanges(pet: pet),
                     const SizedBox(height: KivetoSpace.xl3),
                     _CareSection(pet: pet),
                     const SizedBox(height: KivetoSpace.xl3),
@@ -527,6 +521,108 @@ class _Cell extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// « Signaler une modification »: the change request sheet of [pet] in
+/// the active clinic (disabled while it is not known).
+class _ReportChange extends ConsumerWidget {
+  const new({required this.pet});
+
+  final PetSummary pet;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clinicId = switch (ref.watch(activeClinicProvider)) {
+      AsyncData(value: final clinic?) => clinic.clinicId,
+      _ => null,
+    };
+    return KivetoButton.outline(
+      label: AppLocalizations.of(context).petReportChange,
+      icon: LucideGlyph.penLine,
+      expand: true,
+      onPressed: clinicId == null
+          ? null
+          : () => unawaited(
+              showPetChangeSheet(context, pet: pet, clinicId: clinicId),
+            ),
+    );
+  }
+}
+
+/// « Demandes en cours »: the change requests of [pet] the clinic has not
+/// answered yet (C-11a rows, padding 13 14: the field and its value, when
+/// it was sent, « En attente »); nothing without one, a callout and its
+/// retry when they could not be read.
+class _PendingChanges extends ConsumerWidget {
+  const new({required this.pet});
+
+  final PetSummary pet;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    switch (ref.watch(petChangeRequestsProvider)) {
+      case AsyncData(:final value):
+        final pending = [
+          for (final request in value)
+            if (request.petId == pet.id && request.isPending) request,
+        ];
+        if (pending.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: KivetoSpace.xl3),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              KivetoSectionHeader(l10n.petChangePendingTitle),
+              const SizedBox(height: KivetoSpace.m),
+              KivetoCard.list(
+                children: [
+                  for (final request in pending)
+                    KivetoListRow(
+                      title: _pendingTitle(l10n, request),
+                      meta: l10n.petChangePendingSentOn(
+                        KivetoFormat.dayMonthYear(request.submittedAt.date)
+                            .replaceAll(' ', '\u00a0'),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 13,
+                        horizontal: 14,
+                      ),
+                      trailing: StatusPill(
+                        l10n.petChangePendingStatus,
+                        tone: StatusTone.neutral,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      case AsyncError(isLoading: false):
+        return Padding(
+          padding: const EdgeInsets.only(top: KivetoSpace.xl3),
+          child: KivetoCallout.danger(
+            body: l10n.petChangePendingError,
+            actionLabel: l10n.commonRetry,
+            onAction: () => ref.invalidate(petChangeRequestsProvider),
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  /// « Poids : 12,4 kg », or the field alone without a value.
+  String _pendingTitle(AppLocalizations l10n, PetChangeRequest request) {
+    final field = petChangeFieldLabel(l10n, request.field);
+    final value = request.proposedValue;
+    return value == null
+        ? field
+        : l10n.petChangePendingRow(
+            field,
+            petChangeValueLabel(l10n, request.field, value, pet.sex),
+          );
+  }
 }
 
 /// « Vaccins et préventions »: the « Carnet PDF » button and the care

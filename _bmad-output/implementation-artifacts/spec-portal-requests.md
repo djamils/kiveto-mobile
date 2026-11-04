@@ -1,0 +1,255 @@
+---
+title: 'Slice 6 — portal requests: screen 15 « Questionnaire » (scheduling), screen 17 « Renouvellement » (document), the change request of screen 2 and its pending state (patient)'
+type: 'feature'
+created: '2026-11-04'
+status: 'done'
+baseline_revision: '457a1cc744a0a5946b778e93568aeea3e42404d8'
+review_loop_iteration: 0
+followup_review_recommended: false
+context:
+  - '{project-root}/CLAUDE.md'
+  - '{project-root}/_bmad-output/planning-artifacts/architecture.md'
+  - 'C:/Users/djami/AppData/Roaming/Claude/side-session-notes/local_d4dc2016-f681-4c72-9554-dcd0ab1b9b14/notes-app-shell.md'
+  - 'C:/Users/djami/AppData/Roaming/Claude/side-session-notes/local_d4dc2016-f681-4c72-9554-dcd0ab1b9b14/notes-document.md'
+  - 'C:/Users/djami/AppData/Roaming/Claude/side-session-notes/local_d4dc2016-f681-4c72-9554-dcd0ab1b9b14/notes-patient-home.md'
+  - 'C:/Users/djami/AppData/Roaming/Claude/side-session-notes/local_d4dc2016-f681-4c72-9554-dcd0ab1b9b14/notes-scheduling.md'
+  - 'C:/Users/djami/AppData/Roaming/Claude/side-session-notes/local_d4dc2016-f681-4c72-9554-dcd0ab1b9b14/design-system.md'
+  - 'C:/Users/djami/AppData/Roaming/Claude/side-session-notes/local_d4dc2016-f681-4c72-9554-dcd0ab1b9b14/mockup/15.html'
+  - 'C:/Users/djami/AppData/Roaming/Claude/side-session-notes/local_d4dc2016-f681-4c72-9554-dcd0ab1b9b14/mockup/17.html'
+  - 'C:/Users/djami/AppData/Roaming/Claude/side-session-notes/local_d4dc2016-f681-4c72-9554-dcd0ab1b9b14/mockup/02.html'
+warnings: ['oversized', 'multiple-goals']
+deferred: []
+---
+
+<intent-contract>
+
+## Intent
+
+**Problem:** Three owner requests of the Portal API have no screen: the pre-visit questionnaire (screen 15, `GET/PUT …/appointments/{id}/questionnaire`) is a placeholder although the home hero, the banner of screen 4 and « Remplir le questionnaire maintenant » of 14 already push it; the prescription renewal (screen 17, `POST …/prescriptions/{id}/renewal-requests`) is a placeholder behind « Demander un renouvellement »; « Signaler une modification » on screen 2 opens a placeholder sheet instead of `POST …/pets/{id}/change-requests`, and the pet sheet never shows the requests waiting for the clinic (`GET /clinics/{c}/requests`).
+
+**Approach:** Per D15, the questionnaire goes to `scheduling`, the renewal to `document`, the change request and its pending list to `patient`; each feature gets its own repository on the generated `RequestsApi`. Build 15 and 17 as full-screen pages the way mockups 15 and 17 draw them, the change request as a sheet in the mockup's language, and the undrawn states (locked questionnaire, refusals, success) with the kit. The server decides every rule; the app shows its answers.
+
+## Boundaries & Constraints
+
+**Always:**
+- D15 layers (CLAUDE.md §3, `test/architecture/`): domain pure Dart; DTOs stay in infrastructure; presentation never imports infrastructure, Dio, the client, `core/network`, `core/security`. Repositories **throw** `ApiFailure` (through `apiFailureOf`, `core/network/portal_results.dart`). Features reach others only through `<feature>.dart`; no cycle (scheduling already imports patient; patient must not import scheduling).
+- Account-scoped providers watch `sessionStatusProvider` and the active clinic **id** only (`activeClinicProvider.selectAsync((c) => c?.clinicId)`), are read through `AsyncData` patterns / `AsyncValueView`, never `.value`.
+- `Idempotency-Key` on `requestRenewal` and `requestPetChange`: one key per intent, reused by every retry of the same content, a new key when the content changes (`IntentKey` below); keys come from `idempotencyKeyFactoryProvider` (test seam).
+- After a questionnaire is saved: `ref.read(appointmentsRevisionProvider.notifier).bump()` (the banner of 4 and the home button go). After a renewal request: invalidate `documentListProvider` (every filter) so the card and the prescription sheet show « Renouvellement demandé ». After a change request: invalidate the pet-change requests provider (the pending block appears).
+- Every user-facing string in `lib/l10n/app_fr.arb` (then `fvm flutter gen-l10n`), French, copy in Design Notes; a literal U+00A0 before « ? ; : ! », inside a date shown in a sentence and before « kg »; no elision before a pet's name (« pour {pet} », never « de {pet} »); no channel promise (« par SMS »).
+- Kit widgets by C-id (notes-app-shell §7); material from `package:material_ui/material_ui.dart` only; custom sizes via `kivetoTextStyle`.
+- 100% line coverage of every new domain / infrastructure / `shared/domain` file, tested on the captured fixtures of the Code Map. Enums keep an `unknown` case; wire → domain enum mapping by name (`asNameMap()`/switch), never the generated `toJson` of `unknown`.
+- Text inputs capped at the contract's `maxLength` (questionnaire `details` 500, `notes` 1000; renewal `note` 500; change `proposedValue` 120, `note` 500).
+
+**Never:**
+- No client-side business rule the server owns: no weight range, chip length, name length, « other needs a note », quota, lock or renewability check; the form only requires what it needs to send (a field and a value; a condition; a symptom, a treatment answer and a temperament). The server's 422 / 429 answers are shown.
+- No hand edit of `contracts/` or `packages/kiveto_portal_api/`; no new package; no edit of `CLAUDE.md`; no `.claude/settings.json`.
+- No questionnaire entry added to screens that do not have one (only 1, 4, 14 push 15). No list of resolved requests, no cancellation of a request (the API has none).
+- Never call the generated file operations (documents go through `openDocumentFile`).
+
+## I/O & Edge-Case Matrix
+
+| Scenario | Input / State | Expected Output / Behavior | Error Handling |
+|----------|--------------|---------------------------|----------------|
+| Q fill | GET 200 `not_started`, `editable: true` | Form, « Rien de particulier » selected, treatment and temperament unset, « Envoyer à la clinique » disabled until both answered | — |
+| Q exclusive | tap a symptom while « Rien de particulier » is on; then tap « Rien de particulier » | the symptom replaces it; then it alone is on (others cleared) | — |
+| Q send | complete form, PUT 200 | revision bumped, SnackBar « Questionnaire envoyé à la clinique. », `onSent` (→ /appointments) | — |
+| Q prefill | GET 200 `submitted`, `editable: true` | Form prefilled from `answers`, extra line « Réponses envoyées le … », sending again PUTs | — |
+| Q locked | GET 200 `editable: false` (with or without answers) | Read-only view: info callout, the answers as non-interactive chips / text, or « Le questionnaire n'a pas été rempli avant le rendez-vous. »; no bar | — |
+| Q locked on send | PUT 422 `questionnaire_locked` | re-read the questionnaire → read-only view; revision bumped | — |
+| Q other errors | PUT 422 `validation_failed` / network / 5xx | danger callout (first violation's message, or the failure message), form kept, retry | GET 404 → « Rendez-vous introuvable » ErrorView |
+| R form | GET prescription 200 | header, read-only lines + « La demande porte sur toute l'ordonnance. », condition chips, warning for no_improvement / adverse_effects, note, footnote; « Envoyer la demande » disabled (C-1d) until a condition | GET 404 → « Ordonnance indisponible » ErrorView; other → ErrorView + retry |
+| R send | POST 202 (also the replay of an open request) | success view « Demande envoyée », documents lists invalidated, « Retour aux documents » → `onDone` | — |
+| R refused | POST 422 `prescription_not_renewable` / 429 `rate_limited` / 404 | danger callout with the code's ARB message (no retry for 422/404) | network/5xx: callout + « Réessayer » with the same key |
+| C sheet | « Signaler une modification » | sheet: field chips; per field its input (weight + « Pesé le », sterilization chips by sex), note; send disabled until field and value | — |
+| C send | POST 202 | sheet success « Demande envoyée »; pending block on 2 shows the request | — |
+| C refused | 422 `validation_failed` | each violation's message under its field (`proposedValue`, `measuredOn`, `note`), others in the form callout | 422 `pet_not_eligible`, 429, 404: callout with the ARB message; network: retry, same key |
+| C pending | `/requests` has `pet_change` `submitted` for this pet | « Demandes en cours » card: « Poids : 12,4 kg », « Envoyée le 4 nov. 2026 », pill « En attente » | load failure: danger callout + « Réessayer »; none / other pets / other kinds / resolved: no block |
+
+</intent-contract>
+
+## Code Map
+
+**Generated client (read only)** — `packages/kiveto_portal_api/lib/src/api_client/requests_api.dart`: `RequestsApi(server)` with `getQuestionnaire(clinicId:, appointmentId:)` → `GetQuestionnaireResponse200(body: QuestionnaireView)`, `saveQuestionnaire(body: QuestionnaireUpdate, clinicId:, appointmentId:)` → `SaveQuestionnaireResponse200(body: SavedQuestionnaireView)`, `requestPetChange(body: PetChangeRequestCreation, clinicId:, petId:, idempotencyKey:)` → `RequestPetChangeResponse202(body: PortalRequestCreatedView{requestId})`, `requestRenewal(body: RenewalRequestCreation, clinicId:, prescriptionId:, idempotencyKey:)` → `RequestRenewalResponse202(body: RenewalRequestCreatedView{requestId, status})`, `listRequests(clinicId:, cursor:, limit:)` → `ListRequestsResponse200(body: OwnerRequestList{items: List<PortalRequestView>, nextCursor})`. Models in `lib/src/model/`: `questionnaire_view.dart` / `saved_questionnaire_view.dart` (two classes, own enum classes: `version`, `status`, `answers` = an anyOf wrapper whose `.questionnaireAnswersView` is null for `null`, `updatedAt` DateTime?, `editable`), `questionnaire_answers_view.dart` (`symptoms` list of `QuestionnaireAnswersViewSymptomsArrayModel`, `ongoingTreatment: OngoingTreatmentView{has, details?}`, `temperament`, `notes?`), `questionnaire_update.dart` (`version: QuestionnaireUpdateVersionModel.one`, `symptoms: List<QuestionnaireUpdateSymptomsArrayModel>`, `ongoingTreatment: QuestionnaireUpdateOngoingTreatmentAnyOfModel(ongoingTreatment: OngoingTreatment(has:, details:))`, `temperament`, `notes`), `pet_change_request_creation.dart` (+`_field_model`), `renewal_request_creation.dart` (+`_pet_condition_model`), `portal_request_view*.dart` (kind, field?, status enums), `measuredOn` is a tonik_util `Date`. Check each constructor before use (the normaliser makes response fields required).
+
+**Captured fixtures (new, `test/support/fixtures/portal_api/`, exact bytes, traces stripped)** — `clinics.paris.appointment.questionnaire.get.200.json` (not_started, editable), `…questionnaire.submitted.get.200.json`, `…questionnaire.put.200.json`, `…questionnaire.locked.get.200.json` (submitted, `editable:false`, Garnier's completed visit), `…questionnaire.locked-not-started.get.200.json`, `…questionnaire.validation.put.422.json` (none + cough), `…questionnaire.locked.put.422.json`, `…questionnaire.cancelled.get.404.json`; `clinics.paris.pet.change-requests.post.202.json`, `….validation.post.422.json` (weight 200: `proposedValue`), `….note-missing.post.422.json` (`note`), `….not-eligible.post.422.json`, `….key-reused.post.422.json`; `clinics.paris.prescriptions.renewal-requests.post.202.json`, `….not-renewable.post.422.json`; `clinics.paris.requests.garnier.get.200.json` (7 items: both kinds, every status, resolution messages); existing `clinics.paris.requests.get.200.json` (Julien: Oslo weight « 25,1 » submitted), `clinics.paris.prescriptions.renewable.get.200.json`, `clinics.paris.appointment.get.200.json`.
+
+**Reuse points**
+- `lib/shared/domain/idempotency_key.dart` -- `IdempotencyKey.generate`; `BookingDraft` (`scheduling/domain/booking_draft.dart`) is the same-content-same-key precedent.
+- `lib/core/di/core_providers.dart` -- `portalServerProvider`, `apiFailureMapperProvider`, `clockProvider`, `sessionStatusProvider`; add `idempotencyKeyFactoryProvider` here.
+- `lib/features/scheduling/presentation/scheduling_providers.dart` -- `appointmentsRevisionProvider` (bump), `appointmentProvider(AppointmentId)` (the header: pet, motif, `startAt`), `activeClinicIdOf(ref)`; `scheduling_messages.dart` -- `slotShort(l10n, instant, capitalized: false)` (« mar. 4 nov. à 10:30 »), `failureCause`, `isTransientFailure`; `reschedule_page.dart` -- `_Plain` / `_Moved` page patterns; `booking_layout.dart` -- `FlowScaffold(children:, bar:, gap:)` (white page, padding 16 20 16, bottom bar).
+- `lib/features/scheduling/domain/appointment.dart` -- `QuestionnaireStatus {notStarted, submitted, unknown}` (reuse).
+- `lib/features/document/presentation/documents_providers.dart` -- `prescriptionProvider((clinicId, prescriptionId))`, `documentListProvider` (family: `ref.invalidate(documentListProvider)` reloads every filter); `prescription_sheet.dart` -- header/lines formatting (`documentsPrescriptionTitle`, `documentsPrescriptionLine`), the 404 copy `documentsPrescriptionGoneTitle/Body`; `domain/document.dart` -- `PrescriptionId`, `RenewalStatus`.
+- `lib/features/patient/presentation/pet_page.dart` -- the « Signaler une modification » button + caption (line ~250), `_refresh()` (add the requests provider), `_CareSection` as the section pattern; `pet_messages.dart` -- sex-aware labels; `domain/pet.dart` -- `PetId`, `PetSummary`, `Sex`, `LifeStatus`.
+- Kit: `KivetoDetailHeader(title:, subtitle:, extra:, onBack:)` (C-37c), `StickyCtaBar(child:)` (C-17b), `KivetoButton.primary` (null `onPressed` = C-1d), `KivetoChoiceChip(label:, selected:, onSelected:)` (C-13b; null `onSelected` keeps its colours: the read-only chips), `KivetoTextField` / `.multiline(optional:, largeLabel:)` (C-18a/c), `KivetoCallout.info/warning/danger`, `KivetoFootnote`, `SuccessView` + `BottomCtaArea(success: true)` (C-34a/C-17c), `showKivetoSheet` + `KivetoSheet(title:, subtitle:, children:)` + `SheetSuccessView`, `KivetoCard.list`, `KivetoListRow(title:, meta:, trailing:)`, `KivetoSectionHeader`, `StatusPill(tone: neutral)`, `ErrorView`, `LoadingView`, `KivetoIcon(LucideGlyph.calendar)`.
+- Tests: `test/support/fakes.dart` (`pumpPage`, `pumpKivetoApp`, `FixedClock`, `testNow` = 2026-11-03 10:22:40 UTC, `memorySession`, `pair`), `test/support/portal_api/fake_portal_backend.dart` (`portalServer(backend)`, `PortalReply.fixture/json`, `backend.requests`, `onRequest`); patterns in `test/unit/features/scheduling/infrastructure/portal_scheduling_repository_test.dart`, `test/widget/features/scheduling/*`, `test/widget/features/patient/pet_page_test.dart`, `test/widget/features/document/prescription_sheet_test.dart`.
+- Routing: `lib/app/routing/app_router.dart` -- questionnaire sub-route `':appointmentId/questionnaire'` (placeholder `fullScreen`), documents sub-route `'prescriptions/:prescriptionId/renewal'` (placeholder), `_reportPetChange` (→ placeholder sheet), `_backOrAppointments`, `_goAppointments`, `_goDocuments`; `placeholder_page.dart` `showPlaceholderSheet` (only user: `_reportPetChange`). Tests to update: `test/widget/app/routing/app_router_test.dart` (« every placeholder route builds » lists 15 and 17), `test/widget/app/home_flow_test.dart` (the change-request placeholder test, line ~198), `test/widget/app/scheduling_flow_test.dart` (the questionnaire after 14), `test/widget/features/patient/pet_page_test.dart` (`onReportChange`).
+
+## Tasks & Acceptance
+
+**Execution:**
+- `lib/shared/domain/intent_key.dart` -- `final class IntentKey<T extends Object>` built on an `IdempotencyKey Function()`: `keyFor(T content)` returns the same key for content `==` to the last one, a new key otherwise -- one rule for both request forms.
+- `lib/core/di/core_providers.dart` -- `idempotencyKeyFactoryProvider = Provider<IdempotencyKey Function()>((ref) => IdempotencyKey.generate)` -- deterministic keys in tests.
+- `lib/shared/presentation/kit/forms.dart` -- `KivetoTextField` (both constructors) gains `int? maxLength` (enforced, no counter shown) -- the contract caps.
+- `lib/features/scheduling/domain/questionnaire.dart` -- `enum Symptom {none, cough, vomiting, diarrhea, appetiteLoss, itching, lameness, unknown}`, `enum Temperament {calm, stressed, mayBite, unknown}`, `QuestionnaireAnswers {symptoms (Set), ongoingTreatment (bool), treatmentDetails?, temperament, notes?}`, `Questionnaire {status: QuestionnaireStatus, answers?, updatedAt: ClinicInstant?, editable}`, pure `QuestionnaireForm` (immutable: `initial()` = {none}; `from(QuestionnaireAnswers)` dropping `unknown` values; `toggle(Symptom)` with the exclusivity of mockup 15's script; `withTreatment(bool)`, `withTemperament`, `isComplete` (≥1 symptom, treatment and temperament answered); `toAnswers({details, notes})` trimming, details only when the treatment is yes, blank → null) -- the form's rules, unit-tested.
+- `lib/features/scheduling/domain/questionnaire_repository.dart` + `infrastructure/portal_questionnaire_repository.dart` -- `questionnaire(ClinicId, AppointmentId)`, `save(ClinicId, AppointmentId, QuestionnaireAnswers)` on `RequestsApi`; one mapper per generated view class (`QuestionnaireView`, `SavedQuestionnaireView`); `updatedAt` through `clinicInstantOf`; `version` sent as `.one`.
+- `lib/features/scheduling/di.dart` -- `questionnaireRepositoryProvider`.
+- `lib/features/scheduling/presentation/questionnaire_page.dart` -- `QuestionnairePage(appointmentId:, onBack:, onSent:)`: `questionnaireProvider` (autoDispose family by `AppointmentId`: active clinic id + `GET`), header from `appointmentProvider`; form / prefilled / read-only / errors per the matrix; `FlowScaffold` gap 24 with `StickyCtaBar`; fieldsets as `Semantics(container, label: legend)` like the cancel sheet; « Oui » reveals « Lequel ? » (13/600 label, 2 rows); notes 3 rows optional; on success bump, SnackBar, `onSent`.
+- `lib/features/scheduling/scheduling.dart` -- export `QuestionnairePage`.
+- `lib/features/document/domain/renewal.dart` -- `enum PetCondition {improved, noImprovement, adverseEffects}`, `RenewalRequestDraft {condition, note?}` (value equality), `RenewalReceipt {requestId, status: RenewalStatus}`, `abstract interface class RenewalRepository { Future<RenewalReceipt> requestRenewal(ClinicId, PrescriptionId, RenewalRequestDraft, IdempotencyKey); }`.
+- `lib/features/document/infrastructure/portal_renewal_repository.dart` + `di.dart` `renewalRepositoryProvider` -- on `RequestsApi`; status by name (`unknown` kept).
+- `lib/features/document/presentation/renewal_page.dart` -- `RenewalPage(prescriptionId:, onBack:, onDone:)`: active clinic id → `prescriptionProvider`; C-37c header « Ordonnance du {date} · {vet} · {pet} »; « Traitements à renouveler »: `KivetoCard.list` of read-only C-11i-sized rows (min-height 60, padding 10 16, 15/700 + 13 meta « Qté … · … », no checkbox) + caption; condition chips + C-33c warning; note (C-18c, optional, 500); footnote 13/1.45; bar « Envoyer la demande »; `IntentKey<RenewalRequestDraft>`; success C-34a + `BottomCtaArea(success: true)` « Retour aux documents »; `PopScope` on the success like `_Moved`.
+- `lib/features/document/document.dart` -- export `RenewalPage`.
+- `lib/features/patient/domain/pet_change.dart` -- `enum PetChangeField {name, weight, sterilization, chipNumber, other, unknown}`, `enum PortalRequestStatus {submitted, done, rejected, closed, unknown}`, `PetChangeDraft {field, proposedValue, measuredOn: LocalDate?, note?}` (value equality), `PetChangeRequest {id, petId: PetId, field, proposedValue?, status, submittedAt: ClinicInstant, resolvedAt?, resolutionMessage?}` + `isPending`, contract `PetChangeRepository { requestChange(ClinicId, PetId, PetChangeDraft, IdempotencyKey) → String requestId; changeRequests(ClinicId) → List<PetChangeRequest> }` (first page, `limit: 50`, `pet_change` items only).
+- `lib/features/patient/infrastructure/portal_pet_change_repository.dart` + `di.dart` `petChangeRepositoryProvider` -- on `RequestsApi`; `sterilization` values sent as `neutered` / `intact`; `measuredOn` as `Date`.
+- `lib/features/patient/presentation/pet_change_sheet.dart` -- `showPetChangeSheet(context, pet:, clinicId:)` + the sheet per Design Notes; on success `ref.invalidate(petChangeRequestsProvider)` with the container captured before the await (the sheet may close first).
+- `lib/features/patient/presentation/pet_providers.dart` -- `petChangeRequestsProvider` (FutureProvider: session + active clinic id; empty without clinic).
+- `lib/features/patient/presentation/pet_page.dart` -- drop `onReportChange` (the page opens `showPetChangeSheet` with the shown pet and the active clinic id; button disabled without clinic); add the « Demandes en cours » block after the caption (only with pending requests of the shown pet); `_refresh` invalidates the requests too.
+- `lib/features/patient/presentation/pet_messages.dart` -- `petChangeFieldLabel`, `sterilizationChoiceLabel(l10n, Sterilization, Sex)`, `petChangeValueLabel` (weight + « kg », sterilization codes → labels, others as received).
+- `lib/app/routing/app_router.dart` + `placeholder_page.dart` -- 15 → `QuestionnairePage(onBack: _backOrAppointments, onSent: _goAppointments)`; 17 → `RenewalPage(onBack: _backOrDocuments (pop, else /documents), onDone: _goDocuments)`; remove `_reportPetChange`, `onReportChange:` and `showPlaceholderSheet` (no user left).
+- `lib/l10n/app_fr.arb` (+ `fvm flutter gen-l10n`) -- the Design Notes copy with descriptions.
+- Tests -- unit: `test/unit/shared/domain/intent_key_test.dart`, `test/unit/features/scheduling/domain/questionnaire_test.dart`, `test/unit/features/scheduling/infrastructure/portal_questionnaire_repository_test.dart`, `test/unit/features/document/domain/renewal_test.dart` (or extend `document_domain_test.dart`), `test/unit/features/document/infrastructure/portal_renewal_repository_test.dart`, `test/unit/features/patient/domain/pet_change_test.dart`, `test/unit/features/patient/infrastructure/portal_pet_change_repository_test.dart` (on every new fixture: decoding, the request body and `Idempotency-Key` header sent, each failure mapped); widget: `questionnaire_page_test.dart`, `renewal_page_test.dart`, `pet_change_sheet_test.dart`, `pet_page_test.dart` (pending block), the router and flow tests listed in the Code Map; `test/integration/portal_api_contract_test.dart` decodes the new fixtures (one test per route group).
+- `CONTRIBUTING.md` §0 -- row 11 `feature/portal-requests` (status written once verified), next row `12+`.
+
+**Acceptance Criteria:**
+- Given Julien's or Nina's upcoming appointment with `questionnaireStatus: not_started`, when the owner taps « Remplir le questionnaire » on 1 or the banner on 4, then screen 15 shows « Avant la consultation », « {pet} · {motif} · {mar. 4 nov. à 10:30} » and the form; once sent, the app lands on 4 and neither the banner nor the home button remains.
+- Given a renewable prescription without an open request, when the owner taps « Demander un renouvellement » in its sheet, chooses a condition and sends, then « Demande envoyée » shows, and back on 5 the card's sheet shows « Renouvellement demandé » without a pull-to-refresh.
+- Given the pet sheet of an alive pet, when the owner sends a weight change, then the sheet shows « Demande envoyée » and the pet sheet shows « Poids : {value} kg » « En attente » under « Demandes en cours »; for a deceased pet the server's `pet_not_eligible` reads « Cet animal ne peut plus faire l'objet d'une demande de modification : contactez la clinique. ».
+- Given a retry after a network failure of the same content, when the owner sends again, then the same `Idempotency-Key` is sent; after the content changed, a new one.
+- `make ci` is green; the architecture tests pass; every new gated file is at 100 %.
+
+### Review Findings
+
+Code review (bmad-code-review, 2026-11-04) of `master...feature/portal-requests` after the build, the review pass above and the emulator walk (commit `e2822da`): 35 findings (blind hunter 15, edge-case hunter 7, verification gap 3, acceptance auditor 10) — 0 decision-needed, 13 patch entries, 0 deferred, 22 rejected.
+
+- [x] [Review][Patch] A request that answers after its page or sheet closed is never tested (the revision bump on 15, the documents reload on 17, the requests reload of the sheet are applied before the mounted check) [test/widget/features/scheduling/questionnaire_page_test.dart, test/widget/features/document/renewal_page_test.dart, test/widget/features/patient/pet_change_sheet_test.dart]
+- [x] [Review][Patch] The reload of every documents filter after a renewal is only checked for the unfiltered list [test/widget/features/document/renewal_page_test.dart]
+- [x] [Review][Patch] The questionnaire without an active clinic (« Rendez-vous introuvable », no retry) is never run [test/widget/features/scheduling/questionnaire_page_test.dart]
+- [x] [Review][Patch] A `note` violation on 17 shows in the callout instead of under the note field (Design Notes « Errors ») [lib/features/document/presentation/renewal_page.dart]
+- [x] [Review][Patch] The date inside the subtitle of 15 (« lun. 9 nov. à 14:15 ») keeps breakable spaces, unlike 17's [lib/features/scheduling/presentation/questionnaire_page.dart]
+- [x] [Review][Patch] The app-level test of AC1 asserts the banner of 4 is gone although its stub never shows it (`questionnaireStatus` forced to `submitted` before the PUT) [test/widget/app/home_flow_test.dart]
+- [x] [Review][Patch] The 429 copy promises « demain » although the quota is a rolling 24 h with `Retry-After` [lib/l10n/app_fr.arb `requestRateLimited`]
+- [x] [Review][Patch] `prescription_not_renewable` drops the server's reason (`detail`: « …refusée il y a moins de 7 jours ») [lib/features/document/presentation/renewal_page.dart]
+- [x] [Review][Patch] A renewal answered 404 (prescription gone) leaves the documents lists stale, the card keeps its button [lib/features/document/presentation/renewal_page.dart]
+- [x] [Review][Patch] After a `questionnaire_locked`, the re-read (an `AsyncData` with `isLoading`) keeps the editable form live with « Envoyer » enabled [lib/features/scheduling/presentation/questionnaire_page.dart]
+- [x] [Review][Patch] `AppointmentsRevision.bump()`'s doc still lists only bookings, moves and cancellations [lib/features/scheduling/presentation/scheduling_providers.dart]
+- [x] [Review][Patch] `document.dart` and `scheduling.dart` export the new domain files (the renewal repository contract included) with no consumer outside their feature; `patient.dart` keeps its own private [lib/features/document/document.dart, lib/features/scheduling/scheduling.dart]
+- [x] [Review][Patch] A renewal retry test asserts « a callout » after a condition change, which the warning callout satisfies [test/widget/features/document/renewal_page_test.dart]
+
+Rejected:
+- `low` (acceptance) the closed-questionnaire copy differs from the matrix and Design Notes — the build's review made it neutral on purpose (triage log above); the fix would edit this spec.
+- `low` (acceptance) `IntentKey` keeps every content's key rather than only the last one's — deliberate (triage log above, it avoids a duplicate after A → B → A); the fix would edit this spec.
+- `low` (acceptance) `PetChangeRequest` lacks `resolvedAt` / `resolutionMessage` — removed on purpose (unused); the fix would edit this spec.
+- `low` (acceptance) the residual risk about the callout at the end of the body is stale — fixed by `e2822da`; the fix would edit this spec (recorded in the Auto Run Result addendum).
+- `low` (acceptance) the spec says `done` while its manual check was pending — the walk ran afterwards (Auto Run Result addendum); the fix would edit this spec.
+- `low` (acceptance) two repository helpers throw `ArgumentError` for an `unknown` enum — unreachable: the forms never hold `unknown`; a loud failure on an impossible input is correct.
+- `low` (acceptance) « Signaler une modification » greys for the instant `/me` reloads (`_ReportChange` reads `AsyncData` of the whole clinic) — brief and rare (a `/me` reload while the pet sheet shows); a clinic-id provider for one button adds a provider.
+- `low` (blind) the disabled state of « Signaler une modification » is untested — without an active clinic the pet list is empty, so the button never shows; the state is not reachable on the sheet.
+- `low` (blind) a `questionnaire_locked` send gives no « not sent » message — the closed view's callout « Ce questionnaire ne peut plus être modifié. » says it; the race is rare (the GET already says `editable`).
+- `low` (blind) read-only chips of the closed view are announced as disabled buttons — the closed view is reachable only through the lock race (no screen links a past appointment to 15); a semantics rewrite of the chips is more than a direct fix.
+- `low` (blind) the change sheet does not warn about a pending request for the chosen field — the pending block sits right behind the sheet; the server caps open requests (3 per field); a warning adds a provider read and a branch.
+- `low` (blind) a future change field reads « Autre : … » in « Demandes en cours » — needs the server to add a field this build does not know.
+- `low` (blind) `maxLength` counts characters, the server code points — a 500-character note full of composed emoji; the server's 422 shows then.
+- `low` (blind) the four copies of the fixture-editing helper in the tests — test-only duplication, no divergence today.
+- `low` (blind) the spec text lags the review patches — fixing it would edit this spec (the triage log records each change).
+- `low` (blind) the Auto Run Result's counts differ from the triage log (patch rows, ARB keys) — corrected in the Auto Run Result addendum; otherwise a spec edit.
+- `low` (edge) a page or sheet closed during the send drops a later failure silently — the owner chose to leave; guarding the exits while sending adds `PopScope` / sheet flags for a sub-second window.
+- `low` (edge) a stale list lets 17 resend for an already open request, answered 202 with the open one (the new condition and note are not recorded) — the card hides the button for an open request; only a stale list reaches it.
+- `low` (edge) `showDatePicker` asserts if the device date moves back after a day was picked — a time-zone change while the sheet is open.
+- `low` (edge) commit `8ffec95` says « a retry never duplicates a request » although the key ends with the sheet (a timeout, then a reopened sheet, draws a new key) — a new sheet is a new intent; at worst the clinic sees two equal requests (3 open per field); keeping keys beyond the sheet needs a shared store; the hand-over note states the limit.
+- `low` (edge) the spec's residual risk line is stale — a spec edit (see above).
+- `low` (edge) the spec's closed-questionnaire copy is stale — a spec edit (see above).
+
+## Spec Change Log
+
+## Review Triage Log
+
+### 2026-11-04 — Review pass
+- verdicts: 32 findings — high 0, medium 1, low 28, false 3, maybe-false 0
+- findings:
+  - `[low]` `[reject]` (blind) `changeRequests` reads only the first page (50) of `/requests`: an older pending request beyond it is not shown — true but needs more than 50 newer requests in one clinic with an old one still open (10 requests a day at most, the clinic answers them); following `nextCursor` adds a pagination loop for a case nobody meets in everyday use; recorded as a known limit in the hand-over.
+  - `[low]` `[patch]` (blind) `PetChangeRequest.resolvedAt` / `resolutionMessage` mapped and tested but never read — deleted with their mapping and assertions (showing resolved requests is outside the « pending state » intent; the clinic messages the owner at resolution).
+  - `[low]` `[patch]` (blind) the closed questionnaire claims « Le rendez-vous a commencé » although `editable: false` also covers a consultation started and a lock kept across a reschedule — ARB now neutral: « Ce questionnaire ne peut plus être modifié. » / « Le questionnaire n'a pas été rempli. ».
+  - `[low]` `[reject]` (blind) re-sending drops symptom values this app does not know — the contract fixes version 1 and its enums (a new value would be a new version); keeping raw unknown values through the domain adds a wire-preserving path for a case the API rules out.
+  - `[low]` `[reject]` (blind) write answers (renewal receipt, request id, saved questionnaire) mapped then unused — the repositories return what the server answers, as every repository of the app does; the success state depends on the receipt; removing them would drop the decoding tests of three captured answers.
+  - `[low]` `[reject]` (blind) `PortalRequestStatus` (patient) duplicates `RenewalStatus` (document) — two bounded contexts mapping two different wire shapes (a typed enum vs `renewalStatus`'s open object); a shared enum is a cross-feature refactor for no named divergence today.
+  - `[low]` `[reject]` (blind) presentation helpers copied (`_Plain` twice, `_FormScaffold` ≈ `FlowScaffold`, `_cause`/`_isTransient`, `_Group`/`_Fieldset`, a global `_clinicIdProvider`) — document cannot import scheduling's unexported `FlowScaffold`; promoting the helpers to `shared/presentation` is a refactor beyond a direct correction; the « does not unwrap ProviderException » sub-claim is false (the sheet's error comes from a direct repository call, never a provider).
+  - `[low]` `[reject]` (blind) the wire codes `neutered` / `intact` live in the patient domain (`sterilizationValues`) — they equal the domain enum's names; a typed proposed value per field is a refactor of the draft for one field.
+  - `[low]` `[patch]` (blind) `IntentKey` kept only the last content: A (timed out, recorded) → B → A got a new key and could duplicate the request — `IntentKey` now keeps a content → key map for its lifetime (`putIfAbsent`); test updated (back to A = A's key). The `idempotency_key_reused` sub-claim is false: equal content always sends the same key and the same body.
+  - `[low]` `[patch]` (blind) editing the renewal note or the questionnaire's texts left a stale server error on screen — `onChanged` clears `_error` on the three fields; tests added on both pages.
+  - `[low]` `[reject]` (blind) `maxLength` truncates a paste silently — the caps are the contract's (the server would refuse longer text); a visible counter is a kit-wide decision for 500+-character pastes nobody meets in everyday use.
+  - `[low]` `[patch]` (blind) `questionnaireSentAt` used an invisible literal U+00A0 — written `' '` (literal ones in the new tests escaped too).
+  - `[low]` `[reject]` (blind) « Autre » shows the note as required without gating the button — the spec's Never-rule (no client-side « other needs a note »): the server's 422 shows under the note; the fix would edit this build's spec.
+  - `[false]` `[reject]` (blind) the questionnaire writes controller texts during build — `_formOf` writes only while `_form` is null, i.e. on the first data frame, before any `TextField` using those controllers is mounted; later reads never rewrite them.
+  - `[low]` `[reject]` (edge) more than 50 requests hide an older pending one — same as the first blind row.
+  - `[low]` `[patch]` (edge) a PUT answering 404 (appointment cancelled while 15 was open) did not refresh the lists — `_send` also bumps `appointmentsRevisionProvider` on `NotFoundFailure`; the « a 404 on send » test asserts the revision moved.
+  - `[low]` `[patch]` (edge) renewal note edited after a 422 keeps the stale callout — fixed with the stale-error row above.
+  - `[low]` `[patch]` (edge) questionnaire details / notes edited after a 422 keep the stale callout — fixed with the stale-error row above.
+  - `[low]` `[patch]` (edge) a transient failure after the server committed, then the content edited back (or the sheet reopened), creates a duplicate — the content → key map covers the edit-back; a reopened sheet is a new intent (accepted: the clinic sees two equal requests at worst, 3 open per field max).
+  - `[low]` `[patch]` (verification-gap) back from 17 (`_backOrDocuments`) never exercised through the router — `app_router_test`: deep link to 17, back, `/documents`.
+  - `[low]` `[patch]` (verification-gap) the caps of the renewal note (500) and the questionnaire details (500) / notes (1000) unasserted — caps tests on both pages.
+  - `[low]` `[patch]` (verification-gap) a 422 on `measuredOn`, or on `proposedValue` with « Stérilisation », never shown in a test — two refusal tests: message under the field, no callout.
+  - `[low]` `[patch]` (verification-gap) `measuredOn` sent only with a weight, never exercised — test: a day picked under « Poids », « Nom » sent, `measuredOn` null.
+  - `[low]` `[patch]` (verification-gap) a 5xx on send offering « Réessayer » with the same key untested on 17 and the sheet — 503 tests on both: retry shown, same key, then success.
+  - `[low]` `[patch]` (verification-gap) the production default of `idempotencyKeyFactoryProvider` not pinned — `kiveto_app_test`: two calls give two different UUID v4 keys.
+  - `[low]` `[patch]` (verification-gap) a blank renewal note not checked to go out as null — the retry test types spaces only and asserts `note: null`.
+  - `[medium]` `[patch]` (intent) the lasting writes of the curl captures (Nina's appointment and questionnaire, Gribouille's change request) were not in `demo-data-changes.md` — recorded there (slice 6 section, with the undo SQL); the emulator walk follows the review and adds its rows.
+  - `[false]` `[reject]` (intent) after a 422 `questionnaire_locked` a re-read still `editable: true` would show the form without a message — the server's lock is final (« un report ne le rouvre pas »): the GET after a refused PUT answers `editable: false`; an inconsistent server is not reachable.
+  - `[low]` `[reject]` (intent) the banner of 4 → 15 and a send from 14 not driven at app level — the route and builder are the same as the home's (driven end to end in `home_flow_test`), the banner's callback is tested with its id, and 14 → 15 is driven in `scheduling_flow_test`.
+  - `[false]` `[reject]` (intent) the prescription detail is not refreshed after a renewal — the pill is read from the list's `PrescriptionSummary` (invalidated); `prescriptionProvider` is autoDispose, so the next sheet reads it again; the router test shows the pill after « Retour aux documents ».
+  - `[low]` `[patch]` (intent) « the button stays for deceased pets, show `pet_not_eligible` » tested only on the sheet — `pet_page_test`: Garnier's Filou, « Signaler une modification », the captured 422, the message.
+  - `[low]` `[patch]` (intent) the date of the renewal subtitle kept ordinary spaces — `.replaceAll(' ', ' ')`; test updated.
+
+## Design Notes
+
+**Copy (ARB, French; `~` = U+00A0).** Questionnaire: subtitle `{pet} · {motif} · {slot}` / no pet `{motif} · {slot}`; extra « 2 minutes. Vos réponses sont transmises à l'équipe soignante. », prefilled « Réponses envoyées le {date} à {time}. Vous pouvez les modifier jusqu'au rendez-vous. » (date `dayShort` lowercase, `~` inside); legends « Depuis la dernière visite, avez-vous remarqué~: », « Un traitement en cours pour {pet}~? » (no pet « Un traitement en cours~? »), « Comment se passent les visites pour {pet}~? » (no pet « Comment se passent les visites~? »); chips « Rien de particulier », « Toux », « Vomissements », « Diarrhée », « Baisse d’appétit », « Démangeaisons », « Boiterie »; « Non », « Oui »; « Lequel~? » hint « Nom du médicament, dose »; « Calme », « Stressé(e) », « Peut mordre ou griffer »; « Autre chose à signaler » (optional); bar « Envoyer à la clinique »; SnackBar « Questionnaire envoyé à la clinique. »; locked callout title « Questionnaire clos », body « Le rendez-vous a commencé~: les réponses ne peuvent plus être modifiées. », locked empty « Le questionnaire n'a pas été rempli avant le rendez-vous. », locked submitted extra « Réponses envoyées le {date} à {time}. »; 404 « Rendez-vous introuvable » / « Ce rendez-vous a été annulé ou n'existe plus. ».
+Renewal: subtitle « Ordonnance du {date} · {vet} · {pet} » (`dayMonthYear`); « Traitements à renouveler », caption « La demande porte sur toute l'ordonnance. »; « Comment va {pet} avec ce traitement~? »; « Ça va mieux », « Pas d’amélioration », « Effets indésirables »; warning « Le vétérinaire vous proposera sans doute une consultation avant de renouveler. »; « Précision pour le vétérinaire » (optional); footnote « Retrait à la clinique. Le vétérinaire décide si un renouvellement sans consultation est possible. »; bar « Envoyer la demande »; success « Demande envoyée » / « La clinique vous préviendra quand l'ordonnance sera prête, ou si une consultation est nécessaire. » / « Retour aux documents »; `prescription_not_renewable` « Cette ordonnance ne peut pas être renouvelée en ligne~: contactez la clinique. »; 404 « Cette ordonnance n'est plus disponible. ».
+Change request: sheet title « Signaler une modification », subtitle « Pour {pet}. La clinique vérifie chaque modification avant de mettre à jour la fiche. »; legend « Que faut-il modifier~? »; chips « Nom », « Poids », « Stérilisation », « Puce », « Autre »; « Nouveau nom »; « Nouveau poids (kg) » hint « Ex.~: 12,4 » (decimal keyboard); « Pesé le » (a C-18a-styled tappable box with the calendar glyph: « Aujourd'hui » until a date is picked with `showDatePicker`, last date = device today; `measuredOn` sent only when picked); « Stérilisation » chips by sex — male « Castré » / « Non castré », female « Stérilisée » / « Non stérilisée », else « Stérilisé(e) » / « Non stérilisé(e) »; « Numéro de puce » (number keyboard) help « Les 15 chiffres inscrits sur la carte d'identification. »; « Ce qui a changé » hint « Ex.~: nouvelle allergie »; note « Précision pour la clinique » (optional; for « Autre »: « Précisions pour la clinique », not optional, help « Expliquez la modification à la clinique. »); « Envoyer la demande »; success « Demande envoyée » / « La clinique vérifiera la modification avant de mettre à jour la fiche. » / « Fermer »; `pet_not_eligible` (above); 404 « Cet animal n'est plus suivi par cette clinique. »; pending: section « Demandes en cours », row « {field}~: {value} », meta « Envoyée le {date} », pill « En attente »; load failure « Impossible d'afficher vos demandes en cours. ». Both request forms: 429 « Vous avez envoyé beaucoup de demandes aujourd'hui. Réessayez demain ou contactez la clinique. ».
+
+**Layout.** 15: back alone (C-9a), header gap 6, fieldsets gap 24, legend 16/700 + 12 to the chips (wrap, gap 8), « Oui » row (gap 8) then « Lequel~? » textarea; notes label 16/700 + « (facultatif) ». 17: as mockup 17 with the lines read-only (mockup-vs-contract), gap 22. Locked 15: the same fieldsets with `onSelected: null` chips, treatment details and notes as 15 px text in a canvas box; no bar. Pending block on 2: `KivetoSectionHeader` + `KivetoCard.list` of `KivetoListRow` (C-11a, padding 13 14 like the care rows) with `StatusPill(tone: neutral)`; dates `KivetoFormat.dayMonthYear`.
+
+**Errors.** `failureCause` unwraps `ProviderException`. Validation: show `violation.message` (the server's French text) under the matching field, else the form callout; other business codes → the ARB lines above; transient (network/5xx) → callout with « Réessayer » (same key).
+
+## Verification
+
+**Commands:**
+- `fvm flutter gen-l10n` -- expected: generated files updated, formatted.
+- `make ci` -- expected: green (format, analyze, architecture, tests + coverage gate 100 % on gated files, scripts, api-check).
+
+**Manual checks:**
+- Emulator walk (see the slice report): Nina's questionnaire filled from 14, then the appointment cancelled; Garnier's ORD-36 renewal; Nina's change request and its pending block; Garnier's deceased Filou refused. The locked view has no entry in the app (no screen links a past appointment to 15): widget tests on the captured locked fixtures cover it.
+
+## Auto Run Result
+
+**Summary.** Slice 6 adds the three owner requests of the Portal API: screen 15 « Avant la consultation » (`scheduling`: `GET/PUT …/questionnaire`, the form of mockup 15, answers already sent prefilled, a read-only view once the server closes it, the revision bumped after a save so the banner of 4 and the home button go), screen 17 « Demander un renouvellement » (`document`: the prescription's lines read-only, the pet's condition, a note, `POST …/renewal-requests` with an `Idempotency-Key`, a success view, the documents lists reloaded so « Renouvellement demandé » shows), and the change request of screen 2 (`patient`: a sheet with the field picker, the value per field — weight with « Pesé le », sterilization labelled by sex —, a note, `POST …/change-requests` with its key, and « Demandes en cours » on the pet sheet from `GET /requests`). Shared: `IntentKey` (one key per content), `idempotencyKeyFactoryProvider`, `KivetoTextField.maxLength`.
+
+**Files changed (main).**
+- `lib/shared/domain/intent_key.dart` — one `Idempotency-Key` per request content.
+- `lib/core/di/core_providers.dart` — `idempotencyKeyFactoryProvider` (test seam).
+- `lib/shared/presentation/kit/forms.dart` — `maxLength` on both text-field constructors.
+- `lib/features/scheduling/domain/questionnaire{,_repository}.dart`, `infrastructure/portal_questionnaire_repository.dart`, `presentation/questionnaire_page.dart`, `scheduling_providers.dart` (`questionnaireProvider`), `scheduling_messages.dart` (labels, failures), `di.dart`, `scheduling.dart` — screen 15.
+- `lib/features/document/domain/renewal.dart`, `infrastructure/portal_renewal_repository.dart`, `presentation/renewal_page.dart`, `di.dart`, `document.dart` — screen 17.
+- `lib/features/patient/domain/pet_change.dart`, `infrastructure/portal_pet_change_repository.dart`, `presentation/pet_change_sheet.dart`, `pet_page.dart` (the sheet opened in place of the old callback, « Demandes en cours »), `pet_providers.dart`, `pet_messages.dart`, `di.dart` — the change request.
+- `lib/app/routing/app_router.dart`, `placeholder_page.dart` — 15 and 17 built, `_backOrDocuments`, the placeholder sheet removed.
+- `lib/l10n/app_fr.arb` (+ gen-l10n) — 84 keys.
+- Tests: 7 unit files (domain + the three repositories on 16 new captured fixtures), 3 new widget files, updated router / home / scheduling flows, pet page, kit, contract test. `CONTRIBUTING.md` §0 row 11.
+
+**Review.** 32 findings (blind 14, edge 5, verification-gap 7, intent 6): 22 patch rows in 9 entries (1 medium: the demo-data record, done outside the repo; 21 low, among them 9 test additions), 0 deferred, 10 rejected (3 false; 7 low with the reasons in the triage log: the 50-request page ×2, unknown symptom values, write answers kept, two status enums, copied helpers, wire codes in the domain, `maxLength` truncation, the « Autre » note gate — a spec decision). Follow-up review recommended: false (patched at entry verdict: 1 medium, 8 low; no high).
+
+**Verification.** `make ci` green after the build (4 min 32 s) and again after the review patches (4 min 28 s): format, analyze, architecture, tests with coverage, the gate (every gated file at 100 %), the bash checks, api-check. Every matrix row has a passing widget or unit test (questionnaire_page_test, renewal_page_test, pet_change_sheet_test, pet_page_test, questionnaire_test). The emulator walk is the slice's next step (spec Manual checks).
+
+**Residual risks.** The pending list reads the first 50 requests only; the questionnaire's SnackBar relies on the root `ScaffoldMessenger` (seen in the home flow test, to check on the device); an error callout sits at the end of the scrolling body on 15 and 17 (as on 14); the locked view of 15 has no entry in the app (tests only); iOS not built.
+
+### Addendum — emulator walk and code review (2026-11-04)
+
+**Corrections to the summary above.** The first review pass logged 19 `[patch]` rows (in 9 entries) and 13 `[reject]` rows (3 false, 10 low), not « 22 / 10 »; the ARB gained 85 keys, not 84. The residual risk « an error callout sits at the end of the scrolling body » no longer holds: since `e2822da` it sits in the sticky bar above the button. Since the same pass, `IntentKey` keeps a key per content for its lifetime (A → B → A sends A's key), `PetChangeRequest` has no `resolvedAt` / `resolutionMessage`, and the closed-questionnaire copy is « Ce questionnaire ne peut plus être modifié. » / « Le questionnaire n'a pas été rempli. » (the matrix and Design Notes above keep the planned wording).
+
+**Emulator walk** (Medium_Phone_API_37.0, debug build of the branch, local backend; screenshots in the notes folder `shots-portal-requests/`):
+- Julien (read only): 15 from the home hero on his 2026-11-09 Oslo appointment (header, exclusivity, « Oui » → « Lequel ? »; sent once without network: the failure callout with « Réessayer » shows above the button, nothing reached the server); Oslo's « Demandes en cours » (weight 25,1 kg pending); the change sheet (fields, « Pesé le » picker, sterilization labels) closed unsent.
+- Nina (test client): booked Gribouille's vaccination in the wizard, « Remplir le questionnaire maintenant » → 15 → sent → screen 4 with the SnackBar and no banner; both of her appointments cancelled; a 200 kg weight refused under its field; a sterilization change sent → « Demande envoyée » → the pending row.
+- Garnier: ORD-36 → 17 (lines read-only, the warning for « Pas d'amélioration ») → sent → « Renouvellement demandé » on the card at once; ORD-07 → 17 → the server's refusal; Filou (deceased) → the change refused with « pet_not_eligible »'s message; the banner of 4 → 15 (Pepito) left unsent.
+- Fix found by the walk: the refusal callout of 17 was half hidden under the bottom bar → moved into the bar on 15 and 17 (`e2822da`).
+
+**Code review** (bmad-code-review, four layers on `master...HEAD` at `e2822da`): 35 findings, 13 patch entries applied (`b0a133e`), 0 deferred, 22 rejected with their reasons (« Review Findings » above). `make ci` green on the patched tree (4 min 32 s).
+
+**Residual risks (current).** The pending list reads the first 50 requests only; an `IntentKey` ends with its sheet or page (a reopened sheet after a timeout draws a new key); the closed view of 15 has no entry in the app (lock race only, widget-tested); iOS not built.

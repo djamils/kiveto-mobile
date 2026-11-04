@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"proposedValue","message":"Le poids doit être compris entre 0,05 et 150 kg.","code":"portal_rule"}],"detail":"proposedValue: Le poids doit être compris entre 0,05 et 150 kg.","type":"validation_failed","title":"Données invalides."}

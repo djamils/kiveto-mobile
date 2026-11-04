@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"note","message":"Précisez votre demande dans la note.","code":"portal_rule"}],"detail":"note: Précisez votre demande dans la note.","type":"validation_failed","title":"Données invalides."}
