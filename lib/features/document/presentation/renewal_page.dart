@@ -121,6 +121,10 @@ class _RenewalPageState extends ConsumerState<RenewalPage> {
         _receipt = receipt;
       });
     } on Object catch (error) {
+      // The prescription is gone: the lists drop its card.
+      if (_cause(error) is NotFoundFailure) {
+        container.invalidate(documentListProvider);
+      }
       if (!mounted) return;
       setState(() {
         _sending = false;
@@ -189,6 +193,18 @@ class _RenewalPageState extends ConsumerState<RenewalPage> {
     final error = _error;
     final sending = _sending;
     final pet = prescription.pet.name;
+    // A violation of the note shows under it, any other in the callout.
+    final noteError = switch (error) {
+      ValidationFailure(:final violations) =>
+        violations
+            .where((violation) => violation.propertyPath == 'note')
+            .firstOrNull
+            ?.message,
+      _ => null,
+    };
+    final message = error == null
+        ? null
+        : renewalFailureMessage(l10n, error, shown: const {'note'});
     return _FormScaffold(
       // The server's answer sits above the button: the body may be
       // scrolled anywhere when it comes.
@@ -197,10 +213,10 @@ class _RenewalPageState extends ConsumerState<RenewalPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (error != null) ...[
+            if (message != null) ...[
               KivetoCallout.danger(
-                body: renewalFailureMessage(l10n, error),
-                actionLabel: _isTransient(error) ? l10n.commonRetry : null,
+                body: message,
+                actionLabel: _isTransient(error!) ? l10n.commonRetry : null,
                 onAction: () => unawaited(_send(clinicId)),
               ),
               const SizedBox(height: KivetoSpace.m),
@@ -309,6 +325,7 @@ class _RenewalPageState extends ConsumerState<RenewalPage> {
           maxLines: 5,
           maxLength: _noteMaxLength,
           enabled: !sending,
+          errorText: noteError,
           onChanged: (_) {
             // The last answer of the server no longer applies.
             if (_error != null) setState(() => _error = null);
@@ -332,19 +349,30 @@ bool _isTransient(Object error) => switch (_cause(error)) {
   _ => false,
 };
 
-/// The French message of a renewal request the server did not take: the
-/// first violation of a validation, the codes of the Portal API, else the
-/// shared message of the failure kind.
-String renewalFailureMessage(AppLocalizations l10n, Object error) =>
-    switch (_cause(error)) {
-      ValidationFailure(:final violations) when violations.isNotEmpty =>
-        violations.first.message,
-      ApiFailure(code: 'prescription_not_renewable') =>
-        l10n.renewalNotRenewable,
-      RateLimitedFailure() => l10n.requestRateLimited,
-      NotFoundFailure() => l10n.documentsPrescriptionGoneBody,
-      final other => failureMessage(l10n, other).$2,
-    };
+/// The French message of a renewal request the server did not take: a
+/// violation no field shows (those of [shown] sit under their field: none
+/// then), the codes of the Portal API (the server's reason after a refusal
+/// of the prescription), else the shared message of the failure kind.
+String? renewalFailureMessage(
+  AppLocalizations l10n,
+  Object error, {
+  Set<String> shown = const {},
+}) => switch (_cause(error)) {
+  ValidationFailure(:final violations) when violations.isNotEmpty =>
+    violations
+        .where((violation) => !shown.contains(violation.propertyPath))
+        .firstOrNull
+        ?.message,
+  ApiFailure(code: 'prescription_not_renewable', :final detail) =>
+    switch (detail?.trim()) {
+      final String reason when reason.isNotEmpty =>
+        '${l10n.renewalNotRenewable} $reason',
+      _ => l10n.renewalNotRenewable,
+    },
+  RateLimitedFailure() => l10n.requestRateLimited,
+  NotFoundFailure() => l10n.documentsPrescriptionGoneBody,
+  final other => failureMessage(l10n, other).$2,
+};
 
 /// A line of the prescription, read-only (C-11i's size without its
 /// checkbox): min-height 60, padding 10 16, the label (15/700) over

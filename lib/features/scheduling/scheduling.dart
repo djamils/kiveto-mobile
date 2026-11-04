@@ -8,7 +8,6 @@
 export 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
 export 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
 export 'package:kiveto_mobile/features/scheduling/domain/booking_draft.dart';
-export 'package:kiveto_mobile/features/scheduling/domain/questionnaire.dart';
 export 'package:kiveto_mobile/features/scheduling/presentation/appointments_page.dart'
     show AppointmentsPage;
 export 'package:kiveto_mobile/features/scheduling/presentation/booking_confirm_page.dart'

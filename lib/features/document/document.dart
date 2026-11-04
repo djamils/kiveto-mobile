@@ -7,7 +7,6 @@
 
 export 'package:kiveto_mobile/features/document/domain/document.dart';
 export 'package:kiveto_mobile/features/document/domain/prescription.dart';
-export 'package:kiveto_mobile/features/document/domain/renewal.dart';
 export 'package:kiveto_mobile/features/document/presentation/document_messages.dart'
     show documentKindName, joinPetNames, paymentLabel;
 export 'package:kiveto_mobile/features/document/presentation/documents_page.dart'

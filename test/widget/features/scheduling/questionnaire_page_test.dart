@@ -2,11 +2,13 @@
 // Oslo's appointment not started (« Rien de particulier » chosen, the
 // treatment and the temperament to answer), the exclusivity of « Rien de
 // particulier », « Lequel ? » for a treatment, the answers sent (the
-// revision bumped, the message, the exit), the answers already sent filling
+// revision bumped, the message, the exit; the revision bumped too when
+// the page was left before the answer), the answers already sent filling
 // the form, the closed questionnaire read-only (with and without answers,
 // and when it closes on send), the refusals and failures, the 404 of a
-// cancelled appointment, the appointment unread.
+// cancelled appointment, no active clinic, the appointment unread.
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,15 +62,23 @@ void main() {
 
   setUp(() => exits = []);
 
+  /// Screen 15 for Oslo's appointment on [backend] while [shown]
+  /// (default: always).
   Future<ProviderContainer> pump(
     WidgetTester tester,
-    FakePortalBackend backend,
-  ) => pumpStep(
+    FakePortalBackend backend, {
+    ValueNotifier<bool>? shown,
+  }) => pumpStep(
     tester,
-    QuestionnairePage(
-      appointmentId: bookedId,
-      onBack: (context) => exits.add('back'),
-      onSent: (context) => exits.add('sent'),
+    ValueListenableBuilder<bool>(
+      valueListenable: shown ?? ValueNotifier(true),
+      builder: (context, visible, _) => visible
+          ? QuestionnairePage(
+              appointmentId: bookedId,
+              onBack: (context) => exits.add('back'),
+              onSent: (context) => exits.add('sent'),
+            )
+          : const SizedBox.shrink(),
     ),
     backend: backend,
   );
@@ -100,7 +110,9 @@ void main() {
 
     expect(find.text('Avant la consultation'), findsOneWidget);
     expect(
-      find.text('Oslo · Consultation · lun. 9 nov. à 10:00'),
+      find.text(
+        'Oslo · Consultation · lun.\u00a09\u00a0nov.\u00a0à\u00a010:00',
+      ),
       findsOneWidget,
     );
     expect(
@@ -309,10 +321,10 @@ void main() {
   });
 
   testWidgets('closed on send (422 questionnaire_locked, capture): the '
-      'questionnaire read again, read-only; the revision bumped', (
-    tester,
-  ) async {
+      'questionnaire read again (loading meanwhile, not the form), '
+      'read-only; the revision bumped', (tester) async {
     var locked = false;
+    final reread = Completer<PortalReply>();
     final backend = _backend()
       ..onRequest('PUT', _questionnaire, (_) {
         locked = true;
@@ -321,12 +333,19 @@ void main() {
       ..onRequest(
         'GET',
         _questionnaire,
-        (_) => _capture(locked ? 'locked-not-started.get.200' : 'get.200'),
+        (_) => locked ? reread.future : _capture('get.200'),
       );
     final container = await pump(tester, backend);
 
     await fill(tester);
     await send(tester);
+
+    expect(find.byType(LoadingView), findsOneWidget);
+    expect(_sendButton(), findsNothing);
+    expect(find.byType(KivetoChoiceChip), findsNothing);
+
+    reread.complete(_capture('locked-not-started.get.200'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Questionnaire clos'), findsOneWidget);
     expect(find.byType(KivetoCallout), findsOneWidget);
@@ -434,6 +453,39 @@ void main() {
     expect(exits, ['sent']);
   });
 
+  testWidgets('the page left while the answers are on their way: the '
+      'revision bumped once they are saved', (tester) async {
+    final answer = Completer<PortalReply>();
+    final shown = ValueNotifier(true);
+    final backend = _backend()
+      ..onRequest('PUT', _questionnaire, (_) => answer.future);
+    final container = await pump(tester, backend, shown: shown);
+
+    await fill(tester);
+    await send(tester);
+    shown.value = false;
+    await tester.pumpAndSettle();
+    expect(find.byType(QuestionnairePage), findsNothing);
+    expect(container.read(appointmentsRevisionProvider), 0);
+
+    answer.complete(_capture('put.200'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(appointmentsRevisionProvider), 1);
+    expect(exits, isEmpty);
+  });
+
+  testWidgets('no active clinic: « Rendez-vous introuvable », no retry', (
+    tester,
+  ) async {
+    final backend = _backend()
+      ..on('GET', '$api/me', PortalReply.fixture('me.no-clinic.get.200.json'));
+    await pump(tester, backend);
+
+    expect(find.text('Rendez-vous introuvable'), findsOneWidget);
+    expect(find.text('Réessayer'), findsNothing);
+  });
+
   testWidgets('the appointment cancelled (404, capture): « Rendez-vous '
       'introuvable »; back: the exit', (tester) async {
     await pump(tester, _backend(questionnaire: 'cancelled.get.404'));
@@ -535,6 +587,9 @@ void main() {
       );
     await pump(tester, backend);
 
-    expect(find.text('Consultation · lun. 9 nov. à 10:00'), findsOneWidget);
+    expect(
+      find.text('Consultation · lun.\u00a09\u00a0nov.\u00a0à\u00a010:00'),
+      findsOneWidget,
+    );
   });
 }

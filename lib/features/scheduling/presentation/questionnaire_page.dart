@@ -156,7 +156,9 @@ class _QuestionnairePageState extends ConsumerState<QuestionnairePage> {
     };
     return switch (ref.watch(questionnaireProvider(_id))) {
       AsyncValue(isLoading: true, hasError: true) => loading,
-      AsyncData(:final value) when appointmentRead is! AsyncLoading =>
+      // Read again (closed on send): loading, not the form still live.
+      AsyncData(:final value, isLoading: false)
+          when appointmentRead is! AsyncLoading =>
         value.questionnaire.editable
             ? _page(context, l10n, value, appointment)
             : _LockedQuestionnaire(
@@ -404,7 +406,12 @@ class _Header extends StatelessWidget {
     final appointment = this.appointment;
     String? subtitle;
     if (appointment != null) {
-      final slot = slotShort(l10n, appointment.startAt, capitalized: false);
+      // « lun. 9 nov. à 14:15 » stays on one line.
+      final slot = slotShort(
+        l10n,
+        appointment.startAt,
+        capitalized: false,
+      ).replaceAll(' ', '\u00a0');
       subtitle = switch (appointment.petName) {
         final String pet => l10n.questionnaireSubtitle(
           pet,

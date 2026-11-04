@@ -518,8 +518,8 @@ void main() {
       (
         'too many requests (429)',
         problem('rate_limited', 429),
-        "Vous avez envoyé beaucoup de demandes aujourd'hui. Réessayez "
-            'demain ou contactez la clinique.',
+        'Vous avez envoyé beaucoup de demandes. Réessayez plus tard ou '
+            'contactez la clinique.',
       ),
     ]) {
       testWidgets('$name: its message, no retry', (tester) async {

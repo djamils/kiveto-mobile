@@ -2735,7 +2735,7 @@
   "@renewalNotRenewable": {
     "description": "Renewal (17): the server refuses the renewal (422 prescription_not_renewable)."
   },
-  "requestRateLimited": "Vous avez envoyé beaucoup de demandes aujourd'hui. Réessayez demain ou contactez la clinique.",
+  "requestRateLimited": "Vous avez envoyé beaucoup de demandes. Réessayez plus tard ou contactez la clinique.",
   "@requestRateLimited": {
     "description": "Renewal (17) and change request: too many requests (429)."
   },

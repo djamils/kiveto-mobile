@@ -197,8 +197,8 @@ void main() {
   });
 
   testWidgets('« Remplir le questionnaire » pushes the questionnaire; once '
-      'sent, the appointments without its banner, the home without its '
-      'button', (tester) async {
+      'sent, the appointments read again without their banner, the home '
+      'without its button', (tester) async {
     const base = '$api/clinics/$_paris';
     const questionnaire = '$base/appointments/$_appointment/questionnaire';
     var sent = false;
@@ -233,15 +233,18 @@ void main() {
           'clinics.paris.appointment.questionnaire.put.200.json',
         );
       })
-      ..on(
+      // Not started until the answers were received, submitted after.
+      ..onRequest(
         'GET',
         '$base/appointments?scope=upcoming',
-        _edited('clinics.paris.appointments.upcoming.get.200.json', (body) {
-          for (final item in body['items']! as List<Object?>) {
-            (item! as Map<String, Object?>)['questionnaireStatus'] =
-                'submitted';
-          }
-        }),
+        (_) =>
+            _edited('clinics.paris.appointments.upcoming.get.200.json', (body) {
+              for (final item in body['items']! as List<Object?>) {
+                (item! as Map<String, Object?>)['questionnaireStatus'] = sent
+                    ? 'submitted'
+                    : 'not_started';
+              }
+            }),
       );
     final container = await pumpKivetoApp(
       tester,
@@ -249,13 +252,22 @@ void main() {
       backend: backend,
     );
 
+    // Before: the banner of 4.
+    await tester.tap(find.text('Rendez-vous'));
+    await tester.pumpAndSettle();
+    expect(find.text('Questionnaire à compléter'), findsWidgets);
+    await tester.tap(find.text('Accueil'));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Remplir le questionnaire'));
     await tester.pumpAndSettle();
 
     expect(_top(container), AppRoutes.questionnaire(_appointment));
     expect(find.text('Avant la consultation'), findsOneWidget);
     expect(
-      find.text('Oslo · Rendez-vous · mer. 11 nov. à 10:30'),
+      find.text(
+        'Oslo · Rendez-vous · mer.\u00a011\u00a0nov.\u00a0à\u00a010:30',
+      ),
       findsOneWidget,
     );
     expect(find.text('Rien de particulier'), findsOneWidget);
@@ -268,6 +280,10 @@ void main() {
     expect(_location(container), AppRoutes.appointments);
     expect(find.text('Questionnaire envoyé à la clinique.'), findsOneWidget);
     expect(find.text('Questionnaire à compléter'), findsNothing);
+    expect(
+      backend.requestsTo('$base/appointments?scope=upcoming'),
+      hasLength(2),
+    );
 
     await tester.tap(find.text('Accueil'));
     await tester.pumpAndSettle();

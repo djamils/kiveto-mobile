@@ -3205,7 +3205,7 @@ abstract class AppLocalizations {
   /// Renewal (17) and change request: too many requests (429).
   ///
   /// In fr, this message translates to:
-  /// **'Vous avez envoyé beaucoup de demandes aujourd\'hui. Réessayez demain ou contactez la clinique.'**
+  /// **'Vous avez envoyé beaucoup de demandes. Réessayez plus tard ou contactez la clinique.'**
   String get requestRateLimited;
 
   /// Change request sheet: subtitle.

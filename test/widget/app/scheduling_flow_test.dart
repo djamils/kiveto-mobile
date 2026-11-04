@@ -403,7 +403,9 @@ void main() {
     expect(_location(container), AppRoutes.questionnaire(_booked));
     expect(find.text('Avant la consultation'), findsOneWidget);
     expect(
-      find.text('Oslo · Consultation · lun. 9 nov. à 10:00'),
+      find.text(
+        'Oslo · Consultation · lun.\u00a09\u00a0nov.\u00a0à\u00a010:00',
+      ),
       findsOneWidget,
     );
     expect(posts, 3);

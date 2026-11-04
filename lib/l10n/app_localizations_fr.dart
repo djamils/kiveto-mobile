@@ -1858,7 +1858,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestRateLimited =>
-      'Vous avez envoyé beaucoup de demandes aujourd\'hui. Réessayez demain ou contactez la clinique.';
+      'Vous avez envoyé beaucoup de demandes. Réessayez plus tard ou contactez la clinique.';
 
   @override
   String petChangeSubtitle(String pet) {

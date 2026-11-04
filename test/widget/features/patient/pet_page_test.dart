@@ -772,6 +772,73 @@ void main() {
     });
   });
 
+  testWidgets('the sheet dismissed while the request is on its way: the '
+      'requests read again once it answers, the new one pending', (
+    tester,
+  ) async {
+    final answer = Completer<PortalReply>();
+    var sent = false;
+    final backend = _julien()
+      ..onRequest('POST', '$_pets/$_oslo/change-requests', (_) {
+        sent = true;
+        return answer.future;
+      })
+      ..onRequest(
+        'GET',
+        _requests,
+        (_) => sent
+            ? _edited(
+                'clinics.paris.requests.get.200.json',
+                (body) =>
+                    ((body! as Map<String, Object?>)['items']! as List<Object?>)
+                        .insert(0, {
+                          'id': '01a1a413-c972-7eb1-b861-3e83365ac982',
+                          'kind': 'pet_change',
+                          'petId': _oslo,
+                          'field': 'name',
+                          'proposedValue': 'Oslo II',
+                          'prescriptionId': null,
+                          'status': 'submitted',
+                          'submittedAt': '2026-11-03T11:22:40+01:00',
+                          'resolvedAt': null,
+                          'resolutionMessage': null,
+                          'resultingPrescriptionId': null,
+                        }),
+              )
+            : PortalReply.fixture('clinics.paris.requests.get.200.json'),
+      );
+    await pump(tester, backend);
+
+    await tester.tap(find.text('Signaler une modification'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(KivetoChoiceChip, 'Nom'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(KivetoTextField, 'Nouveau nom'),
+      'Oslo II',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(KivetoButton, 'Envoyer la demande'));
+    await tester.pump();
+
+    // The scrim tapped: the sheet goes, the request is still on its way.
+    await tester.tapAt(const Offset(195, 20));
+    await tester.pumpAndSettle();
+    expect(find.byType(PetChangeSheet), findsNothing);
+    expect(backend.requestsTo(_requests), hasLength(1));
+
+    answer.complete(
+      PortalReply.fixture(
+        'clinics.paris.pet.change-requests.post.202.json',
+        status: 202,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(backend.requestsTo(_requests), hasLength(2));
+    expect(find.text('Nom\u00a0: Oslo II'), findsOneWidget);
+  });
+
   testWidgets('pull-to-refresh reads the pets, the sheet, the care items, '
       'the requests and the visits again', (tester) async {
     final backend = _julien();

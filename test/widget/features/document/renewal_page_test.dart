@@ -1,11 +1,14 @@
 // Screen 17 on the fake backend and the captures: ORD-36 (its date, vet,
 // pet and line read-only), the conditions and their warning, « Envoyer la
 // demande » once a condition is chosen, the request sent with its key,
-// « Demande envoyée » (the documents lists read again; back is « Retour aux
-// documents »), the server's refusals (422 prescription_not_renewable, 429,
-// 404), the retry of a network failure with the same key and a new key once
-// the content changed, the prescription gone or failing.
+// « Demande envoyée » (the documents lists read again, also when the page
+// was left before the answer; back is « Retour aux documents »), the
+// server's refusals (422 prescription_not_renewable with its reason, a note
+// refused under the note, 429, 404), the retry of a failure with the same
+// key and a new key once the content changed, the prescription gone or
+// failing.
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +35,7 @@ const _ord36 = '01a19a12-8b44-7c87-b043-5d82ad91c574';
 const _prescription = '$api/clinics/$_paris/prescriptions/$_ord36';
 const _renewal = '$_prescription/renewal-requests';
 const _documents = '$api/clinics/$_paris/documents';
+const _prescriptions = '$_documents?type=prescription';
 
 Map<String, Object?> _jsonOf(PortalRequest request) =>
     jsonDecode(utf8.decode(request.body)) as Map<String, Object?>;
@@ -52,6 +56,11 @@ FakePortalBackend _backend() => FakePortalBackend()
   ..on(
     'GET',
     _documents,
+    PortalReply.fixture('clinics.paris.documents.prescriptions.get.200.json'),
+  )
+  ..on(
+    'GET',
+    _prescriptions,
     PortalReply.fixture('clinics.paris.documents.prescriptions.get.200.json'),
   );
 
@@ -75,18 +84,25 @@ void main() {
     keys = [];
   });
 
-  /// Screen 17 for ORD-36 on [backend]; keys `key-1`, `key-2`…; the
-  /// documents list kept read (the Documents tab under it).
+  /// Screen 17 for ORD-36 on [backend] while [shown] (default: always);
+  /// keys `key-1`, `key-2`…; the documents lists (every document, the
+  /// prescriptions) kept read (the Documents tab under it).
   Future<ProviderContainer> pump(
     WidgetTester tester,
-    FakePortalBackend backend,
-  ) async {
+    FakePortalBackend backend, {
+    ValueNotifier<bool>? shown,
+  }) async {
     final container = await pumpPage(
       tester,
-      RenewalPage(
-        prescriptionId: _ord36,
-        onBack: (context) => exits.add('back'),
-        onDone: (context) => exits.add('done'),
+      ValueListenableBuilder<bool>(
+        valueListenable: shown ?? ValueNotifier(true),
+        builder: (context, visible, _) => visible
+            ? RenewalPage(
+                prescriptionId: _ord36,
+                onBack: (context) => exits.add('back'),
+                onDone: (context) => exits.add('done'),
+              )
+            : const SizedBox.shrink(),
       ),
       session: await memorySession(pair('A')),
       backend: backend,
@@ -100,7 +116,9 @@ void main() {
         }),
       ],
     );
-    container.listen(documentListProvider(null), (_, _) {});
+    container
+      ..listen(documentListProvider(null), (_, _) {})
+      ..listen(documentListProvider(DocumentKind.prescription), (_, _) {});
     await tester.pumpAndSettle();
     return container;
   }
@@ -199,6 +217,7 @@ void main() {
       findsOneWidget,
     );
     expect(backend.requestsTo(_documents), hasLength(2));
+    expect(backend.requestsTo(_prescriptions), hasLength(2));
 
     await tester.tap(find.widgetWithText(KivetoButton, 'Retour aux documents'));
     await tester.binding.handlePopRoute();
@@ -207,27 +226,31 @@ void main() {
   });
 
   group('refusals', () {
-    for (final (name, reply, message) in [
+    for (final (name, reply, message, documentReads) in [
       (
-        'not renewable online (422, capture)',
+        "not renewable online (422, capture): the server's reason too",
         PortalReply.fixture(
           'clinics.paris.prescriptions.renewal-requests.'
           'not-renewable.post.422.json',
           status: 422,
         ),
         'Cette ordonnance ne peut pas être renouvelée en ligne\u00a0: '
-            'contactez la clinique.',
+            'contactez la clinique. Une demande de renouvellement de cette '
+            'ordonnance a été refusée il y a moins de 7 jours.',
+        1,
       ),
       (
         'too many requests (429)',
         problem('rate_limited', 429),
-        "Vous avez envoyé beaucoup de demandes aujourd'hui. Réessayez "
-            'demain ou contactez la clinique.',
+        'Vous avez envoyé beaucoup de demandes. Réessayez plus tard ou '
+            'contactez la clinique.',
+        1,
       ),
       (
-        'gone (404)',
+        'gone (404): the documents read again',
         problem('not_found', 404),
         "Cette ordonnance n'est plus disponible.",
+        2,
       ),
     ]) {
       testWidgets('$name: its message, no retry', (tester) async {
@@ -250,13 +273,12 @@ void main() {
         );
         expect(find.text('Réessayer'), findsNothing);
         expect(find.text('Demande envoyée'), findsNothing);
-        expect(backend.requestsTo(_documents), hasLength(1));
+        expect(backend.requestsTo(_documents), hasLength(documentReads));
       });
     }
 
-    testWidgets('a note too long for the server (422): its message', (
-      tester,
-    ) async {
+    testWidgets('a note too long for the server (422): its message under '
+        'the note, no callout; an edit drops it', (tester) async {
       final backend = _backend()
         ..on(
           'POST',
@@ -278,7 +300,14 @@ void main() {
       await tapVisible(tester, _chip('Ça va mieux'));
       await tapVisible(tester, _send());
 
-      expect(find.text('La note est trop longue.'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(KivetoTextField),
+          matching: find.text('La note est trop longue.'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(KivetoCallout), findsNothing);
 
       // The note edited: the server's answer no longer applies.
       await tester.enterText(find.byType(KivetoTextField), 'Plus court');
@@ -345,7 +374,12 @@ void main() {
       await tapVisible(tester, _send());
 
       await tapVisible(tester, _chip('Pas d’amélioration'));
-      expect(find.byType(KivetoCallout), findsOneWidget);
+      // The warning of the condition; the failure dropped by the change.
+      expect(find.text(_warning), findsOneWidget);
+      expect(
+        find.text('Vérifiez votre connexion Internet, puis réessayez.'),
+        findsNothing,
+      );
       offline = false;
       await tapVisible(tester, _send());
 
@@ -358,6 +392,28 @@ void main() {
       );
       expect(find.text('Demande envoyée'), findsOneWidget);
     });
+  });
+
+  testWidgets('the page left while the request is on its way: the '
+      'documents lists read again once it answers', (tester) async {
+    final answer = Completer<PortalReply>();
+    final shown = ValueNotifier(true);
+    final backend = _backend()
+      ..onRequest('POST', _renewal, (_) => answer.future);
+    await pump(tester, backend, shown: shown);
+
+    await tapVisible(tester, _chip('Ça va mieux'));
+    await tester.tap(_send());
+    await tester.pump();
+    shown.value = false;
+    await tester.pumpAndSettle();
+    expect(find.byType(RenewalPage), findsNothing);
+
+    answer.complete(_accepted());
+    await tester.pumpAndSettle();
+
+    expect(backend.requestsTo(_documents), hasLength(2));
+    expect(backend.requestsTo(_prescriptions), hasLength(2));
   });
 
   testWidgets("the contract's cap: 500 for the note", (tester) async {

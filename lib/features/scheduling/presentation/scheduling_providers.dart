@@ -24,7 +24,8 @@ import 'package:url_launcher/url_launcher.dart';
 // `.value`.
 
 /// The changes the owner made to the appointments in this run (a booking,
-/// a reschedule, a cancellation): the appointments lists and the home
+/// a reschedule, a cancellation, a questionnaire sent; or an appointment
+/// found closed or gone on the way): the appointments lists and the home
 /// watch it, so they reload after each change; [AppointmentsRevision.bump]
 /// also reloads the pets' care items (and the pets after a new one). Kept
 /// alive: a change that answers after its screen closed still refreshes.
@@ -36,7 +37,7 @@ final class AppointmentsRevision extends Notifier<int> {
   int build() => 0;
 
   /// An appointment was booked (for a new pet: [newPet]), moved or
-  /// cancelled.
+  /// cancelled, or its questionnaire was sent (or found closed or gone).
   void bump({bool newPet = false}) {
     state++;
     ref.invalidate(careItemsProvider);
