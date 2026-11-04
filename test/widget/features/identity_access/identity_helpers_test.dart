@@ -249,6 +249,25 @@ void main() {
           "Cette invitation n'est plus disponible.",
         ),
         (
+          const BusinessFailure(code: 'email_taken', statusCode: 422),
+          'Cette adresse e-mail est déjà utilisée par un autre compte.',
+        ),
+        (
+          const ValidationFailure(
+            code: 'validation_failed',
+            violations: [Violation(propertyPath: 'email', message: 'x')],
+          ),
+          "Vérifiez l'adresse e-mail saisie.",
+        ),
+        (
+          const ValidationFailure(
+            code: 'validation_failed',
+            violations: [Violation(propertyPath: 'firstName', message: 'x')],
+          ),
+          'Certaines informations ne sont pas valides. Corrigez-les, puis '
+              'réessayez.',
+        ),
+        (
           const NetworkFailure(),
           'Vérifiez votre connexion Internet, puis réessayez.',
         ),
@@ -286,6 +305,52 @@ void main() {
       expect(isRestartFailure(StateError('bug')), isFalse);
     });
 
+    test('the codes whose challenge is spent', () {
+      for (final code in [
+        'otp_expired',
+        'otp_attempts_exceeded',
+        'otp_challenge_not_found',
+      ]) {
+        expect(
+          isSpentCode(BusinessFailure(code: code, statusCode: 422)),
+          isTrue,
+          reason: code,
+        );
+      }
+      expect(
+        isSpentCode(
+          const BusinessFailure(code: 'otp_invalid', statusCode: 422),
+        ),
+        isFalse,
+      );
+      expect(isSpentCode(const NetworkFailure()), isFalse);
+    });
+
+    test('the e-mail refused by the server: a violation on email only', () {
+      expect(
+        isEmailRefused(
+          const ValidationFailure(
+            violations: [Violation(propertyPath: 'email', message: 'x')],
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        isEmailRefused(
+          const ValidationFailure(
+            violations: [Violation(propertyPath: 'code', message: 'x')],
+          ),
+        ),
+        isFalse,
+      );
+      expect(
+        isEmailRefused(
+          const BusinessFailure(code: 'email_taken', statusCode: 422),
+        ),
+        isFalse,
+      );
+    });
+
     test('joinNames', () {
       expect(joinNames(_l10n, []), '');
       expect(joinNames(_l10n, ['Moka']), 'Moka');
@@ -310,6 +375,13 @@ void main() {
       expect(tail.map((part) => part.text), ['a ', 'b', ' c']);
       expect(tail[1].underline, isFalse);
     });
+  });
+
+  test('unbroken: a masked phone on one line', () {
+    expect(
+      unbroken('+33 6 •• •• •• 78'),
+      '+33\u00a06\u00a0••\u00a0••\u00a0••\u00a078',
+    );
   });
 
   test('ResendCountdown.format: m:ss, seconds rounded up', () {

@@ -9,6 +9,7 @@ import 'package:kiveto_mobile/app/routing/kit_gallery_page.dart';
 import 'package:kiveto_mobile/app/routing/placeholder_page.dart';
 import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
+import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/document/document.dart';
 import 'package:kiveto_mobile/features/home/home.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
@@ -295,10 +296,11 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
         ),
         StatefulShellBranch(
           routes: [
-            _page(
-              AppRoutes.account,
-              (l10n) => l10n.screenAccountTitle,
-              kind: PlaceholderKind.account,
+            GoRoute(
+              path: AppRoutes.account,
+              builder: (context, state) => AccountPage(
+                onAddClinic: (context) => context.go(AppRoutes.clinics),
+              ),
             ),
           ],
         ),

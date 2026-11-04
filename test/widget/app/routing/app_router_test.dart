@@ -460,6 +460,30 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('the account tab: « Ajouter une clinique » goes to the clinic '
+        'search', (tester) async {
+      final backend = FakePortalBackend()
+        ..on(
+          'GET',
+          '/api/portal/v1/me',
+          PortalReply.fixture('me.get.200.json'),
+        );
+      final container = await pumpKivetoApp(
+        tester,
+        session: await memorySession(pair('A')),
+        backend: backend,
+        initialLocation: AppRoutes.account,
+      );
+
+      final link = find.text('Ajouter une clinique', findRichText: true);
+      await tester.ensureVisible(link);
+      await tester.pumpAndSettle();
+      await tester.tap(link);
+      await tester.pumpAndSettle();
+
+      expect(_location(container), AppRoutes.clinics);
+    });
+
     testWidgets('the account tab signs out', (tester) async {
       final session = await memorySession(pair('A'));
       final container = await pumpKivetoApp(
@@ -468,6 +492,8 @@ void main() {
         initialLocation: AppRoutes.account,
       );
 
+      // /me fails (no route): the error view, then the button.
+      await tester.ensureVisible(find.text('Se déconnecter'));
       await tester.tap(find.text('Se déconnecter'));
       await tester.pumpAndSettle();
 

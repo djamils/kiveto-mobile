@@ -3,9 +3,10 @@ import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 
-/// The French message of a failure of the sign-in screens, by its problem
-/// `type`; the generic body of [failureMessage] for anything else (network,
-/// server, unknown codes).
+/// The French message of a failure of the sign-in screens and of the
+/// account sheets (the e-mail change, the deletion), by its problem `type`;
+/// the generic body of [failureMessage] for anything else (network, server,
+/// unknown codes).
 String identityErrorText(
   AppLocalizations l10n,
   Object error,
@@ -29,8 +30,36 @@ String identityErrorText(
   ApiFailure(code: 'account_exists') => l10n.identityErrorAccountExists,
   ApiFailure(code: 'terms_outdated') => l10n.identityErrorTermsOutdated,
   ApiFailure(code: 'invitation_invalid') => l10n.identityErrorInvitationInvalid,
+  ApiFailure(code: 'email_taken') => l10n.identityErrorEmailTaken,
+  ValidationFailure(:final violations)
+      when violations.any((violation) => violation.propertyPath == 'email') =>
+    l10n.identityErrorEmailInvalid,
   _ => failureMessage(l10n, error).$2,
 };
+
+/// Whether [error] means the code's challenge cannot be used any more
+/// (expired, too many attempts, unknown): only a new code goes on.
+bool isSpentCode(Object error) => switch (error) {
+  ApiFailure(
+    code: 'otp_expired' || 'otp_attempts_exceeded' || 'otp_challenge_not_found',
+  ) =>
+    true,
+  _ => false,
+};
+
+/// Whether [error] is the server refusing the e-mail address itself
+/// (`422 validation_failed` on `email`): the e-mail change goes back to its
+/// address field.
+bool isEmailRefused(Object error) => switch (error) {
+  ValidationFailure(:final violations) => violations.any(
+    (violation) => violation.propertyPath == 'email',
+  ),
+  _ => false,
+};
+
+/// [text] with no-break spaces: a masked phone (« +33 6 •• •• •• 78 »)
+/// stays on one line in a sentence.
+String unbroken(String text) => text.replaceAll(' ', '\u00a0');
 
 /// Whether [error] means the grant or the request of the flow is gone and
 /// the user must start again from the welcome screen.
