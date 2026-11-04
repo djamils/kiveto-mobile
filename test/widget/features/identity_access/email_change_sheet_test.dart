@@ -345,6 +345,101 @@ void main() {
     );
   });
 
+  testWidgets('a spent SMS code: no resend, « Continuer » disabled with 6 '
+      'digits; « Recevoir un nouveau code »: a refusal on the boxes, then '
+      'one new code on step 2, its challenge used', (tester) async {
+    final backend = _backend()
+      ..on('POST', _change, problem('otp_expired', 422));
+    await open(tester, backend);
+    await requestCode(tester, 'zoe.essai@example.com');
+    await type(tester, '123456');
+    expect(_codeError(tester), 'Ce code a expiré. Demandez-en un nouveau.');
+
+    expect(find.textContaining('Renvoyer le code'), findsNothing);
+    await type(tester, '654321');
+    expect(_button(tester, 'Continuer').onPressed, isNull);
+    expect(backend.requestsTo(_change), hasLength(1));
+
+    backend.on('POST', _otp, problem('otp_rate_limited', 429));
+    await tester.tap(find.text('Recevoir un nouveau code'));
+    await tester.pumpAndSettle();
+
+    expect(backend.requestsTo(_otp), hasLength(2));
+    expect(
+      _codeError(tester),
+      'Trop de demandes de code. Réessayez dans quelques minutes.',
+    );
+    expect(
+      find.text('Saisissez le code envoyé au $_shownPhone.'),
+      findsOneWidget,
+    );
+    expect(find.text('Recevoir un nouveau code'), findsOneWidget);
+
+    backend
+      ..on(
+        'POST',
+        _otp,
+        PortalReply.fixture('auth.otp.request.post.202.json', status: 202),
+      )
+      ..on(
+        'POST',
+        _change,
+        PortalReply.fixture('me.email-change.post.202.json', status: 202),
+      );
+    await tester.tap(find.text('Recevoir un nouveau code'));
+    await tester.pumpAndSettle();
+
+    expect(backend.requestsTo(_otp), hasLength(3));
+    expect(find.text('Recevoir un nouveau code'), findsNothing);
+    expect(_codeError(tester), isNull);
+    expect(find.text('Renvoyer le code'), findsOneWidget);
+    expect(
+      find.text('Saisissez le code envoyé au $_shownPhone.'),
+      findsOneWidget,
+    );
+
+    await type(tester, '111222');
+
+    expect(_body(backend.requestsTo(_change).last), {
+      'challengeId': '01a1a0ee-b560-7aca-b883-0473f9c33042',
+      'code': '111222',
+      'email': 'zoe.essai@example.com',
+    });
+    expect(
+      find.text('Saisissez le code envoyé à zoe.essai@example.com.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a kept SMS code past its expiresAt: « Recevoir un code » asks '
+      'for a new one', (tester) async {
+    final clock = FixedClock(_beforeResend);
+    final backend = _backend()
+      ..on(
+        'POST',
+        _change,
+        PortalReply.fixture(
+          'me.email-change.validation.post.422.json',
+          status: 422,
+        ),
+      );
+    await open(tester, backend, clock: clock);
+    await requestCode(tester, 'zoe@');
+    await type(tester, '123456');
+    // Back on the address, the challenge kept.
+    expect(find.text('Adresse e-mail'), findsOneWidget);
+
+    // The `expiresAt` of `me.email-change.otp.post.202.json` passed.
+    clock.instant = DateTime.utc(2026, 11, 3, 21, 59, 53);
+    await requestCode(tester, 'zoe@example.com');
+
+    expect(backend.requestsTo(_otp), hasLength(2));
+    expect(
+      find.text('Saisissez le code envoyé au $_shownPhone.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('the code request refused: its message under the text; the '
       'address field still there', (tester) async {
     final backend = _backend()

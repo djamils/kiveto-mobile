@@ -200,6 +200,27 @@ void main() {
       expect(bodies, ['{"firstName":"Julien","lastName":"Girard"}']);
     });
 
+    testWidgets("the keyboard's done action on « Ville » saves", (
+      tester,
+    ) async {
+      final backend = _julienBackend()
+        ..on('PATCH', _me, PortalReply.fixture('me.patch.200.json'));
+      await pump(tester, backend);
+      await open(tester, find.widgetWithText(KivetoButton, 'Modifier'));
+      await tester.enterText(_field('Ville'), 'Marseille');
+
+      await tester.showKeyboard(_field('Ville'));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(
+        backend.requestsTo(_me).where((request) => request.method == 'PATCH'),
+        hasLength(1),
+      );
+      expect(find.text('Modifier mon profil'), findsNothing);
+      expect(find.text('Profil enregistré.'), findsOneWidget);
+    });
+
     testWidgets('an edited address keeps its country (BE)', (tester) async {
       final me = jsonDecode(_midday('me.get.200.json')) as Map<String, Object?>;
       (me['account']! as Map<String, Object?>)['address'] = {

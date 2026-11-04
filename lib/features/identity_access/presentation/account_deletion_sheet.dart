@@ -127,7 +127,13 @@ class _AccountDeletionSheetState extends ConsumerState<AccountDeletionSheet> {
   Future<void> _delete() async {
     final challenge = _challenge;
     final code = _code.text;
-    if (challenge == null || _busy || _resending || code.length != 6) return;
+    if (challenge == null ||
+        _codeSpent ||
+        _busy ||
+        _resending ||
+        code.length != 6) {
+      return;
+    }
     final l10n = AppLocalizations.of(context);
     // The app's messenger: its SnackBar shows on the welcome screen the
     // router goes to once the session is closed.
@@ -233,7 +239,7 @@ class _AccountDeletionSheetState extends ConsumerState<AccountDeletionSheet> {
         KivetoButton.danger(
           label: l10n.identityDeletionConfirm,
           loading: _busy,
-          onPressed: _code.text.length == 6 && !_resending
+          onPressed: _code.text.length == 6 && !_resending && !_codeSpent
               ? () => unawaited(_delete())
               : null,
         ),

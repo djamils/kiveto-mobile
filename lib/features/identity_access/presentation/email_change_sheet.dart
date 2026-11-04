@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/features/identity_access/di.dart';
 import 'package:kiveto_mobile/features/identity_access/domain/otp_challenge.dart';
 import 'package:kiveto_mobile/features/identity_access/domain/otp_channel.dart';
@@ -107,10 +108,13 @@ class _EmailChangeSheetState extends ConsumerState<EmailChangeSheet> {
       };
 
   /// Step 1 → 2: an SMS code to the account's phone; back to the code
-  /// already sent while its challenge is kept (no new SMS).
+  /// already sent while its challenge is kept and not expired (no new SMS).
   Future<void> _requestCode() async {
     if (_busy || _email.text.trim().isEmpty) return;
-    if (_challenge != null) {
+    final kept = _challenge;
+    if (kept != null &&
+        !_challengeSpent &&
+        ref.read(clockProvider).now().isBefore(kept.expiresAt)) {
       _code.clear();
       setState(() {
         _addressError = null;
@@ -148,12 +152,47 @@ class _EmailChangeSheetState extends ConsumerState<EmailChangeSheet> {
     }
   }
 
+  /// A spent SMS code (expired, too many attempts, unknown): a new one,
+  /// on step 2 again; a refusal shows on the boxes.
+  Future<void> _newCode() async {
+    if (_busy || _resending) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      _busy = true;
+      _codeError = null;
+    });
+    try {
+      final challenge = await ref
+          .read(accountSecurityRepositoryProvider)
+          .requestEmailChangeCode();
+      if (!mounted) return;
+      _code.clear();
+      setState(() {
+        _busy = false;
+        _challenge = challenge;
+        _challengeSpent = false;
+      });
+    } on Object catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _codeError = identityErrorText(l10n, error);
+      });
+    }
+  }
+
   /// Step 2 → 3: the SMS code checked, a code sent to the address; an
   /// address the server refuses goes back to its field (the code was not
-  /// spent: its challenge is kept).
+  /// spent: its challenge is kept). Nothing for a spent code.
   Future<void> _submitSmsCode(String code) async {
     final challenge = _challenge;
-    if (challenge == null || _busy || _resending || code.length != 6) return;
+    if (challenge == null ||
+        _challengeSpent ||
+        _busy ||
+        _resending ||
+        code.length != 6) {
+      return;
+    }
     final l10n = AppLocalizations.of(context);
     final email = _email.text.trim();
     setState(() {
@@ -320,14 +359,24 @@ class _EmailChangeSheetState extends ConsumerState<EmailChangeSheet> {
               resendAvailableAt: _challenge!.resendAvailableAt,
               errorText: _codeError,
               busy: _busy || _resending,
+              // A spent code: « Recevoir un nouveau code » is the way on.
+              resendable: !_challengeSpent,
               onResend: () => unawaited(_resend()),
               onChanged: (_) => setState(() => _codeError = null),
               onCompleted: (code) => unawaited(_submitSmsCode(code)),
             ),
+            if (_challengeSpent)
+              KivetoTextButton(
+                label: l10n.identityAccountNewCode,
+                onPressed: _busy || _resending
+                    ? null
+                    : () => unawaited(_newCode()),
+              ),
             KivetoButton.primary(
               label: l10n.commonContinue,
               loading: _busy,
-              onPressed: _code.text.length == 6 && !_resending
+              onPressed:
+                  _code.text.length == 6 && !_resending && !_challengeSpent
                   ? () => unawaited(_submitSmsCode(_code.text))
                   : null,
             ),

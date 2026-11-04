@@ -115,7 +115,9 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     try {
       await ref.read(meRepositoryProvider).updateProfile(update);
       container.invalidate(meProvider);
-      if (!mounted) return;
+      // Closed meanwhile (the sheet may still be animating out): nothing
+      // to pop, or the page under it would go.
+      if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? false)) return;
       Navigator.of(context).pop(true);
     } on Object catch (error) {
       if (!mounted) return;
@@ -148,13 +150,15 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     String label, {
     TextInputType? keyboardType,
     Iterable<String>? autofillHints,
+    bool last = false,
   }) => KivetoTextField(
     label: label,
     controller: _fields[field],
     errorText: _errors[field],
     enabled: !_saving,
     keyboardType: keyboardType,
-    textInputAction: TextInputAction.next,
+    textInputAction: last ? TextInputAction.done : TextInputAction.next,
+    onSubmitted: last ? (_) => unawaited(_save()) : null,
     autofillHints: autofillHints,
     onChanged: (_) {
       if (_errors.containsKey(field)) {
@@ -167,83 +171,89 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final formError = _formError;
-    return KivetoSheet(
-      title: l10n.accountProfileSheetTitle,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _field(
-                l10n,
-                _Field.firstName,
-                l10n.accountProfileFirstName,
-                autofillHints: const [AutofillHints.givenName],
+    // The names and the address filled together by the platform.
+    return AutofillGroup(
+      child: KivetoSheet(
+        title: l10n.accountProfileSheetTitle,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _field(
+                  l10n,
+                  _Field.firstName,
+                  l10n.accountProfileFirstName,
+                  autofillHints: const [AutofillHints.givenName],
+                ),
               ),
-            ),
-            const SizedBox(width: KivetoSpace.ml),
-            Expanded(
-              child: _field(
-                l10n,
-                _Field.lastName,
-                l10n.accountProfileLastName,
-                autofillHints: const [AutofillHints.familyName],
+              const SizedBox(width: KivetoSpace.ml),
+              Expanded(
+                child: _field(
+                  l10n,
+                  _Field.lastName,
+                  l10n.accountProfileLastName,
+                  autofillHints: const [AutofillHints.familyName],
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: KivetoSpace.sm),
-        _field(
-          l10n,
-          _Field.street,
-          l10n.accountProfileStreet,
-          keyboardType: TextInputType.streetAddress,
-          autofillHints: const [AutofillHints.streetAddressLine1],
-        ),
-        const SizedBox(height: KivetoSpace.sm),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 2,
-              child: _field(
-                l10n,
-                _Field.postalCode,
-                l10n.accountProfilePostalCode,
-                autofillHints: const [AutofillHints.postalCode],
+            ],
+          ),
+          const SizedBox(height: KivetoSpace.sm),
+          _field(
+            l10n,
+            _Field.street,
+            l10n.accountProfileStreet,
+            keyboardType: TextInputType.streetAddress,
+            autofillHints: const [AutofillHints.streetAddressLine1],
+          ),
+          const SizedBox(height: KivetoSpace.sm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: _field(
+                  l10n,
+                  _Field.postalCode,
+                  l10n.accountProfilePostalCode,
+                  autofillHints: const [AutofillHints.postalCode],
+                ),
               ),
-            ),
-            const SizedBox(width: KivetoSpace.ml),
-            Expanded(
-              flex: 3,
-              child: _field(
-                l10n,
-                _Field.city,
-                l10n.accountProfileCity,
-                autofillHints: const [AutofillHints.addressCity],
+              const SizedBox(width: KivetoSpace.ml),
+              Expanded(
+                flex: 3,
+                child: _field(
+                  l10n,
+                  _Field.city,
+                  l10n.accountProfileCity,
+                  autofillHints: const [AutofillHints.addressCity],
+                  last: true,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: KivetoSpace.xs),
-        KivetoFootnote(l10n.accountProfileFootnote),
-        if (formError != null) ...[
+            ],
+          ),
           const SizedBox(height: KivetoSpace.xs),
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              formError,
-              style: KivetoText.bodySmall.copyWith(color: KivetoColors.danger),
+          KivetoFootnote(l10n.accountProfileFootnote),
+          if (formError != null) ...[
+            const SizedBox(height: KivetoSpace.xs),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                formError,
+                style: KivetoText.bodySmall.copyWith(
+                  color: KivetoColors.danger,
+                ),
+              ),
             ),
+          ],
+          const SizedBox(height: KivetoSpace.xs),
+          KivetoButton.primary(
+            label: l10n.accountProfileSave,
+            loading: _saving,
+            onPressed: () => unawaited(_save()),
           ),
         ],
-        const SizedBox(height: KivetoSpace.xs),
-        KivetoButton.primary(
-          label: l10n.accountProfileSave,
-          loading: _saving,
-          onPressed: () => unawaited(_save()),
-        ),
-      ],
+      ),
     );
   }
 }

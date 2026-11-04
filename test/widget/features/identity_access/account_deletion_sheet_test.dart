@@ -346,6 +346,36 @@ void main() {
     expect(session.status, SessionStatus.signedOut);
   });
 
+  for (final code in ['otp_expired', 'otp_attempts_exceeded']) {
+    testWidgets('a spent code ($code): 6 new digits leave « Supprimer mon '
+        'compte » disabled; nothing sent', (tester) async {
+      final backend = _backend()..on('POST', _deletion, problem(code, 422));
+      await open(tester, backend);
+      await requestCode(tester);
+      await tester.enterText(find.byType(TextField), '123456');
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(KivetoButton, 'Supprimer mon compte'),
+      );
+      await tester.pumpAndSettle();
+      expect(backend.requestsTo(_deletion), hasLength(1));
+
+      await tester.enterText(find.byType(TextField), '654321');
+      await tester.pumpAndSettle();
+
+      expect(_button(tester, 'Supprimer mon compte').onPressed, isNull);
+      expect(find.text('Recevoir un nouveau code'), findsOneWidget);
+      expect(find.textContaining('Renvoyer le code'), findsNothing);
+      await tester.tap(
+        find.widgetWithText(KivetoButton, 'Supprimer mon compte'),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      expect(backend.requestsTo(_deletion), hasLength(1));
+      expect(session.status, SessionStatus.signedIn);
+    });
+  }
+
   for (final step in ['before', 'after']) {
     testWidgets('« Garder mon compte » $step the code: closed, nothing '
         'deleted', (tester) async {

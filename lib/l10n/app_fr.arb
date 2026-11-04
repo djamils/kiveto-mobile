@@ -741,7 +741,7 @@
   },
   "identityAccountNewCode": "Recevoir un nouveau code",
   "@identityAccountNewCode": {
-    "description": "Account deletion sheet, step 2: the code expired, had too many attempts or is unknown; asks for a new code by SMS (a new challenge)."
+    "description": "Account deletion and e-mail change sheets, SMS code step: the code expired, had too many attempts or is unknown; asks for a new code by SMS (a new challenge)."
   },
   "identityAccountResendIn": "Renvoyer le code dans {time}",
   "@identityAccountResendIn": {
@@ -769,7 +769,7 @@
   },
   "identityEmailEdit": "Modifier l'adresse",
   "@identityEmailEdit": {
-    "description": "E-mail change sheet: back to the address field (a new SMS code is needed)."
+    "description": "E-mail change sheet: back to the address field; from the SMS code step the code already sent is kept (no new SMS), from the e-mail code step a new SMS code is needed."
   },
   "identityEmailDoneTitle": "Adresse e-mail vérifiée",
   "@identityEmailDoneTitle": {

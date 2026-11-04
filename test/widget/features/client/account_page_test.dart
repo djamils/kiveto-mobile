@@ -144,7 +144,10 @@ void main() {
     expect(find.text('Compte'), findsOneWidget);
     expect(find.text('JG'), findsOneWidget);
     expect(find.text('Julien Girard'), findsOneWidget);
-    expect(find.text('+33 6 •• •• •• 78'), findsOneWidget);
+    expect(
+      find.text('+33\u00a06\u00a0••\u00a0••\u00a0••\u00a078'),
+      findsOneWidget,
+    );
     expect(find.text('À vérifier'), findsNothing);
     expect(find.text('Aucune adresse renseignée'), findsOneWidget);
     expect(find.widgetWithText(KivetoButton, 'Modifier'), findsOneWidget);
@@ -276,7 +279,12 @@ void main() {
       );
     await pump(tester, backend);
 
-    expect(find.text('julien@example.com · +33 6 •• •• •• 78'), findsOneWidget);
+    expect(
+      find.text(
+        'julien@example.com · +33\u00a06\u00a0••\u00a0••\u00a0••\u00a078',
+      ),
+      findsOneWidget,
+    );
     expect(find.widgetWithText(StatusPill, 'À vérifier'), findsOneWidget);
     expect(find.text('Ajouter une adresse e-mail'), findsNothing);
 
@@ -308,7 +316,10 @@ void main() {
     expect(find.text('TM'), findsOneWidget);
     expect(find.text('Thierry Marchand'), findsOneWidget);
     expect(
-      find.text('thierry.marchand@orange.fr · +33 6 •• •• •• 80'),
+      find.text(
+        'thierry.marchand@orange.fr · '
+        '+33\u00a06\u00a0••\u00a0••\u00a0••\u00a080',
+      ),
       findsOneWidget,
     );
     expect(find.text('À vérifier'), findsNothing);
@@ -358,7 +369,12 @@ void main() {
 
     // No name: the phone, an avatar without initials.
     expect(find.text('?'), findsOneWidget);
-    expect(find.text('+33 6 •• •• •• 78'), findsNWidgets(2));
+    // The name falls back to the phone; the meta line keeps it unbroken.
+    expect(find.text('+33 6 •• •• •• 78'), findsOneWidget);
+    expect(
+      find.text('+33\u00a06\u00a0••\u00a0••\u00a0••\u00a078'),
+      findsOneWidget,
+    );
     expect(
       find.text('12 rue des Lices, Bât. B, 13006 Marseille'),
       findsOneWidget,
@@ -548,6 +564,57 @@ void main() {
         _tileOf(tester, ConsentKind.appointmentReminders, 'Email').value,
         isTrue,
       );
+    });
+
+    testWidgets('two kinds at once, the first refused: it goes back, '
+        'enabled; the second keeps the change asked for, still disabled, '
+        'until its own answer', (tester) async {
+      final marketing = Completer<PortalReply>();
+      final billing = Completer<PortalReply>();
+      final backend = _julienBackend()
+        ..onRequest('PUT', '$_parisConsents/marketing', (_) => marketing.future)
+        ..onRequest('PUT', '$_parisConsents/billing', (_) => billing.future);
+      await pump(tester, backend);
+
+      await tap(tester, _tile(ConsentKind.marketing, 'Email'));
+      await tester.pump();
+      await tap(tester, _tile(ConsentKind.billing, 'Email'));
+      await tester.pump();
+
+      marketing.complete(problem('service_unavailable', 503));
+      await tester.pumpAndSettle();
+
+      // Marketing as before the tap (Julien's: SMS only), enabled again.
+      expect(_tileOf(tester, ConsentKind.marketing, 'Email').value, isFalse);
+      expect(_tileOf(tester, ConsentKind.marketing, 'SMS').value, isTrue);
+      expect(
+        _tileOf(tester, ConsentKind.marketing, 'Email').onChanged,
+        isNotNull,
+      );
+      // Billing still shows the change asked for, still being saved.
+      expect(_tileOf(tester, ConsentKind.billing, 'Email').value, isTrue);
+      expect(_tileOf(tester, ConsentKind.billing, 'SMS').value, isTrue);
+      expect(_tileOf(tester, ConsentKind.billing, 'Email').onChanged, isNull);
+      expect(_tileOf(tester, ConsentKind.billing, 'SMS').onChanged, isNull);
+      expect(
+        find.text(
+          'Le service rencontre un problème. Réessayez dans un instant.',
+        ),
+        findsOneWidget,
+      );
+
+      billing.complete(_consentsWith('billing', ['email']));
+      await tester.pumpAndSettle();
+
+      // The server's answer: billing on e-mail only, enabled.
+      expect(_tileOf(tester, ConsentKind.billing, 'Email').value, isTrue);
+      expect(_tileOf(tester, ConsentKind.billing, 'SMS').value, isFalse);
+      expect(
+        _tileOf(tester, ConsentKind.billing, 'Email').onChanged,
+        isNotNull,
+      );
+      expect(_tileOf(tester, ConsentKind.marketing, 'Email').value, isFalse);
+      expect(_gets(backend, _me), 2);
     });
 
     testWidgets('marketing SMS off: an empty channel list', (tester) async {

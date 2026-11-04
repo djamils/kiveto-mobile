@@ -53,7 +53,11 @@ class ProfileCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      [?email, account.maskedPhone].join(' · '),
+                      // The masked phone stays on one line.
+                      [
+                        ?email,
+                        account.maskedPhone.replaceAll(' ', '\u00a0'),
+                      ].join(' · '),
                       style: KivetoText.bodySmall,
                     ),
                     if (unverified) ...[

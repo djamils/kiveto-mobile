@@ -1018,7 +1018,7 @@ abstract class AppLocalizations {
   /// **'Renvoyer le code'**
   String get identityAccountResend;
 
-  /// Account deletion sheet, step 2: the code expired, had too many attempts or is unknown; asks for a new code by SMS (a new challenge).
+  /// Account deletion and e-mail change sheets, SMS code step: the code expired, had too many attempts or is unknown; asks for a new code by SMS (a new challenge).
   ///
   /// In fr, this message translates to:
   /// **'Recevoir un nouveau code'**
@@ -1042,7 +1042,7 @@ abstract class AppLocalizations {
   /// **'Vérifier l\'adresse'**
   String get identityEmailVerifySubmit;
 
-  /// E-mail change sheet: back to the address field (a new SMS code is needed).
+  /// E-mail change sheet: back to the address field; from the SMS code step the code already sent is kept (no new SMS), from the e-mail code step a new SMS code is needed.
   ///
   /// In fr, this message translates to:
   /// **'Modifier l\'adresse'**

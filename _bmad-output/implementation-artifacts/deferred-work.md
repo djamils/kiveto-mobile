@@ -252,3 +252,9 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
   summary: A deleted (or signed-out) account leaves its `client.activeClinic.<accountId>` key in the platform preferences: `ActiveClinicStore` has no removal and `DeleteAccount` only closes the session; a cleanup needs a seam from identity_access to client (identity_access cannot import client).
   evidence: Build review (blind hunter), verified, low, pre-existing since slice 1 (its hand-over lists the per-account keys as never cleaned); the key holds a clinic id, not a secret.
+
+## Deferred from: code review of spec-client-account.md (2026-11-04)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
+  summary: The device-calendar conversion of the account's instants (`deviceDateOf`, `deviceTimeOf` in `lib/features/client/presentation/account_messages.dart`: « Export du … », « Disponible jusqu'au … à … », « Accordé le … », « rattachée le … ») cannot fail a test: every test instant is at midday UTC and CI runs in UTC, so dropping `.toLocal()` or the device offset passes `make ci`. Pin a non-UTC `TZ` (e.g. `Europe/Paris`) for the test step of `make ci` and add an instant near midnight UTC; patient's `deviceToday` has the same blind spot.
+  evidence: Code review (verification-gap layer), filed defer: `account_page_test.dart` and `account_sheets_test.dart` move every capture instant to `T12:00:00+00:00`; `.github/workflows/ci.yml` sets no `TZ`; there is no `flutter_test_config.dart`.
