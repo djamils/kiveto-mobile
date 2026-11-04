@@ -99,6 +99,20 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Opens the history sheet by its link (a span of the section's text).
+  Future<void> openHistory(WidgetTester tester) async {
+    final link = find.text(
+      'Historique de mes consentements',
+      findRichText: true,
+    );
+    await tester.ensureVisible(link);
+    await tester.pumpAndSettle();
+    await tester.tapOnText(
+      find.textRange.ofSubstring('Historique de mes consentements'),
+    );
+    await tester.pumpAndSettle();
+  }
+
   group('the profile sheet', () {
     testWidgets('prefilled; the names and the address in a merge patch; '
         'saved: closed, « Profil enregistré. », /me reloaded', (tester) async {
@@ -366,7 +380,7 @@ void main() {
         );
       await pump(tester, backend);
 
-      await open(tester, find.text('Historique de mes consentements'));
+      await openHistory(tester);
 
       // The sheet's title (the link stays behind it) and the clinic.
       expect(find.text('Historique de mes consentements'), findsNWidgets(2));
@@ -395,7 +409,7 @@ void main() {
         );
       await pump(tester, backend);
 
-      await open(tester, find.text('Historique de mes consentements'));
+      await openHistory(tester);
 
       expect(
         find.text('Accordé le 13 oct. 2026 · La clinique'),
@@ -441,7 +455,7 @@ void main() {
         );
       await pump(tester, backend);
 
-      await open(tester, find.text('Historique de mes consentements'));
+      await openHistory(tester);
 
       expect(
         find.text('Retiré au plus tard le 1 juil. 2020 · Reprise'),
@@ -457,7 +471,7 @@ void main() {
         _history,
         PortalReply.json('{"items":[],"nextCursor":null}'),
       );
-      await open(tester, find.text('Historique de mes consentements'));
+      await openHistory(tester);
 
       expect(find.text('Aucun changement enregistré.'), findsOneWidget);
     });
@@ -494,7 +508,7 @@ void main() {
         );
       await pump(tester, backend);
 
-      await open(tester, find.text('Historique de mes consentements'));
+      await openHistory(tester);
 
       final sheet = find.byType(ConsentHistorySheet);
       expect(
@@ -520,7 +534,7 @@ void main() {
         ..on('GET', _history, problem('service_unavailable', 503));
       await pump(tester, backend);
 
-      await open(tester, find.text('Historique de mes consentements'));
+      await openHistory(tester);
       expect(find.text('Service indisponible'), findsOneWidget);
 
       final page1 = jsonDecode(
@@ -617,7 +631,7 @@ void main() {
         expect(
           find.text(
             'Un fichier ZIP avec votre compte, vos cliniques, vos rendez-vous '
-            'et la liste de vos documents, disponible 48 h.',
+            'et la liste de vos documents, disponible 48\u00a0h.',
           ),
           findsOneWidget,
         );

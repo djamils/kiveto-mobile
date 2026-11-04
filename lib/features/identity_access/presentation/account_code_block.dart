@@ -18,6 +18,7 @@ class AccountCodeBlock extends StatelessWidget {
     super.key,
     this.errorText,
     this.busy = false,
+    this.resendable = true,
     this.onChanged,
     this.onCompleted,
   });
@@ -29,6 +30,9 @@ class AccountCodeBlock extends StatelessWidget {
 
   /// A request runs (a check, a resend): no resend.
   final bool busy;
+
+  /// False hides « Renvoyer le code » (the caller offers another way on).
+  final bool resendable;
   final ValueChanged<String>? onChanged;
 
   /// Called with the code once the 6 digits are typed.
@@ -50,21 +54,23 @@ class AccountCodeBlock extends StatelessWidget {
           onChanged: onChanged,
           onCompleted: onCompleted,
         ),
-        const SizedBox(height: KivetoSpace.sm),
-        ResendCountdown(
-          availableAt: resendAvailableAt,
-          builder: (context, remaining) {
-            final waiting = remaining > Duration.zero;
-            return KivetoTextButton(
-              label: waiting
-                  ? l10n.identityAccountResendIn(
-                      ResendCountdown.format(remaining),
-                    )
-                  : l10n.identityAccountResend,
-              onPressed: waiting || busy ? null : onResend,
-            );
-          },
-        ),
+        if (resendable) ...[
+          const SizedBox(height: KivetoSpace.sm),
+          ResendCountdown(
+            availableAt: resendAvailableAt,
+            builder: (context, remaining) {
+              final waiting = remaining > Duration.zero;
+              return KivetoTextButton(
+                label: waiting
+                    ? l10n.identityAccountResendIn(
+                        ResendCountdown.format(remaining),
+                      )
+                    : l10n.identityAccountResend,
+                onPressed: waiting || busy ? null : onResend,
+              );
+            },
+          ),
+        ],
       ],
     );
   }

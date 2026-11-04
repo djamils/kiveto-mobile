@@ -23,6 +23,9 @@ const _challenge = '01a1a364-f91f-7dd0-8637-861f9ac73106';
 const _resend = '$api/auth/otp/$_challenge/resend';
 const _phone = '+33 6 •• •• •• 40';
 
+/// [_phone] as the sentences show it: on one line.
+final String _shownPhone = _phone.replaceAll(' ', '\u00a0');
+
 /// 30 s before the `resendAvailableAt` of
 /// `me.deletion-request.otp.post.202.json`.
 final _beforeResend = DateTime.utc(2026, 11, 3, 21, 51, 6);
@@ -86,9 +89,9 @@ void main() {
     final backend = _backend();
     await open(tester, backend);
 
-    expect(find.text('Supprimer mon compte ?'), findsOneWidget);
+    expect(find.text('Supprimer mon compte\u00a0?'), findsOneWidget);
     const disabled =
-        'Votre compte est désactivé dès la confirmation : vous ne '
+        'Votre compte est désactivé dès la confirmation\u00a0: vous ne '
         'pourrez plus vous connecter.';
     const clinics =
         'Vos cliniques conservent votre dossier, vos factures et vos '
@@ -101,7 +104,7 @@ void main() {
       expect(find.textContaining(line), findsOneWidget);
     }
     expect(
-      find.text('Un code de confirmation va être envoyé au $_phone.'),
+      find.text('Un code de confirmation va être envoyé au $_shownPhone.'),
       findsOneWidget,
     );
     expect(find.widgetWithText(KivetoButton, 'Garder mon compte'), findsOne);
@@ -109,7 +112,10 @@ void main() {
     await requestCode(tester);
 
     expect(backend.requestsTo(_otp), hasLength(1));
-    expect(find.text('Saisissez le code envoyé au $_phone.'), findsOneWidget);
+    expect(
+      find.text('Saisissez le code envoyé au $_shownPhone.'),
+      findsOneWidget,
+    );
     expect(find.text('Code de confirmation'), findsOneWidget);
     expect(find.text('Renvoyer le code dans 0:30'), findsOneWidget);
     expect(_button(tester, 'Supprimer mon compte').onPressed, isNull);
@@ -129,10 +135,10 @@ void main() {
     });
     expect(session.status, SessionStatus.signedOut);
     expect(backend.requestsTo('$api/auth/logout'), isEmpty);
-    expect(find.text('Supprimer mon compte ?'), findsNothing);
+    expect(find.text('Supprimer mon compte\u00a0?'), findsNothing);
     expect(
       find.text(
-        'Votre demande de suppression est enregistrée : votre compte '
+        'Votre demande de suppression est enregistrée\u00a0: votre compte '
         'est désactivé.',
       ),
       findsOneWidget,
@@ -278,7 +284,10 @@ void main() {
       tester.widget<KivetoOtpField>(find.byType(KivetoOtpField)).errorText,
       isNull,
     );
-    expect(find.text('Saisissez le code envoyé au $_phone.'), findsOneWidget);
+    expect(
+      find.text('Saisissez le code envoyé au $_shownPhone.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('an expired code: « Recevoir un nouveau code » (still there '
@@ -301,6 +310,8 @@ void main() {
     await tester.enterText(find.byType(TextField), '1');
     await tester.pump();
     expect(find.text('Recevoir un nouveau code'), findsOneWidget);
+    // One way on: the resend of the spent challenge is gone.
+    expect(find.textContaining('Renvoyer le code'), findsNothing);
 
     backend.on('POST', _otp, problem('otp_rate_limited', 429));
     await tester.tap(find.text('Recevoir un nouveau code'));
@@ -321,6 +332,7 @@ void main() {
     await tester.tap(find.text('Recevoir un nouveau code'));
     await tester.pumpAndSettle();
     expect(find.text('Recevoir un nouveau code'), findsNothing);
+    expect(find.textContaining('Renvoyer le code'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), '654321');
     await tester.pumpAndSettle();
@@ -344,7 +356,7 @@ void main() {
       await tester.tap(find.text('Garder mon compte'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Supprimer mon compte ?'), findsNothing);
+      expect(find.text('Supprimer mon compte\u00a0?'), findsNothing);
       expect(backend.requestsTo(_deletion), isEmpty);
       expect(session.status, SessionStatus.signedIn);
     });

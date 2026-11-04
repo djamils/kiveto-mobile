@@ -377,6 +377,13 @@ void main() {
     });
   });
 
+  test('unbroken: a masked phone on one line', () {
+    expect(
+      unbroken('+33 6 •• •• •• 78'),
+      '+33\u00a06\u00a0••\u00a0••\u00a0••\u00a078',
+    );
+  });
+
   test('ResendCountdown.format: m:ss, seconds rounded up', () {
     expect(ResendCountdown.format(Duration.zero), '0:00');
     expect(ResendCountdown.format(const Duration(milliseconds: 23400)), '0:24');

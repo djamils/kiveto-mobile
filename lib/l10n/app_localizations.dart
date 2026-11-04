@@ -1603,7 +1603,7 @@ abstract class AppLocalizations {
   /// Data export sheet: what an export holds.
   ///
   /// In fr, this message translates to:
-  /// **'Un fichier ZIP avec votre compte, vos cliniques, vos rendez-vous et la liste de vos documents, disponible 48 h.'**
+  /// **'Un fichier ZIP avec votre compte, vos cliniques, vos rendez-vous et la liste de vos documents, disponible 48 h.'**
   String get accountExportSubtitle;
 
   /// Data export sheet: an export, by the day it was asked for.

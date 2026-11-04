@@ -181,7 +181,7 @@ class _AccountDeletionSheetState extends ConsumerState<AccountDeletionSheet> {
           warnings,
           const SizedBox(height: KivetoSpace.xxs),
           Text(
-            l10n.identityDeletionCodeWillBeSent(widget.maskedPhone),
+            l10n.identityDeletionCodeWillBeSent(unbroken(widget.maskedPhone)),
             style: KivetoText.body.copyWith(color: KivetoColors.inkSecondary),
           ),
           if (requestError != null)
@@ -206,7 +206,7 @@ class _AccountDeletionSheetState extends ConsumerState<AccountDeletionSheet> {
     }
     return KivetoSheet(
       title: l10n.identityDeletionTitle,
-      subtitle: l10n.identityAccountCodeSentTo(widget.maskedPhone),
+      subtitle: l10n.identityAccountCodeSentTo(unbroken(widget.maskedPhone)),
       children: [
         warnings,
         const SizedBox(height: KivetoSpace.xxs),
@@ -215,6 +215,8 @@ class _AccountDeletionSheetState extends ConsumerState<AccountDeletionSheet> {
           resendAvailableAt: challenge.resendAvailableAt,
           errorText: _codeError,
           busy: _busy || _resending,
+          // A spent code: « Recevoir un nouveau code » is the one way on.
+          resendable: !_codeSpent,
           onResend: () => unawaited(_resend()),
           // The 6th digit only enables the button: a deletion is never
           // sent without its tap.

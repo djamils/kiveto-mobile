@@ -195,14 +195,15 @@ void main() {
     }
     expect(
       find.text(
-        'Vaccins, antiparasitaires, contrôles. Accordé le 3 oct. 2026.',
+        'Vaccins, antiparasitaires, contrôles. '
+        'Accordé le 3\u00a0oct.\u00a02026.',
       ),
       findsOneWidget,
     );
     expect(
       find.text(
         'Avis de factures et de paiements. Toujours envoyés\u00a0: '
-        'choisissez au moins un canal. Accordé le 2 sept. 2026.',
+        'choisissez au moins un canal. Accordé le 2\u00a0sept.\u00a02026.',
       ),
       findsOneWidget,
     );
@@ -212,7 +213,7 @@ void main() {
       expect(_tileOf(tester, kind, 'SMS').onChanged, isNotNull);
     }
     expect(
-      find.widgetWithText(KivetoLinkButton, 'Historique de mes consentements'),
+      find.widgetWithText(KivetoInlineLinks, 'Historique de mes consentements'),
       findsOneWidget,
     );
 
@@ -760,7 +761,10 @@ void main() {
 
     expect(find.text('Supprimer mon compte\u00a0?'), findsOneWidget);
     expect(
-      find.text('Un code de confirmation va être envoyé au +33 6 •• •• •• 78.'),
+      find.text(
+        'Un code de confirmation va être envoyé au '
+        '+33\u00a06\u00a0••\u00a0••\u00a0••\u00a078.',
+      ),
       findsOneWidget,
     );
   });

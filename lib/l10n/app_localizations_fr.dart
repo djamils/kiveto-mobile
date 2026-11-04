@@ -906,7 +906,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get accountExportSubtitle =>
-      'Un fichier ZIP avec votre compte, vos cliniques, vos rendez-vous et la liste de vos documents, disponible 48 h.';
+      'Un fichier ZIP avec votre compte, vos cliniques, vos rendez-vous et la liste de vos documents, disponible 48 h.';
 
   @override
   String accountExportRow(String date) {

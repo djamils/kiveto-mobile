@@ -71,15 +71,22 @@ class ConsentsSection extends ConsumerWidget {
         body,
         if (clinicId != null) ...[
           const SizedBox(height: KivetoSpace.m),
-          KivetoLinkButton(
-            label: l10n.accountConsentsHistoryLink,
-            onPressed: () => unawaited(
-              showConsentHistorySheet(
-                context,
-                clinicId: clinicId,
-                clinicName: clinicName,
+          // Mockup 06: a plain 13/600 link, left-aligned.
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: KivetoInlineLinks([
+              InlinePart.link(
+                l10n.accountConsentsHistoryLink,
+                underline: false,
+                onTap: () => unawaited(
+                  showConsentHistorySheet(
+                    context,
+                    clinicId: clinicId,
+                    clinicName: clinicName,
+                  ),
+                ),
               ),
-            ),
+            ]),
           ),
         ],
       ],

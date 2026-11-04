@@ -57,6 +57,10 @@ bool isEmailRefused(Object error) => switch (error) {
   _ => false,
 };
 
+/// [text] with no-break spaces: a masked phone (« +33 6 •• •• •• 78 »)
+/// stays on one line in a sentence.
+String unbroken(String text) => text.replaceAll(' ', '\u00a0');
+
 /// Whether [error] means the grant or the request of the flow is gone and
 /// the user must start again from the welcome screen.
 bool isRestartFailure(Object error) => switch (error) {

@@ -294,7 +294,7 @@ class _EmailChangeSheetState extends ConsumerState<EmailChangeSheet> {
             ),
             const SizedBox(height: KivetoSpace.xs),
             Text(
-              l10n.identityEmailCodeWillBeSent(widget.maskedPhone),
+              l10n.identityEmailCodeWillBeSent(unbroken(widget.maskedPhone)),
               style: KivetoText.body.copyWith(color: KivetoColors.inkSecondary),
             ),
             if (requestError != null) _ErrorLine(requestError),
@@ -311,7 +311,9 @@ class _EmailChangeSheetState extends ConsumerState<EmailChangeSheet> {
       case _Step.smsCode:
         return KivetoSheet(
           title: title,
-          subtitle: l10n.identityAccountCodeSentTo(widget.maskedPhone),
+          subtitle: l10n.identityAccountCodeSentTo(
+            unbroken(widget.maskedPhone),
+          ),
           children: [
             AccountCodeBlock(
               controller: _code,

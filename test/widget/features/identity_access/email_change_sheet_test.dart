@@ -28,6 +28,9 @@ const _emailChallenge = '01a1a364-15fd-71ad-9a43-0146dbcad996';
 const _resend = '$api/auth/otp/$_smsChallenge/resend';
 const _phone = '+33 6 •• •• •• 78';
 
+/// [_phone] as the sentences show it: on one line.
+final String _shownPhone = _phone.replaceAll(' ', '\u00a0');
+
 /// 30 s before the `resendAvailableAt` of `me.email-change.otp.post.202.json`.
 final _beforeResend = DateTime.utc(2026, 11, 3, 21, 49, 53);
 
@@ -131,7 +134,7 @@ void main() {
     expect(find.text('Ajouter une adresse e-mail'), findsOneWidget);
     expect(find.text('Adresse e-mail'), findsOneWidget);
     expect(
-      find.text('Pour confirmer, un code va être envoyé au $_phone.'),
+      find.text('Pour confirmer, un code va être envoyé au $_shownPhone.'),
       findsOneWidget,
     );
     expect(_button(tester, 'Recevoir un code').onPressed, isNull);
@@ -140,7 +143,10 @@ void main() {
     expect(_button(tester, 'Recevoir un code').onPressed, isNull);
     await requestCode(tester, ' zoe.essai@example.com ');
 
-    expect(find.text('Saisissez le code envoyé au $_phone.'), findsOneWidget);
+    expect(
+      find.text('Saisissez le code envoyé au $_shownPhone.'),
+      findsOneWidget,
+    );
     expect(find.text('Code de confirmation'), findsOneWidget);
     expect(find.text('Valable 10 minutes.'), findsOneWidget);
     expect(find.text('Renvoyer le code dans 0:30'), findsOneWidget);
@@ -168,7 +174,7 @@ void main() {
     expect(find.text('Adresse e-mail vérifiée'), findsOneWidget);
     expect(
       find.text(
-        'zoe.essai@example.com est vérifiée : vous pourrez y recevoir '
+        'zoe.essai@example.com est vérifiée\u00a0: vous pourrez y recevoir '
         'vos codes de connexion.',
       ),
       findsOneWidget,
@@ -293,7 +299,10 @@ void main() {
     await tester.tap(find.text('Recevoir un code'));
     await tester.pumpAndSettle();
     expect(backend.requestsTo(_otp), hasLength(1));
-    expect(find.text('Saisissez le code envoyé au $_phone.'), findsOneWidget);
+    expect(
+      find.text('Saisissez le code envoyé au $_shownPhone.'),
+      findsOneWidget,
+    );
     expect(_codeError(tester), isNull);
 
     backend.on(
@@ -330,7 +339,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(backend.requestsTo(_otp), hasLength(2));
-    expect(find.text('Saisissez le code envoyé au $_phone.'), findsOneWidget);
+    expect(
+      find.text('Saisissez le code envoyé au $_shownPhone.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('the code request refused: its message under the text; the '

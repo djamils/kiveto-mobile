@@ -52,8 +52,10 @@ String consentDescription(AppLocalizations l10n, Consent consent) {
   };
   final grantedAt = consent.grantedAt;
   if (!consent.granted || grantedAt == null) return body;
+  // « 30 oct. 2026 » stays on one line.
   final granted = l10n.accountConsentGrantedOn(
-    KivetoFormat.dayMonthYear(deviceDateOf(grantedAt)),
+    KivetoFormat.dayMonthYear(deviceDateOf(grantedAt))
+        .replaceAll(' ', '\u00a0'),
   );
   return '$body $granted';
 }
