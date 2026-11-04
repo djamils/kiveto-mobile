@@ -200,6 +200,31 @@ void main() {
     expect(exits, ['sign-in']);
   });
 
+  for (final signedIn in [false, true]) {
+    testWidgets('the system back (${signedIn ? 'signed in' : 'signed out'}) '
+        'leaves through ${signedIn ? 'the home' : 'the sign-in'}, not out '
+        'of the app', (tester) async {
+      final (exits, _) = await _pump(tester, signedIn: signedIn);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(InvitationPage), findsOneWidget);
+      expect(exits, [if (signedIn) 'home' else 'sign-in']);
+    });
+  }
+
+  testWidgets('a missing link: the system back leaves through the sign-in', (
+    tester,
+  ) async {
+    final (exits, _) = await _pump(tester, token: null);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(exits, ['sign-in']);
+  });
+
   testWidgets('signed in: no "Rattacher cette clinique", a way back home', (
     tester,
   ) async {
