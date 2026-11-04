@@ -210,12 +210,13 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
                   onCancel: () => _cancel(clinicId, appointment),
                   onFillQuestionnaire: () =>
                       widget.onFillQuestionnaire(context, appointment.id.value),
-                  onAddToCalendar: () => unawaited(
+                  onAddToCalendar: (origin) => unawaited(
                     shareAppointmentCalendar(
                       context,
                       ref,
                       clinicId: clinicId,
                       appointment: appointment,
+                      origin: origin,
                     ),
                   ),
                 );

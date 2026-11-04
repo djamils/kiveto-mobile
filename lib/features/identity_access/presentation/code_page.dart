@@ -194,132 +194,137 @@ class _CodePageState extends ConsumerState<CodePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(
-                    KivetoSpace.authGutter,
-                    KivetoSpace.xl,
-                    KivetoSpace.authGutter,
-                    KivetoSpace.xl,
-                  ),
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: KivetoIconButton.back(onPressed: _back),
+                // iOS number pads have no return key: a drag closes them
+                // (the submit stays pinned under the list, above the keyboard).
+                child: KeyboardDismissOnDrag(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      KivetoSpace.authGutter,
+                      KivetoSpace.xl,
+                      KivetoSpace.authGutter,
+                      KivetoSpace.xl,
                     ),
-                    const SizedBox(height: KivetoSpace.xl5),
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        l10n.screenSignInCodeTitle,
-                        style: KivetoText.pageTitle.copyWith(height: 1.15),
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: KivetoIconButton.back(onPressed: _back),
                       ),
-                    ),
-                    const SizedBox(height: KivetoSpace.sm),
-                    Text.rich(
-                      TextSpan(
-                        style: KivetoText.bodyLarge,
-                        children: [
-                          if (at < 0)
-                            TextSpan(text: sentence)
-                          else ...[
-                            TextSpan(text: sentence.substring(0, at)),
-                            TextSpan(
-                              text: phone,
-                              style: const TextStyle(
-                                color: KivetoColors.ink,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            TextSpan(
-                              text: sentence.substring(at + phone.length),
-                            ),
-                          ],
-                          const TextSpan(text: ' '),
-                          TextSpan(
-                            text: l10n.identityCodeEdit,
-                            style: const TextStyle(
-                              color: KivetoColors.brand,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
-                              decorationColor: KivetoColors.brand,
-                            ),
-                            recognizer: _edit,
-                          ),
-                        ],
+                      const SizedBox(height: KivetoSpace.xl5),
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          l10n.screenSignInCodeTitle,
+                          style: KivetoText.pageTitle.copyWith(height: 1.15),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: KivetoSpace.xl5),
-                    KivetoOtpField(
-                      legend: l10n.identityCodeLegend,
-                      helpText: l10n.identityCodeHelp,
-                      errorText: _codeError,
-                      controller: _code,
-                      autofocus: true,
-                      onChanged: (_) => setState(() => _codeError = null),
-                      onCompleted: (code) => unawaited(_verify(code)),
-                    ),
-                    const SizedBox(height: KivetoSpace.xl5),
-                    ResendCountdown(
-                      availableAt: flow.challenge.resendAvailableAt,
-                      builder: (context, remaining) {
-                        final waiting = remaining > Duration.zero;
-                        final enabled = !waiting && !_resending && !_verifying;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                      const SizedBox(height: KivetoSpace.sm),
+                      Text.rich(
+                        TextSpan(
+                          style: KivetoText.bodyLarge,
                           children: [
-                            KivetoTextButton(
-                              label: waiting
-                                  ? l10n.identityCodeResendSmsIn(
-                                      ResendCountdown.format(remaining),
-                                    )
-                                  : l10n.identityCodeResendSms,
-                              onPressed: enabled
-                                  ? () => unawaited(_resend(OtpChannel.sms))
-                                  : null,
-                            ),
-                            const SizedBox(height: KivetoSpace.xs),
-                            KivetoTextButton(
-                              label: l10n.identityCodeResendEmail,
-                              onPressed: enabled
-                                  ? () => unawaited(_resend(OtpChannel.email))
-                                  : null,
-                            ),
-                            if (notice != null) ...[
-                              const SizedBox(height: KivetoSpace.xs),
-                              Semantics(
-                                liveRegion: true,
-                                child: Text(
-                                  notice,
-                                  style: KivetoText.bodySmall,
+                            if (at < 0)
+                              TextSpan(text: sentence)
+                            else ...[
+                              TextSpan(text: sentence.substring(0, at)),
+                              TextSpan(
+                                text: phone,
+                                style: const TextStyle(
+                                  color: KivetoColors.ink,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
+                              TextSpan(
+                                text: sentence.substring(at + phone.length),
+                              ),
                             ],
-                            if (resendError != null) ...[
+                            const TextSpan(text: ' '),
+                            TextSpan(
+                              text: l10n.identityCodeEdit,
+                              style: const TextStyle(
+                                color: KivetoColors.brand,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                                decorationColor: KivetoColors.brand,
+                              ),
+                              recognizer: _edit,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: KivetoSpace.xl5),
+                      KivetoOtpField(
+                        legend: l10n.identityCodeLegend,
+                        helpText: l10n.identityCodeHelp,
+                        errorText: _codeError,
+                        controller: _code,
+                        autofocus: true,
+                        onChanged: (_) => setState(() => _codeError = null),
+                        onCompleted: (code) => unawaited(_verify(code)),
+                      ),
+                      const SizedBox(height: KivetoSpace.xl5),
+                      ResendCountdown(
+                        availableAt: flow.challenge.resendAvailableAt,
+                        builder: (context, remaining) {
+                          final waiting = remaining > Duration.zero;
+                          final enabled =
+                              !waiting && !_resending && !_verifying;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              KivetoTextButton(
+                                label: waiting
+                                    ? l10n.identityCodeResendSmsIn(
+                                        ResendCountdown.format(remaining),
+                                      )
+                                    : l10n.identityCodeResendSms,
+                                onPressed: enabled
+                                    ? () => unawaited(_resend(OtpChannel.sms))
+                                    : null,
+                              ),
                               const SizedBox(height: KivetoSpace.xs),
-                              Semantics(
-                                liveRegion: true,
-                                child: Text(
-                                  resendError,
-                                  style: KivetoText.bodySmall.copyWith(
-                                    color: KivetoColors.danger,
+                              KivetoTextButton(
+                                label: l10n.identityCodeResendEmail,
+                                onPressed: enabled
+                                    ? () => unawaited(_resend(OtpChannel.email))
+                                    : null,
+                              ),
+                              if (notice != null) ...[
+                                const SizedBox(height: KivetoSpace.xs),
+                                Semantics(
+                                  liveRegion: true,
+                                  child: Text(
+                                    notice,
+                                    style: KivetoText.bodySmall,
                                   ),
                                 ),
-                              ),
+                              ],
+                              if (resendError != null) ...[
+                                const SizedBox(height: KivetoSpace.xs),
+                                Semantics(
+                                  liveRegion: true,
+                                  child: Text(
+                                    resendError,
+                                    style: KivetoText.bodySmall.copyWith(
+                                      color: KivetoColors.danger,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (_restartable)
+                                KivetoTextButton(
+                                  label: l10n.identityRestart,
+                                  onPressed: _back,
+                                ),
+                              if (!waiting) ...[
+                                const SizedBox(height: KivetoSpace.sm),
+                                KivetoFootnote(l10n.identityCodeNotReceived),
+                              ],
                             ],
-                            if (_restartable)
-                              KivetoTextButton(
-                                label: l10n.identityRestart,
-                                onPressed: _back,
-                              ),
-                            if (!waiting) ...[
-                              const SizedBox(height: KivetoSpace.sm),
-                              KivetoFootnote(l10n.identityCodeNotReceived),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Padding(

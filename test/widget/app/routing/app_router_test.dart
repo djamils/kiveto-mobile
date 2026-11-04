@@ -1,9 +1,11 @@
 // The redirects (pure table, then on a pumped router), the invitation deep
-// link, the shell: tabs with their own stack, badge and initials seams.
+// link (and the iOS dev link the engine pushes), the shell: tabs with their
+// own stack, badge and initials seams.
 
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiveto_mobile/app/routing/app_router.dart';
@@ -321,6 +323,56 @@ void main() {
         );
 
         expect(_location(container), '/invitation#t=abc');
+        expect(find.byType(InvitationPage), findsOneWidget);
+        expect(
+          find.text('Invitation : Clinique Vétérinaire de Paris'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('abc'), findsNothing);
+        final lookup = backend
+            .requestsTo('/api/portal/v1/invitations/lookup')
+            .single;
+        expect(utf8.decode(lookup.body), '{"token":"abc"}');
+        expect(lookup.uri.toString(), isNot(contains('abc')));
+      });
+
+      testWidgets('the iOS dev link (${signedIn ? 'signed in' : 'signed '
+                    'out'}): the engine pushes the whole URL '
+          'kiveto-dev://portal.kiveto.local/invitation#t=abc, the invitation '
+          'page reads its token, sent in the lookup body only, never '
+          'shown', (tester) async {
+        final backend = FakePortalBackend()
+          ..on(
+            'POST',
+            '/api/portal/v1/invitations/lookup',
+            PortalReply.fixture('invitations.lookup.post.200.json'),
+          )
+          ..on(
+            'POST',
+            '/api/portal/v1/invitations/otp',
+            PortalReply.fixture('invitations.otp.post.202.json', status: 202),
+          );
+        await pumpKivetoApp(
+          tester,
+          session: await memorySession(signedIn ? pair('A') : null),
+          backend: backend,
+        );
+        expect(find.byType(InvitationPage), findsNothing);
+
+        // What the iOS engine sends for a URL opened in the app (cold or
+        // warm): `location` is the URL's absoluteString.
+        await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+          SystemChannels.navigation.name,
+          SystemChannels.navigation.codec.encodeMethodCall(
+            const MethodCall('pushRouteInformation', <String, Object?>{
+              'location': 'kiveto-dev://portal.kiveto.local/invitation#t=abc',
+              'state': null,
+            }),
+          ),
+          (_) {},
+        );
+        await tester.pumpAndSettle();
+
         expect(find.byType(InvitationPage), findsOneWidget);
         expect(
           find.text('Invitation : Clinique Vétérinaire de Paris'),

@@ -1,1 +1,11 @@
 #include "Generated.xcconfig"
+
+// Debug builds only (the Runner's Debug configuration): the dev URL scheme
+// of the invitation link, which Info.plist registers as
+// $(KIVETO_DEV_URL_SCHEME). iOS opens http(s) links in an app through
+// universal links only, so the simulator opens screen 0 with
+//   xcrun simctl openurl booted "kiveto-dev://portal.kiveto.local/invitation#t=<token>"
+// The iOS counterpart of android/app/src/debug/AndroidManifest.xml.
+// Release.xcconfig (Release and Profile) leaves the variable undefined:
+// those builds register no scheme.
+KIVETO_DEV_URL_SCHEME = kiveto-dev

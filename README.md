@@ -33,7 +33,7 @@ Dans Git Bash sous Windows, dans un terminal sous macOS :
 git clone https://github.com/djamils/kiveto-mobile.git
 cd kiveto-mobile
 make doctor     # vérifie les prérequis et affiche comment corriger chacun
-make install    # Flutter épinglé (FVM), dépendances, config/env/dev.json
+make install    # Flutter épinglé (FVM), dépendances, config/env/dev.json (Android) et dev.ios.json (iOS)
 make start      # lance l'app ; démarre le premier émulateur si aucun appareil ne tourne
 ```
 

@@ -27,6 +27,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/keyboard.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 
@@ -129,6 +130,69 @@ void main() {
     await tester.tap(finder);
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'iOS: the note has no dismiss key, a drag on the page closes the '
+    'keyboard',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pump(tester, _backend());
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.byType(KivetoTextField),
+        from: find.text('Ça va mieux'),
+      );
+    },
+  );
+
+  testWidgets(
+    'iOS: a drag that scrolls the text of the note keeps the keyboard; a '
+    'drag on the page closes it',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pump(tester, _backend());
+
+      await expectTextScrollKeepsKeyboard(
+        tester,
+        field: find.byType(KivetoTextField),
+        from: find.text('Ça va mieux'),
+      );
+    },
+  );
+
+  testWidgets(
+    'iOS: a form that fits (a tall screen) still closes the keyboard on a '
+    'drag (always-scrollable physics)',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pump(tester, _backend());
+      tester.view.physicalSize = const Size(390 * 3, 2600 * 3);
+      addTearDown(tester.view.resetPhysicalSize);
+      await tester.pumpAndSettle();
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.byType(KivetoTextField),
+        from: find.text('Ça va mieux'),
+        beforeDrag: () => expect(
+          tester
+              .state<ScrollableState>(
+                find
+                    .descendant(
+                      of: find.byType(KeyboardDismissOnDrag),
+                      matching: find.byType(Scrollable),
+                    )
+                    .first,
+              )
+              .position
+              .maxScrollExtent,
+          0,
+          reason: 'the form fits: nothing to scroll',
+        ),
+      );
+    },
+  );
 
   testWidgets('ORD-36 (capture): the header, its line read-only, the '
       'conditions, the note and the footnote; « Envoyer la demande » once a '

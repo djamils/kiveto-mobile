@@ -133,93 +133,96 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
       backgroundColor: KivetoColors.surface,
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  KivetoSpace.authGutter,
-                  KivetoSpace.xl7,
-                  KivetoSpace.authGutter,
-                  kivetoBottomPadding(context, 28),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: KivetoBrandLockup(),
-                        ),
-                        const SizedBox(height: KivetoSpace.xl7),
-                        Semantics(
-                          header: true,
-                          child: Text(
-                            l10n.identityWelcomeTitle,
-                            style: KivetoText.display,
+        // iOS phone and number pads have no return key: a drag closes them.
+        child: KeyboardDismissOnDrag(
+          child: CustomScrollView(
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    KivetoSpace.authGutter,
+                    KivetoSpace.xl7,
+                    KivetoSpace.authGutter,
+                    kivetoBottomPadding(context, 28),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: KivetoBrandLockup(),
                           ),
-                        ),
-                        const SizedBox(height: KivetoSpace.m),
-                        Text(
-                          l10n.identityWelcomeIntro,
-                          style: KivetoText.bodyLarge,
-                        ),
-                        const SizedBox(height: KivetoSpace.xl7),
-                        KivetoPhoneField(
-                          label: l10n.identityPhoneLabel,
-                          controller: _phone,
-                          countryCode: _country.code,
-                          onCountryTap: () => unawaited(_pickCountry()),
-                          hintText: l10n.identityPhoneHint,
-                          helpText: l10n.identityPhoneHelp,
-                          errorText: _error,
-                          inputFormatters: [
-                            PhoneInputFormatter(
-                              tenDigitPlan: _country.tenDigitPlan,
-                              countryCode: _country.code,
+                          const SizedBox(height: KivetoSpace.xl7),
+                          Semantics(
+                            header: true,
+                            child: Text(
+                              l10n.identityWelcomeTitle,
+                              style: KivetoText.display,
                             ),
-                          ],
-                          onChanged: (_) => setState(() => _error = null),
-                          onSubmitted: (_) => unawaited(_submit()),
-                        ),
-                        const SizedBox(height: KivetoSpace.l),
-                        KivetoButton.primary(
-                          label: l10n.identityRequestCode,
-                          loading: _sending,
-                          onPressed: _complete
-                              ? () => unawaited(_submit())
-                              : null,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: KivetoSpace.xl5),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        KivetoCallout.info(
-                          title: l10n.identityInvitationBoxTitle,
-                          body: l10n.identityInvitationBoxBody,
-                          actionLabel: l10n.identityInvitationBoxAction,
-                          onAction: () => unawaited(_openInvitationLink()),
-                        ),
-                        if (onKitGallery != null) ...[
-                          const SizedBox(height: KivetoSpace.sm),
-                          KivetoTextButton(
-                            label: l10n.welcomeKitGalleryLink,
-                            onPressed: () => onKitGallery(context),
+                          ),
+                          const SizedBox(height: KivetoSpace.m),
+                          Text(
+                            l10n.identityWelcomeIntro,
+                            style: KivetoText.bodyLarge,
+                          ),
+                          const SizedBox(height: KivetoSpace.xl7),
+                          KivetoPhoneField(
+                            label: l10n.identityPhoneLabel,
+                            controller: _phone,
+                            countryCode: _country.code,
+                            onCountryTap: () => unawaited(_pickCountry()),
+                            hintText: l10n.identityPhoneHint,
+                            helpText: l10n.identityPhoneHelp,
+                            errorText: _error,
+                            inputFormatters: [
+                              PhoneInputFormatter(
+                                tenDigitPlan: _country.tenDigitPlan,
+                                countryCode: _country.code,
+                              ),
+                            ],
+                            onChanged: (_) => setState(() => _error = null),
+                            onSubmitted: (_) => unawaited(_submit()),
+                          ),
+                          const SizedBox(height: KivetoSpace.l),
+                          KivetoButton.primary(
+                            label: l10n.identityRequestCode,
+                            loading: _sending,
+                            onPressed: _complete
+                                ? () => unawaited(_submit())
+                                : null,
                           ),
                         ],
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: KivetoSpace.xl5),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          KivetoCallout.info(
+                            title: l10n.identityInvitationBoxTitle,
+                            body: l10n.identityInvitationBoxBody,
+                            actionLabel: l10n.identityInvitationBoxAction,
+                            onAction: () => unawaited(_openInvitationLink()),
+                          ),
+                          if (onKitGallery != null) ...[
+                            const SizedBox(height: KivetoSpace.sm),
+                            KivetoTextButton(
+                              label: l10n.welcomeKitGalleryLink,
+                              onPressed: () => onKitGallery(context),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

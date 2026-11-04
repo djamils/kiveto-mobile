@@ -1,6 +1,6 @@
-// Test doubles shared by the suites: a token storage in memory, a fixed
-// clock, a secure storage that fails, an active clinic store in memory, and
-// the real app pumped with them.
+// Test doubles shared by the suites: a token storage in memory, an install
+// marker in memory, a fixed clock, a secure storage that fails, an active
+// clinic store in memory, and the real app pumped with them.
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +15,7 @@ import 'package:kiveto_mobile/app/theme/kiveto_theme.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/network/api_config.dart';
 import 'package:kiveto_mobile/core/network/portal_http.dart';
+import 'package:kiveto_mobile/core/security/reinstall_guard.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/core/security/token_pair.dart';
 import 'package:kiveto_mobile/core/security/token_storage.dart';
@@ -63,6 +64,43 @@ final class InMemoryTokenStorage implements TokenStorage {
     if (failing) {
       throw PlatformException(code: 'storage', message: 'unavailable');
     }
+  }
+}
+
+/// An [InstallMarker] in memory: [present] once created; [failingRead] and
+/// [failingWrite] make [exists] and [create] throw, like unavailable
+/// platform preferences.
+final class InMemoryInstallMarker implements InstallMarker {
+  new({
+    this.present = false,
+    this.failingRead = false,
+    this.failingWrite = false,
+  });
+
+  bool present;
+  bool failingRead;
+  bool failingWrite;
+
+  /// How many reads and writes reached the marker.
+  int reads = 0;
+  int creates = 0;
+
+  @override
+  Future<bool> exists() async {
+    reads++;
+    if (failingRead) {
+      throw PlatformException(code: 'preferences', message: 'unavailable');
+    }
+    return present;
+  }
+
+  @override
+  Future<void> create() async {
+    creates++;
+    if (failingWrite) {
+      throw PlatformException(code: 'preferences', message: 'unavailable');
+    }
+    present = true;
   }
 }
 

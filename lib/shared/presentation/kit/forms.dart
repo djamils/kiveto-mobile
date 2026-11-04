@@ -232,6 +232,36 @@ class KivetoTextField extends StatelessWidget {
   );
 }
 
+/// Closes the keyboard when the user drags [child], a scroll view: iOS
+/// phone, number and multiline pads have no key that closes them.
+///
+/// Only [child]'s own scrolling counts (notification depth 0): a drag that
+/// scrolls the text of a multiline field inside it keeps the keyboard,
+/// unlike `ScrollViewKeyboardDismissBehavior.onDrag`, which reacts to any
+/// nested scrollable. [child] must accept the drag: a view whose content
+/// may fit needs always-scrollable physics.
+class KeyboardDismissOnDrag extends StatelessWidget {
+  const new({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      NotificationListener<ScrollUpdateNotification>(
+        onNotification: (notification) {
+          final scope = FocusScope.of(context);
+          if (notification.depth == 0 &&
+              notification.dragDetails != null &&
+              !scope.hasPrimaryFocus &&
+              scope.hasFocus) {
+            FocusManager.instance.primaryFocus?.unfocus();
+          }
+          return false;
+        },
+        child: child,
+      );
+}
+
 /// C-18d: the search field, radius 12, a leading search glyph; its label
 /// is for screen readers only.
 class KivetoSearchField extends StatelessWidget {

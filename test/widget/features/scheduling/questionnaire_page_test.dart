@@ -24,6 +24,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fakes.dart';
+import '../../../support/keyboard.dart';
 import '../../../support/portal_api/fake_portal_backend.dart';
 import '../../../support/portal_api/portal_http_harness.dart';
 import 'scheduling_support.dart';
@@ -56,6 +57,16 @@ Finder _chip(String label) => find.widgetWithText(KivetoChoiceChip, label);
 
 Finder _sendButton() =>
     find.widgetWithText(KivetoButton, 'Envoyer à la clinique');
+
+/// The scrollable of the page itself (FlowScaffold's).
+ScrollableState _pageScroll(WidgetTester tester) => tester.state(
+  find
+      .descendant(
+        of: find.byType(KeyboardDismissOnDrag),
+        matching: find.byType(Scrollable),
+      )
+      .first,
+);
 
 void main() {
   late List<String> exits;
@@ -181,6 +192,62 @@ void main() {
     expect(selected(tester, 'Toux'), isFalse);
     expect(selected(tester, 'Boiterie'), isFalse);
   });
+
+  testWidgets(
+    'iOS: a multiline field has no dismiss key, a drag on the page (the '
+    'flow scaffold) closes the keyboard',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pump(tester, _backend());
+      await tapVisible(tester, _chip('Oui'));
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.widgetWithText(KivetoTextField, 'Lequel\u00a0?'),
+        from: _chip('Non'),
+      );
+    },
+  );
+
+  testWidgets(
+    'iOS: a drag that scrolls the text of « Lequel ? » keeps the keyboard; '
+    'a drag on the page closes it',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pump(tester, _backend());
+      await tapVisible(tester, _chip('Oui'));
+
+      await expectTextScrollKeepsKeyboard(
+        tester,
+        field: find.widgetWithText(KivetoTextField, 'Lequel ?'),
+        from: _chip('Non'),
+      );
+    },
+  );
+
+  testWidgets(
+    'iOS: a page that fits (a tall screen) still closes the keyboard on a '
+    'drag (always-scrollable physics)',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      await pump(tester, _backend());
+      tester.view.physicalSize = const Size(390 * 3, 2600 * 3);
+      addTearDown(tester.view.resetPhysicalSize);
+      await tester.pumpAndSettle();
+      await tapVisible(tester, _chip('Oui'));
+
+      await expectDragClosesKeyboard(
+        tester,
+        field: find.widgetWithText(KivetoTextField, 'Lequel ?'),
+        from: _chip('Non'),
+        beforeDrag: () => expect(
+          _pageScroll(tester).position.maxScrollExtent,
+          0,
+          reason: 'the page fits: nothing to scroll',
+        ),
+      );
+    },
+  );
 
   testWidgets('« Oui » asks « Lequel ? »; « Non » hides it', (tester) async {
     await pump(tester, _backend());

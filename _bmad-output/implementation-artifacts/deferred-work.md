@@ -109,10 +109,12 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Build and run phase 5 on iOS (simulator from macOS): the `AppIcon` set resized from the 1024 launcher (no alpha), DM Sans with its optical size, the secure storage (Keychain), the router and the shell.
   evidence: Phase 5 was built and checked on Windows and the Android emulator only; no Xcode build ran.
+  update: 2026-11-04 — `feature/ios-support` (`spec-ios-support.md`, step 1, from Windows) prepared the iOS run without building it: `make start PLATFORM=ios` passes `config/env/dev.ios.json` (127.0.0.1:81) and `BYPASS_PERMISSION_LOCATION_ALWAYS=1`, the session is cleared after a reinstall, a debug-only `kiveto-dev` URL scheme opens screen 0 on the simulator, the share sheets get an origin on iPad, dark status-bar content. The Xcode build and the simulator walk (with the items above: AppIcon, DM Sans, Keychain, router, shell) are step 2, on the Mac.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Clear the stored tokens on the first launch after an iOS reinstall (the Keychain survives an uninstall, so a reinstalled app would come back signed in): a first-run marker that the keychain does not keep (it needs `shared_preferences` or a file), then `SecureTokenStorage.clear()`.
   evidence: `SecureTokenStorage` and `DeviceIdStore` both use the Keychain; keeping the device id across reinstalls is wanted (device budget), keeping the session is not.
+  resolved: `feature/ios-support` (`spec-ios-support.md`, 2026-11-04) — `ReinstallGuard` (`lib/core/security/reinstall_guard.dart`) runs in `bootstrap` before `SessionManager.restore`, on iOS only: without the `kiveto.install.marker` bool of `shared_preferences` (UserDefaults go with an uninstall), `SecureTokenStorage.clear()` then the marker; the device id is kept; every storage failure is swallowed (a failed clear writes no marker, so the next launch retries). Unit-tested on both platforms, and in `test/widget/app/bootstrap_test.dart` under an iOS platform override; not run on a device yet (step 2). The cleared session is only dropped on the device: its refresh family is not revoked server-side (as with any uninstall, Android included) and expires after 90 days of inactivity.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-app-shell.md`
   summary: Add `shared_preferences` (2.5.6 checked on 2026-11-03; check again) with the slice that persists the active clinic (`client`), and fill `hasConfirmedClinicProvider` from `GET /me` (slice 1).
@@ -235,24 +237,29 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
   summary: On iPad the calendar share sheet needs an origin rect: `calendarSharerProvider` calls `SharePlus.instance.share` without `sharePositionOrigin`, so « Ajouter à mon calendrier » would end in the failure SnackBar there; pass the tapped widget's rect through the seam when iOS is built.
   evidence: Code review (blind hunter), verified, medium: the Runner targets iPhone and iPad (`TARGETED_DEVICE_FAMILY = "1,2"`) and share_plus requires `sharePositionOrigin` on iPad; iOS is out of slice 4's scope (never built).
+  resolved: `feature/ios-support` (`spec-ios-support.md`, 2026-11-04) — `calendarSharerProvider` takes `(PortalFile, Rect origin)` and passes it as `sharePositionOrigin`; the origin is the tapped control's global rect (`globalRectOf`, `kiveto_layout.dart`): the card's « Ajouter à mon calendrier » link on 4, the outline button of 14 and of the reschedule's success, each pinned by a widget test against `tester.getRect`. Note: share_plus 13.3.0+ already centres the popover on iPad when no origin is given (its CHANGELOG « Avoid exceptions on iPads with no sharePositionOrigin », `FPPSharePlusPlugin.m` of 13.3.1), so the failure SnackBar this entry predicted no longer holds; the origin anchors the popover to the tapped control. Not run on an iPad yet (step 2).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-scheduling.md`
   summary: The real share sheet and dialer hand-offs (`calendarSharerProvider` on share_plus, `phoneDialerProvider` on url_launcher) never run in a test: every test overrides the seams, so a dropped `mimeType` or `fileNameOverrides` would not fail `make ci`.
   evidence: Code review (verification-gap layer, intent auditor), low: the repo keeps every platform plugin behind a provider seam with no platform-channel mocks, and `SharePlatform` is not exported by share_plus; a test needs share_plus_platform_interface as a dev dependency, or channel and path_provider mocks. Checked on the Android emulator instead (the share sheet with the `.ics`).
+  update: 2026-11-04 — `feature/ios-support` added `sharePositionOrigin: origin` to the real closure, which no test runs either (the seams' overrides now assert the rect they receive); still open.
 
 ## Deferred from: spec-client-account.md (slice 5, 2026-11-04)
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
   summary: The real share_plus closure of `dataExportSharerProvider` (mime type `application/zip`, the `kiveto-export.zip` fallback name) never runs in a test: every test overrides the seam. Close it together with slice 4's `calendarSharerProvider` entry (one `SharePlatform` fake).
   evidence: Build review (verification-gap layer), low: `account_sheets_test.dart` only asserts the seam is a function; checked on the Android emulator instead.
+  update: 2026-11-04 — `feature/ios-support` added `sharePositionOrigin: origin` to the real closure (the seam takes `(PortalFile, Rect origin)`), which no test runs either; still open, with the calendar one.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
   summary: On iPad the export's share sheet needs an origin rect: `dataExportSharerProvider` calls `SharePlus.instance.share` without `sharePositionOrigin`, so « Télécharger » would end in « Impossible de télécharger cet export. » there; pass the tapped button's rect through this seam and the calendar one when iOS is built.
   evidence: Build review (edge-case hunter), verified, medium: share_plus requires `sharePositionOrigin` on iPad and the Runner targets iPhone and iPad; iOS is out of this effort's scope.
+  resolved: `feature/ios-support` (`spec-ios-support.md`, 2026-11-04) — `dataExportSharerProvider` takes `(PortalFile, Rect origin)` and passes it as `sharePositionOrigin`; « Télécharger » (`KivetoButton.tonal` in a `Builder`) reports its global rect, pinned by `account_sheets_test.dart` against `tester.getRect`. As for the calendar, share_plus 13.3.0+ already centres the popover without an origin, so the failure line no longer held; the origin anchors it to the button. Not run on an iPad yet (step 2).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
   summary: A deleted (or signed-out) account leaves its `client.activeClinic.<accountId>` key in the platform preferences: `ActiveClinicStore` has no removal and `DeleteAccount` only closes the session; a cleanup needs a seam from identity_access to client (identity_access cannot import client).
   evidence: Build review (blind hunter), verified, low, pre-existing since slice 1 (its hand-over lists the per-account keys as never cleaned); the key holds a clinic id, not a secret.
+  update: 2026-11-04 — `feature/ios-support` keeps the iOS install marker (`kiveto.install.marker`, `ReinstallGuard`) in the same platform preferences: a clean-up must remove its own keys, never `clear()` the store, or iOS users are signed out again at the next launch.
 
 ## Deferred from: code review of spec-client-account.md (2026-11-04)
 
@@ -273,9 +280,34 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-clinic-listing.md`
   summary: iOS: geolocator_apple compiles the « always » location API unless `BYPASS_PERMISSION_LOCATION_ALWAYS` is set (an environment variable read by its `Package.swift` under Swift Package Manager); the app only asks for when-in-use (`NSLocationWhenInUseUsageDescription`), so App Review may ask about an always-permission code path. Set it in the iOS build (make start / CI) when iOS is built.
   evidence: Build review (blind hunter), verified in the geolocator README, low; iOS is out of this effort's scope (never built).
+  resolved: `feature/ios-support` (`spec-ios-support.md`, 2026-11-04) — `scripts/start.sh` exports `BYPASS_PERMISSION_LOCATION_ALWAYS=1` before `fvm flutter run`, for every build `make start` runs (`test/scripts/start_sh_test.sh` checks the run's environment); `CONTRIBUTING.md` §5 « iOS (macOS) » says any other iOS build (Xcode, `flutter build ios`, CI) must set it and that SPM may reuse a resolution made without it. `test/integration/ios_project_test.dart` pins that `Info.plist` has no `NSLocationAlways*` key. The compiled-out call is to confirm on the Mac (step 2).
 
 ## Deferred from: code review of spec-clinic-listing.md (2026-11-04)
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-clinic-listing.md`
   summary: The « Ouvert · ferme à … » line of screen 11 is computed from `clockProvider.now().toLocal()`; on a UTC CI the local and UTC hours coincide, so dropping `.toLocal()` passes every test. Closed by the slice 5 entry « pin a non-UTC TZ for the test step of make ci » (same blind spot as `deviceToday` and the account's dates).
   evidence: Code review (verification-gap layer), filed defer: `clinic_listing_page_test.dart` builds device-local instants (`DateTime(...).toUtc()`), correct in any zone but blind to a missing conversion under `TZ=UTC`.
+
+## Deferred from: spec-ios-support.md (iOS step 1, 2026-11-04)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
+  summary: Release and Profile builds keep the `CFBundleURLTypes` entry `app.kiveto.portal.dev` of `ios/Runner/Info.plist` with an empty scheme string (`$(KIVETO_DEV_URL_SCHEME)` is set in `ios/Flutter/Debug.xcconfig` only). An empty scheme matches no URL, so no `kiveto-dev` link opens a release build; whether App Store validation accepts an empty `CFBundleURLSchemes` item is unverified. Check the built Release plist (`plutil -p`, step 2) and the App Store Connect validation (step 3); if refused, give Release its own `INFOPLIST_FILE` (a pbxproj change), strip the entry in a build phase, or preprocess the plist (`INFOPLIST_PREPROCESS = YES` in both xcconfigs, `INFOPLIST_PREPROCESSOR_DEFINITIONS = KIVETO_DEV=1` in `Debug.xcconfig` only, the dev blocks in `#ifdef KIVETO_DEV`; check how the preprocessor treats `//` in plist strings and whether Xcode and the Flutter tool still read the source plist).
+  evidence: Code review of `feature/ios-support` (blind hunter, edge-case hunter, verification gap, intent auditor), maybe-false, if true medium: `test/integration/ios_project_test.dart` reads the source files only; no Xcode build ran.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
+  summary: Decide the bundle id of free-account installs before the first one: a free personal team registers the explicit App ID `app.kiveto.portal` for itself, and bundle ids are unique across teams, so it may hold the id against the paid program the user plans to join, until it is removed or expires. Option: a separate dev bundle id (e.g. `app.kiveto.portal.dev`) for free installs, which needs a `PRODUCT_BUNDLE_IDENTIFIER` change per configuration in the pbxproj; the backend's `.well-known` files name `app.kiveto.portal` (universal links, step 3).
+  evidence: Orchestrator addendum to the step-1 brief (the user's own iPhone, installed by Xcode with a free Apple account); a decision for the user, not implemented.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
+  summary: Set `BYPASS_PERMISSION_LOCATION_ALWAYS=1` in every iOS build that does not go through `make start` once they exist: `flutter build ios/ipa` for TestFlight and the App Store, and an iOS CI job (step 3). Only release and archive builds reach App Review, where the compiled-in « always » API matters.
+  evidence: Code review of `feature/ios-support` (blind hunter): `scripts/start.sh` exports it for debug runs; CONTRIBUTING « iOS (macOS) » says other builds must set it; no release path exists yet.
+
+## Deferred from: code review of spec-ios-support.md (2026-11-04, bmad-code-review)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
+  summary: Refuse a plain `http://` API base URL outside debug builds (e.g. in `apiConfigFromDefines` or `ApiConfig` when `kReleaseMode`), or allow `http` only for the dev hosts (loopback, `*.local`, `10.0.2.2`). dart:io sockets are not subject to App Transport Security on iOS, so a release build given an `http` base URL would send the tokens in clear text; Android's cleartext policy may not stop dart:io either.
+  evidence: Code review (blind hunter), maybe-false, if true medium: `ApiConfig` accepts `http` in every build mode; release builds have no env config yet (D11), so nothing ships with `http` today. Settle with the first release configuration (step 3): check whether dart:io honours Android's `cleartextTrafficPermitted=false` and decide the guard.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ios-support.md`
+  summary: Revoke on the server the session that `ReinstallGuard` drops on the first launch after an iOS install (the Keychain kept it from the previous install): read the stale pair before `clear()`, then send `POST /auth/logout` best-effort once the HTTP client exists after `runApp`. Today that refresh family stays live until it expires (90 days of inactivity), as after any uninstall on Android too.
+  evidence: Code review (blind hunter), low: the limit is only written in the `resolved:` line of the phase-5 reinstall entry; `SignOut` (identity_access) already bounds a logout to 5 s; core/security cannot call identity_access, so the hand-off needs a seam in `app/bootstrap`.

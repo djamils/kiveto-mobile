@@ -1,7 +1,9 @@
-// bootstrap(): the stored session and device id are read before runApp.
+// bootstrap(): the stored session and device id are read before runApp;
+// the first launch after an iOS install clears the session first.
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,6 +74,72 @@ void main() {
     ]) {
       expect(overridden, contains('$seam.overrideWith(...)'), reason: '$seam');
     }
+  });
+
+  group('after an iOS install', () {
+    final stored = {
+      SecureTokenStorage.key: jsonEncode(pair('A').toJson()),
+      DeviceIdStore.key: 'device-1',
+    };
+
+    testWidgets(
+      'the first launch (no marker): the stored session is cleared before '
+      'it is restored (the welcome page), the device id kept, the marker '
+      'written',
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+      (tester) async {
+        FlutterSecureStorage.setMockInitialValues({...stored});
+        final marker = InMemoryInstallMarker();
+
+        await bootstrap(readConfig: _config, installMarker: marker);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('La santé de vos animaux, avec votre clinique'),
+          findsOneWidget,
+        );
+        const storage = FlutterSecureStorage();
+        expect(await storage.read(key: SecureTokenStorage.key), isNull);
+        expect(await storage.read(key: DeviceIdStore.key), 'device-1');
+        expect(marker.present, isTrue);
+      },
+    );
+
+    testWidgets(
+      'a later launch (marker present): the session kept, the shell',
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+      (tester) async {
+        FlutterSecureStorage.setMockInitialValues({...stored});
+        final marker = InMemoryInstallMarker(present: true);
+
+        await bootstrap(readConfig: _config, installMarker: marker);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Rendez-vous'), findsOneWidget);
+        expect(
+          await const FlutterSecureStorage().read(key: SecureTokenStorage.key),
+          isNotNull,
+        );
+        expect(marker.creates, 0);
+      },
+    );
+  });
+
+  testWidgets('Android without a marker: the guard does not run, the '
+      'session kept (the shell), the marker untouched', (tester) async {
+    expect(defaultTargetPlatform, TargetPlatform.android);
+    FlutterSecureStorage.setMockInitialValues({
+      SecureTokenStorage.key: jsonEncode(pair('A').toJson()),
+      DeviceIdStore.key: 'device-1',
+    });
+    final marker = InMemoryInstallMarker();
+
+    await bootstrap(readConfig: _config, installMarker: marker);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rendez-vous'), findsOneWidget);
+    expect(marker.reads, 0);
+    expect(marker.present, isFalse);
   });
 
   test('without --dart-define: a StateError before runApp', () async {

@@ -610,6 +610,8 @@ void main() {
       'hands the ZIP to the share sheet',
       (tester) async {
         final shared = <PortalFile>[];
+        // The global rect each share received (the iPad popover anchor).
+        final origins = <Rect>[];
         const signed = '/files/exports/$_readyId?_hash=x';
         final zip = utf8.encode('PK zip');
         final backend = _julienBackend()
@@ -641,9 +643,10 @@ void main() {
           tester,
           backend,
           overrides: [
-            dataExportSharerProvider.overrideWithValue(
-              (file) async => shared.add(file),
-            ),
+            dataExportSharerProvider.overrideWithValue((file, origin) async {
+              shared.add(file);
+              origins.add(origin);
+            }),
           ],
         );
 
@@ -669,6 +672,9 @@ void main() {
         expect(find.widgetWithText(StatusPill, 'Expiré'), findsOneWidget);
         expect(find.text('Actualiser'), findsNothing);
         expect(find.text('Télécharger'), findsOneWidget);
+        final buttonRect = tester.getRect(
+          find.widgetWithText(KivetoButton, 'Télécharger'),
+        );
 
         await tester.tap(find.text('Télécharger'));
         await tester.pumpAndSettle();
@@ -676,6 +682,10 @@ void main() {
         expect(shared.single.bytes, zip);
         expect(shared.single.fileName, 'kiveto-export.zip');
         expect(shared.single.contentType, 'application/zip');
+        // The tapped button's global rect: the share sheet's anchor on
+        // iPad.
+        expect(origins.single, buttonRect);
+        expect(buttonRect.isEmpty, isFalse);
       },
     );
 
@@ -687,7 +697,9 @@ void main() {
       await pump(
         tester,
         backend,
-        overrides: [dataExportSharerProvider.overrideWithValue((_) async {})],
+        overrides: [
+          dataExportSharerProvider.overrideWithValue((_, _) async {}),
+        ],
       );
       await open(tester, find.text('Exporter mes données'));
 
@@ -731,7 +743,9 @@ void main() {
       await pump(
         tester,
         backend,
-        overrides: [dataExportSharerProvider.overrideWithValue((_) async {})],
+        overrides: [
+          dataExportSharerProvider.overrideWithValue((_, _) async {}),
+        ],
       );
       await open(tester, find.text('Exporter mes données'));
       const failed = 'Impossible de télécharger cet export.';
@@ -921,7 +935,7 @@ void main() {
     await pump(
       tester,
       backend,
-      overrides: [dataExportSharerProvider.overrideWithValue((_) async {})],
+      overrides: [dataExportSharerProvider.overrideWithValue((_, _) async {})],
     );
     await open(tester, find.text('Exporter mes données'));
 

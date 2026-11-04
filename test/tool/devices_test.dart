@@ -120,6 +120,51 @@ void main() {
     });
   });
 
+  group('a physical iPhone plugged into the Mac', () {
+    const iphone = '00008110-001A2C3E0A12801E';
+    const fixture = 'devices_iphone_and_simulator.json';
+
+    test('with a booted simulator: both listed, exit 3', () async {
+      final result = await _pick(['--platform', 'ios'], fixture: fixture);
+      expect(result, (
+        code: 3,
+        out:
+            '$iphone\tiPhone de Djamil\n'
+            '8A1F2C3D-0000-4000-8000-000000000001\tiPhone 17\n',
+        err: '',
+      ));
+    });
+
+    test('DEVICE=<its name> or DEVICE=<its id> picks it', () async {
+      for (final device in ['iPhone de Djamil', iphone]) {
+        final result = await _pick([
+          '--platform',
+          'ios',
+          '--device',
+          device,
+        ], fixture: fixture);
+        expect(result, (code: 0, out: '$iphone\n', err: ''), reason: device);
+      }
+    });
+
+    test('alone (no simulator running): picked, exit 0', () async {
+      final devices = jsonDecode(
+        File('test/tool/fixtures/$fixture').readAsStringSync(),
+      ) as List<Object?>;
+      final alone = [
+        for (final device in devices)
+          if (device case {'emulator': false}) device,
+      ];
+
+      final result = await _pick([
+        '--platform',
+        'ios',
+      ], text: jsonEncode(alone));
+
+      expect(result, (code: 0, out: '$iphone\n', err: ''));
+    });
+  });
+
   group('pickDevice refuses with exit 1 and a message on stderr', () {
     Future<void> refuses(
       List<String> args,

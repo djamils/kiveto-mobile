@@ -421,21 +421,27 @@ class _FormScaffold extends StatelessWidget {
       child: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                KivetoSpace.gutter,
-                KivetoSpace.xl,
-                KivetoSpace.gutter,
-                KivetoSpace.xl,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < children.length; i++) ...[
-                    if (i > 0) const SizedBox(height: KivetoSpace.xl4),
-                    children[i],
+            // A drag on the page closes the keyboard (an iOS multiline field
+            // has no dismiss key), also when the content fits (always
+            // scrollable); one that scrolls the note's own text keeps it.
+            child: KeyboardDismissOnDrag(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  KivetoSpace.gutter,
+                  KivetoSpace.xl,
+                  KivetoSpace.gutter,
+                  KivetoSpace.xl,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < children.length; i++) ...[
+                      if (i > 0) const SizedBox(height: KivetoSpace.xl4),
+                      children[i],
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),

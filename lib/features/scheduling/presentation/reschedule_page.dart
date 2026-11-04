@@ -23,6 +23,7 @@ import 'package:kiveto_mobile/shared/presentation/kit/feedback.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
+import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The reschedule of an appointment (screen 3's slot picker, reused):
@@ -326,16 +327,21 @@ class _Moved extends ConsumerWidget {
                         ].join(' · '),
                       ].join('\n'),
                       note: notes.isEmpty ? null : notes.join('\n'),
-                      action: KivetoButton.outline(
-                        label: l10n.appointmentsAddToCalendar,
-                        icon: LucideGlyph.calendar,
-                        expand: false,
-                        onPressed: () => unawaited(
-                          shareAppointmentCalendar(
-                            context,
-                            ref,
-                            clinicId: clinicId,
-                            appointment: appointment,
+                      // The Builder's context is the button's: its rect
+                      // anchors the share sheet on iPad.
+                      action: Builder(
+                        builder: (button) => KivetoButton.outline(
+                          label: l10n.appointmentsAddToCalendar,
+                          icon: LucideGlyph.calendar,
+                          expand: false,
+                          onPressed: () => unawaited(
+                            shareAppointmentCalendar(
+                              context,
+                              ref,
+                              clinicId: clinicId,
+                              appointment: appointment,
+                              origin: globalRectOf(button),
+                            ),
                           ),
                         ),
                       ),

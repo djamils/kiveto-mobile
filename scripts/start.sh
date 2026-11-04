@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # make start: pub get only when a pubspec changed, device selection, then
-#   fvm flutter run -d <id> --no-pub --dart-define-from-file=config/env/$ENV.json $RUN_ARGS
+#   BYPASS_PERMISSION_LOCATION_ALWAYS=1 \
+#   fvm flutter run -d <id> --no-pub --dart-define-from-file=<env file> $RUN_ARGS
 # (--no-pub: the dependencies were just checked, flutter run must not redo it).
+# The env file is config/env/$ENV.json on Android, config/env/$ENV.ios.json
+# on iOS (env_file_for, lib.sh): the simulator reaches the Mac's backend at
+# 127.0.0.1, not at the Android emulator's 10.0.2.2, which is refused there;
+# a physical iPhone needs the Mac's Bonjour name (<mac-name>.local), and a
+# loopback file is refused for it once the device is chosen.
 #
 # Device selection: DEVICE when set (it must be listed) -> the only running
 # device of PLATFORM -> otherwise boot EMULATOR / the first AVD (android) or
@@ -22,12 +28,34 @@ case $BOOT_WAIT in
 esac
 BOOT_WAIT=$((10#$BOOT_WAIT))
 
-env_file=config/env/$ENV.json
+env_file=$(env_file_for "$PLATFORM" "$ENV")
 if [ ! -f "$env_file" ]; then
   if [ "$ENV" = dev ]; then
     die "$env_file is missing - fix: make install (creates it from $env_file.dist)"
   fi
-  die "$env_file is missing for ENV=$ENV - fix: create it, or use ENV=dev"
+  die "$env_file is missing for ENV=$ENV - fix: create $env_file, or use ENV=dev"
+fi
+# mac_local_name: the Mac's Bonjour name, <LocalHostName>.local, which a
+# physical iPhone reaches over Wi-Fi; <mac-name>.local when scutil fails.
+mac_local_name() {
+  local name
+  name=$(scutil --get LocalHostName 2>/dev/null) || name=''
+  name=${name%%"$NL"*}
+  printf '%s.local\n' "${name:-<mac-name>}"
+}
+
+# No silent fallback to the Android emulator's alias: an iOS file whose
+# API_BASE_URL points at 10.0.2.2 would reach nothing from the simulator.
+# Only that host, whole: a Mac LAN address such as 10.0.2.23, or 10.0.2.2
+# in another key, is accepted.
+if [ "$PLATFORM" = ios ] &&
+  grep -iE '"API_BASE_URL"[[:space:]]*:[[:space:]]*"[a-z]+://10[.]0[.]2[.]2([/:"]|$)' "$env_file" >/dev/null; then
+  if [ "$ENV" = dev ]; then
+    fix="rm $env_file && make install"
+  else
+    fix="point API_BASE_URL of $env_file at 127.0.0.1 (simulator) or $(mac_local_name) (iPhone)"
+  fi
+  die "$env_file points at 10.0.2.2, the Android emulator's alias for its host: the iOS simulator reaches the Mac at 127.0.0.1 - fix: $fix"
 fi
 
 require_flutter
@@ -196,10 +224,34 @@ else
 fi
 ok "Device $DEVICE_ID"
 
+# A physical iPhone's loopback (127.x.x.x, localhost, [::1]) is the iPhone
+# itself: an API_BASE_URL on the loopback only serves the simulator, which
+# shares the Mac's network. A device that `xcrun simctl list devices` does
+# not list is a physical one; when simctl fails, nobody can tell, so nothing
+# is refused.
+if [ "$PLATFORM" = ios ] &&
+  grep -iE '"API_BASE_URL"[[:space:]]*:[[:space:]]*"[a-z]+://(127([.][0-9]+){3}|localhost|\[::1\])([/:"]|$)' "$env_file" >/dev/null &&
+  simulators=$(xcrun simctl list devices 2>/dev/null); then
+  case $simulators in
+    *"($DEVICE_ID)"*) ;;
+    *)
+      bonjour=$(mac_local_name)
+      die "$DEVICE_ID is a physical iPhone and the API_BASE_URL of $env_file is on the loopback (127.x.x.x, localhost or [::1]): the iPhone cannot reach the Mac at its own loopback - fix: in $env_file, replace that host with $bonjour, the Mac's Bonjour name (scutil --get LocalHostName), e.g. http://$bonjour:81 for the dev backend"
+      ;;
+  esac
+fi
+
 # --- Run ----------------------------------------------------------------------
 
 run_args=()
 if [ -n "$RUN_ARGS" ]; then read -r -a run_args <<<"$RUN_ARGS"; fi
+
+# geolocator_apple's Package.swift reads this variable when Xcode resolves
+# the Swift package: 1 compiles out requestAlwaysAuthorization (the app only
+# asks for the when-in-use permission, NSLocationWhenInUseUsageDescription).
+# Every build make start runs gets it; Android ignores it. Another iOS build
+# (Xcode, flutter build ios, CI) must set it too (CONTRIBUTING.md section 5).
+export BYPASS_PERMISSION_LOCATION_ALWAYS=1
 
 step "fvm flutter run -d $DEVICE_ID --no-pub --dart-define-from-file=$env_file${RUN_ARGS:+ $RUN_ARGS}"
 run_live fvm flutter run -d "$DEVICE_ID" --no-pub --dart-define-from-file="$env_file" ${run_args[@]+"${run_args[@]}"}

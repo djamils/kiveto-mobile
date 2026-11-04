@@ -19,6 +19,7 @@ import 'package:kiveto_mobile/shared/domain/clinic_instant.dart';
 import 'package:kiveto_mobile/shared/domain/portal_file.dart';
 import 'package:kiveto_mobile/shared/domain/species.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/portal_api/fake_portal_backend.dart';
@@ -31,10 +32,13 @@ const _bookNewPet = '$parisBase/appointments/with-new-pet';
 void main() {
   late List<String> exits;
   late List<PortalFile> shared;
+  // The global rect each share received (the iPad popover anchor).
+  late List<Rect> origins;
 
   setUp(() {
     exits = [];
     shared = [];
+    origins = [];
   });
 
   Widget page() => BookingConfirmPage(
@@ -60,8 +64,9 @@ void main() {
     practitioner: dupont,
     slot: monday10,
     overrides: [
-      calendarSharerProvider.overrideWithValue((file) async {
+      calendarSharerProvider.overrideWithValue((file, origin) async {
         shared.add(file);
+        origins.add(origin);
       }),
     ],
   );
@@ -157,10 +162,18 @@ void main() {
       findsOneWidget,
     );
 
+    final calendarButton = find.widgetWithText(
+      KivetoButton,
+      'Ajouter à mon calendrier',
+    );
+    final buttonRect = tester.getRect(calendarButton);
     await tester.tap(find.text('Ajouter à mon calendrier'));
     await tester.pumpAndSettle();
     expect(shared.single.fileName, 'rendez-vous-2026-11-09.ics');
     expect(shared.single.contentType, 'text/calendar');
+    // The tapped button's global rect: the share sheet's anchor on iPad.
+    expect(origins.single, buttonRect);
+    expect(buttonRect.isEmpty, isFalse);
 
     await tester.tap(find.text('Remplir le questionnaire maintenant'));
     await tester.tap(find.text('Plus tard'));

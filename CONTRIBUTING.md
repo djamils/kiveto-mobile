@@ -31,7 +31,8 @@ the commands and checks it brings **do not exist** — do not rely on them.
 | 10 | `feature/client-account` | Slice 5: `client` (screen 6 Compte: the profile card and its form sent as a `PATCH /me` merge patch, the clinics of the account and the switch of the active one, the consents of the active clinic per kind and channel with the server's 409 / 422 answers, their history, the data exports and their ZIP handed to the share sheet), `identity_access` (the e-mail change and the account deletion sheets, each confirmed by an SMS code; `DeleteAccount` closes the session after the server's 202); `ClinicRow` shared by the switcher and the page; the `mail` glyph | Done (validated on Windows and the Android emulator against the local backend: Julien edited and restored his first name, turned a consent on and off, met the server's 422 on his only billing channel, read the history and switched Paris → Lyon → Paris; Marchand downloaded a ready export to the share sheet, requested a new one and met the daily quota; Rey ran the e-mail change to the e-mail code, an address refused first and the same SMS code reused; a test client verified a new address and deleted her account after a spent code; iOS not built) |
 | 11 | `feature/portal-requests` | Slice 6: the owner's requests of the Portal API — `scheduling` (screen 15 Questionnaire: the pre-visit questionnaire with « Rien de particulier » exclusive, the answers already sent filling the form, the closed questionnaire read-only, the revision bumped once sent), `document` (screen 17 Renouvellement: the prescription's lines read-only, the pet's condition and its warning, the documents lists reloaded once sent), `patient` (the change request sheet of screen 2: name, weight and its day, sterilization by sex, chip number, another change; its pending requests under the pet's sheet); `IntentKey` (one `Idempotency-Key` per content) in `shared/domain`, `idempotencyKeyFactoryProvider` in `core/di`, the contract's `maxLength` on `KivetoTextField`; the server's 422 / 429 / 404 answers shown | Done (validated on Windows and the Android emulator against the local backend: a test client booked a vaccination, filled its questionnaire from screen 14 (the banner and the home button gone, the SnackBar on 4) and cancelled it; a weight refused by the server under its field, then a sterilization change pending under « Demandes en cours »; Garnier's renewal of ORD-36 (« Renouvellement demandé » at once), ORD-07 refused with the server's reason, a deceased pet's change refused; a network failure kept in view above the button; iOS not built) |
 | 12 | `feature/clinic-listing` | Slice 7: `clinic_listing` (screen 10 Trouver une clinique: the greeting, the records at the account's number with « Rattacher ce dossier » and the links waiting for their clinic, the search by name or city and « Autour de moi » by distance, cursor pages, the C-31 cards and the unlisted variant; screen 11 Fiche clinique: the open status on the device's clock, « Vous êtes », the motifs open to new clients or why not, « Déjà client », the grouped opening hours), `scheduling` (the new-client booking in two steps on the shared `SlotPicker` and a `BookingDraft`, every refusal of the server, « Demande envoyée »; screen 4 lists the account's booking requests and has a clinic-less mode), `client` (the link suggestions and their acceptance), `app` (the clinic-less Animaux and Documents tabs say why they are empty); `ListingId` in `shared/domain`; `geolocator` 14.1.2 (coarse position, the platform's location manager on Android) | Done (validated on Windows and the Android emulator against the local backend: Julien searched, met the server's refusal of a one-letter query, used « Autour de moi » (permission refused then granted once), was refused `already_linked` at Lyon and booked from his space instead, opened the Paris and Vercors sheets; a clinic-less account saw the empty tabs, accepted its Paris record (pending link on 10 and 6), sent a request at Lyon (« En attente » on 4 at once) and met the pending-request limit; a third account's declined requests on 4; iOS not built) |
-| 13+ | `feature/<feature>` | Later work | To do |
+| 13 | `feature/ios-support` | iOS support, step 1, built from Windows without a Mac: `config/env/dev.ios.json` (the simulator reaches the Mac's backend at `127.0.0.1:81`; `make start PLATFORM=ios` refuses an iOS file that points at the Android emulator's `10.0.2.2`), `BYPASS_PERMISSION_LOCATION_ALWAYS=1` for every build `make start` runs (geolocator_apple compiles out the « always » permission), the tapped control's rect as the iPad share popover's anchor (calendar and data export), the session cleared on the first launch after an iOS install (`ReinstallGuard`, a marker in `shared_preferences`; the device id kept), a debug-only `kiveto-dev` URL scheme for the invitation link on the simulator, dark status-bar content, the phone, number and multiline keyboards closed by a drag; for the user's physical iPhone (free Apple account, documented), its `http://<mac-name>.local:81` address in `dev.ios.json`, a loopback file refused for a physical device, `NSLocalNetworkUsageDescription` | Built on Windows (`make ci` green) and checked on the Android emulator against the local backend (still signed in after the install, the invitation link opening screen 0, its number pad closed by a drag, the calendar share sheet, dark status-bar icons); the iOS build, the simulator and the physical-iPhone walk are step 2, on the Mac (universal links, the paid program's signing and the App Store items are step 3) |
+| 14+ | `feature/<feature>` | Later work | To do |
 
 Update this table in the PR that completes a phase.
 
@@ -157,7 +158,7 @@ pinned to the version of `.fvmrc`.
 ```bash
 make help          # targets and options (default goal)
 make doctor        # read-only: every prerequisite, with the fix of each missing one (FULL=1 adds flutter doctor -v)
-make install       # prerequisites, pinned Flutter (fvm install), pub get, git hooks, config/env/dev.json
+make install       # prerequisites, pinned Flutter (fvm install), pub get, git hooks, the missing config/env/*.json (dev.json, dev.ios.json) from their .dist
 make start         # run the app; boots the first AVD (or EMULATOR=) when no device runs
 make devices       # connected devices, AVDs and, on macOS, simulators
 make install-fvm   # opt-in: FVM 4.3.2 for the current user only, SHA-256 checked; prints the PATH line
@@ -181,7 +182,8 @@ make api-generate       # regenerate packages/kiveto_portal_api from contracts/p
 
 Options: `PLATFORM=android|ios` (default `android`; iOS needs macOS),
 `DEVICE=<id>`, `EMULATOR=<avd>`, `SIMULATOR=<name>`, `ENV=dev` (passes
-`config/env/<ENV>.json` with `--dart-define-from-file`), `RUN_ARGS=`
+`config/env/<ENV>.json` with `--dart-define-from-file`, and
+`config/env/<ENV>.ios.json` with `PLATFORM=ios`), `RUN_ARGS=`
 (extra `flutter run` flags, e.g. `--release`), `BOOT_WAIT=180` (seconds),
 `REF=<backend commit>` and `KIVETO_BACKEND_DIR=<backend checkout>` (default
 `../kiveto`) for `make api-sync`, `V=1`, `NO_COLOR=1`,
@@ -202,6 +204,88 @@ git hooks for this clone only (`core.hooksPath=.githooks`). The contract of
 each target is in the architecture document, §7 Developer experience.
 `make ci` also runs on Linux (GitHub Actions); the other targets are for
 Windows and macOS.
+
+### iOS (macOS)
+
+- **Backend address.** `make start PLATFORM=ios` passes
+  `config/env/dev.ios.json` (`ENV=<env>`: `config/env/<env>.ios.json`),
+  which `make install` creates from `config/env/dev.ios.json.dist`:
+  `http://127.0.0.1:81` with the dev `Host` `portal.kiveto.local`, since
+  the simulator shares the Mac's network. An iOS file that holds
+  `10.0.2.2` (the Android emulator's alias for its host) is refused before
+  any build; the fix is `rm config/env/dev.ios.json && make install`. A
+  Mac set up before this file existed gets it on its next `make install`
+  (its `dev.json` is kept).
+- **A physical iPhone** plugged into the Mac, reaching the Mac's backend
+  over Wi-Fi:
+  - Bundle id first: a free personal team registers `app.kiveto.portal`
+    for itself, which may hold it against the paid program; decide before
+    the first free install (deferred-work, iOS step 1).
+  - Signing with a free Apple account, without touching a tracked file:
+    add the Apple ID in Xcode › Settings › Accounts and create an « Apple
+    Development » certificate there (Manage Certificates › +). With no
+    team in the project, `make start` lets Flutter pick that identity from
+    the keychain and pass its `DEVELOPMENT_TEAM` and
+    `-allowProvisioningUpdates` to xcodebuild
+    (`fvm flutter config --ios-signing-cert` when there are several; to be
+    confirmed on the Mac). Fallback: pick the personal team in Xcode ›
+    Runner › Signing & Capabilities; `DEVELOPMENT_TEAM` then lands in
+    `ios/Runner.xcodeproj/project.pbxproj`, which must never be committed
+    with it (`test/integration/ios_project_test.dart` fails on a signing
+    team; restore it with
+    `git checkout -- ios/Runner.xcodeproj/project.pbxproj`). On the
+    iPhone, turn Developer Mode on and trust the developer app (Settings ›
+    General › VPN & Device Management); a free-account install expires
+    after 7 days.
+  - The address: in your git-ignored `config/env/dev.ios.json`, set
+    `API_BASE_URL` to `http://<mac-name>.local:81`, the Mac's Bonjour name
+    (`scutil --get LocalHostName`), which survives DHCP changes and which
+    the simulator accepts too; keep `API_HOST_HEADER` as it is. The
+    backend's compose publishes `81:80` on every interface; the macOS
+    firewall may ask once. iOS asks for the local network permission
+    (`NSLocalNetworkUsageDescription`) as soon as a debug build launches,
+    because Flutter publishes the Dart VM service over Bonjour in debug
+    and profile builds: allow it, or neither the backend nor
+    `flutter attach` is reachable.
+  - `make start PLATFORM=ios` refuses an `API_BASE_URL` on the loopback
+    (`127.x.x.x`, `localhost`, `[::1]`) for a physical iPhone, whose
+    loopback is itself, and says which host to use. It tells a physical
+    device from a simulator with `xcrun simctl list devices`; when that
+    fails it cannot tell and refuses nothing. With a simulator running
+    too, pick the iPhone with `DEVICE=<its id or name>` (`make devices`).
+  - A physical Android phone is not set up: `dev.json`'s `10.0.2.2` is
+    the emulator's alias, and the debug network security config allows
+    clear-text HTTP to `10.0.2.2` only.
+- **Location permission.** `make start` exports
+  `BYPASS_PERMISSION_LOCATION_ALWAYS=1` for every build it runs:
+  geolocator_apple's `Package.swift` reads it when Xcode resolves the
+  Swift package and then compiles out `requestAlwaysAuthorization` (the
+  app only asks « when in use »). This relies on Swift Package Manager:
+  `geolocator_apple.podspec` ignores the variable. SPM is Flutter's
+  default since 3.44 and the project has no `Podfile`; check it on the Mac
+  with `fvm flutter config --list` (under CocoaPods the macro would need a
+  `post_install` hook in a `Podfile`). Any other iOS build (Xcode,
+  `fvm flutter build ios`, a CI job) must set it too. Xcode opened from
+  the Dock does not inherit a shell's variables, and opening
+  `ios/Runner.xcworkspace` already resolves the packages: run
+  `launchctl setenv BYPASS_PERMISSION_LOCATION_ALWAYS 1` before opening
+  it. Swift Package Manager may reuse a manifest it evaluated without the
+  variable: after a build or an Xcode session without it, reset the
+  package caches (Xcode › File › Packages › Reset Package Caches) and run
+  `make clean` before building again (to be confirmed on the Mac).
+- **Invitation link.** iOS opens http(s) links in an app only through
+  universal links (step 3), so debug builds register the `kiveto-dev`
+  URL scheme (`KIVETO_DEV_URL_SCHEME` in `ios/Flutter/Debug.xcconfig`,
+  read by `ios/Runner/Info.plist`; release and profile builds register
+  none): `xcrun simctl openurl booted
+  "kiveto-dev://portal.kiveto.local/invitation#t=<token>"` opens screen 0,
+  signed out or in, like the Android `adb shell am start` intent (to be
+  confirmed on the Mac, cold and warm start; the router test pins the URL
+  the engine hands over).
+- **Session after a reinstall.** The Keychain survives an uninstall: the
+  first launch after an iOS install clears the stored session (not the
+  device id), so a reinstalled app starts signed out. Android is not
+  concerned.
 
 ### Quality controls
 
@@ -343,10 +427,10 @@ policies: session lifecycle, one token refresh at a time, a stable
 |---|---|---|---|
 | Unit | `test/unit/` (mirrors `lib/`) | domain, application, infrastructure | Yes (`make test-unit`) |
 | Widget | `test/widget/` (mirrors `lib/**/presentation`) | pages and widgets: empty / short / long lists, states, errors | Yes (`make test-widget`) |
-| Integration | `test/integration/` (shared helpers in `test/support/`) | complete flows without a device: real wiring, real generated client, fake HTTP adapter fed with contract JSON (`portal_api_contract_test.dart` decodes every contract fixture) | Yes (`make test-integration`) |
+| Integration | `test/integration/` (shared helpers in `test/support/`) | complete flows without a device: real wiring, real generated client, fake HTTP adapter fed with contract JSON (`portal_api_contract_test.dart` decodes every contract fixture); `ios_project_test.dart`, a static read of the iOS project files (the dev URL scheme wiring, the location keys, the launch status bar) | Yes (`make test-integration`) |
 | Tooling | `test/tool/` (fixtures in `test/tool/fixtures/`) | `tool/lib/`: the device picker, the Dart scanner, the coverage gate, the contract commands (`portal_api.dart`, SHA-256 included), the contract normaliser | Yes (`make test-tool`) |
 | Architecture | `test/architecture/` | the rules of §6, with self-tests that inject violations | Yes (`make test-architecture`) |
-| Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh`, doctor and install, install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`, `analyze.sh`, `api.sh`, the git hooks, the entry points `tool/devices.dart`, `tool/coverage_gate.dart`, `tool/portal_api.dart` and `tool/normalize_contract.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
+| Scripts | `test/scripts/*_test.sh` (plain bash, `support.sh`) | `scripts/lib.sh` (the env files of `make install` and `make start` included), `start.sh` (the env file per platform, the bypass variable, the iOS refusals), doctor and install, install-fvm, `test.sh`, `ci.sh`, `test-scripts.sh`, `format.sh`, `analyze.sh`, `api.sh`, the git hooks, the entry points `tool/devices.dart`, `tool/coverage_gate.dart`, `tool/portal_api.dart` and `tool/normalize_contract.dart`, bash 3.2 portability | Yes (`make test-scripts`) |
 | End-to-end | `integration_test/` | emulator or simulator against the local backend | No (`make test-e2e`, deferred) |
 
 Coverage policy:

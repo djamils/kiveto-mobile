@@ -227,16 +227,21 @@ class _Booked extends ConsumerWidget {
                           l10n.bookingSmsSent,
                         if (until != null) cancellableUntilLine(l10n, until),
                       ].join('\n'),
-                      action: KivetoButton.outline(
-                        label: l10n.appointmentsAddToCalendar,
-                        icon: LucideGlyph.calendar,
-                        expand: false,
-                        onPressed: () => unawaited(
-                          shareAppointmentCalendar(
-                            context,
-                            ref,
-                            clinicId: clinicId,
-                            appointment: appointment,
+                      // The Builder's context is the button's: its rect
+                      // anchors the share sheet on iPad.
+                      action: Builder(
+                        builder: (button) => KivetoButton.outline(
+                          label: l10n.appointmentsAddToCalendar,
+                          icon: LucideGlyph.calendar,
+                          expand: false,
+                          onPressed: () => unawaited(
+                            shareAppointmentCalendar(
+                              context,
+                              ref,
+                              clinicId: clinicId,
+                              appointment: appointment,
+                              origin: globalRectOf(button),
+                            ),
                           ),
                         ),
                       ),
