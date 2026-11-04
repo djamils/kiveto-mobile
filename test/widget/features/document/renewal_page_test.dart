@@ -19,6 +19,7 @@ import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/feedback.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -236,9 +237,13 @@ void main() {
         await tapVisible(tester, _chip('Ça va mieux'));
         await tapVisible(tester, _send());
 
+        // A callout above the button, in the bar.
         expect(
           find.descendant(
-            of: find.byType(KivetoCallout),
+            of: find.descendant(
+              of: find.byType(StickyCtaBar),
+              matching: find.byType(KivetoCallout),
+            ),
             matching: find.text(message),
           ),
           findsOneWidget,

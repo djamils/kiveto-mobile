@@ -199,13 +199,31 @@ class _QuestionnairePageState extends ConsumerState<QuestionnairePage> {
     final sending = _sending;
     return FlowScaffold(
       gap: KivetoSpace.xl5,
+      // The server's answer sits above the button: the body may be
+      // scrolled anywhere when it comes.
       bar: StickyCtaBar(
-        child: KivetoButton.primary(
-          label: l10n.questionnaireSend,
-          loading: sending,
-          onPressed: form.isComplete && !sending
-              ? () => unawaited(_send(clinicId))
-              : null,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (error != null) ...[
+              KivetoCallout.danger(
+                body: questionnaireFailureMessage(l10n, error),
+                actionLabel: isTransientFailure(error)
+                    ? l10n.commonRetry
+                    : null,
+                onAction: () => unawaited(_send(clinicId)),
+              ),
+              const SizedBox(height: KivetoSpace.m),
+            ],
+            KivetoButton.primary(
+              label: l10n.questionnaireSend,
+              loading: sending,
+              onPressed: form.isComplete && !sending
+                  ? () => unawaited(_send(clinicId))
+                  : null,
+            ),
+          ],
         ),
       ),
       children: [
@@ -276,12 +294,6 @@ class _QuestionnairePageState extends ConsumerState<QuestionnairePage> {
           enabled: !sending,
           onChanged: (_) => _edited(),
         ),
-        if (error != null)
-          KivetoCallout.danger(
-            body: questionnaireFailureMessage(l10n, error),
-            actionLabel: isTransientFailure(error) ? l10n.commonRetry : null,
-            onAction: () => unawaited(_send(clinicId)),
-          ),
       ],
     );
   }

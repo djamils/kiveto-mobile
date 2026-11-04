@@ -190,13 +190,29 @@ class _RenewalPageState extends ConsumerState<RenewalPage> {
     final sending = _sending;
     final pet = prescription.pet.name;
     return _FormScaffold(
+      // The server's answer sits above the button: the body may be
+      // scrolled anywhere when it comes.
       bar: StickyCtaBar(
-        child: KivetoButton.primary(
-          label: l10n.renewalSend,
-          loading: sending,
-          onPressed: condition == null || sending
-              ? null
-              : () => unawaited(_send(clinicId)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (error != null) ...[
+              KivetoCallout.danger(
+                body: renewalFailureMessage(l10n, error),
+                actionLabel: _isTransient(error) ? l10n.commonRetry : null,
+                onAction: () => unawaited(_send(clinicId)),
+              ),
+              const SizedBox(height: KivetoSpace.m),
+            ],
+            KivetoButton.primary(
+              label: l10n.renewalSend,
+              loading: sending,
+              onPressed: condition == null || sending
+                  ? null
+                  : () => unawaited(_send(clinicId)),
+            ),
+          ],
         ),
       ),
       children: [
@@ -299,12 +315,6 @@ class _RenewalPageState extends ConsumerState<RenewalPage> {
           },
         ),
         KivetoFootnote(l10n.renewalFootnote),
-        if (error != null)
-          KivetoCallout.danger(
-            body: renewalFailureMessage(l10n, error),
-            actionLabel: _isTransient(error) ? l10n.commonRetry : null,
-            onAction: () => unawaited(_send(clinicId)),
-          ),
       ],
     );
   }

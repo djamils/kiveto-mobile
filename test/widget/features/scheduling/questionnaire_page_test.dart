@@ -343,8 +343,14 @@ void main() {
     await fill(tester);
     await send(tester);
 
+    // Above the button, in the bar: seen wherever the body is scrolled.
     expect(
-      find.text('« Aucun symptôme » ne se combine pas avec un autre symptôme.'),
+      find.descendant(
+        of: find.byType(StickyCtaBar),
+        matching: find.text(
+          '« Aucun symptôme » ne se combine pas avec un autre symptôme.',
+        ),
+      ),
       findsOneWidget,
     );
     expect(find.text('Réessayer'), findsNothing);
