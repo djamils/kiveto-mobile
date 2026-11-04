@@ -5,6 +5,7 @@ import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/patient/di.dart';
 import 'package:kiveto_mobile/features/patient/domain/care_item.dart';
 import 'package:kiveto_mobile/features/patient/domain/pet.dart';
+import 'package:kiveto_mobile/features/patient/domain/pet_change.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 
@@ -48,3 +49,15 @@ final FutureProviderFamily<List<CareItem>, PetId> careItemsProvider =
       if (clinicId == null) return const [];
       return await repository.careItems(clinicId, petId);
     });
+
+/// The change requests of the owner in the active clinic, newest first
+/// (empty without an active clinic); the pet sheet shows the pending ones
+/// of its pet. Reloaded after a change request is sent.
+final petChangeRequestsProvider = FutureProvider<List<PetChangeRequest>>((
+  ref,
+) async {
+  final repository = ref.watch(petChangeRepositoryProvider);
+  final clinicId = await _activeClinicId(ref);
+  if (clinicId == null) return const [];
+  return await repository.changeRequests(clinicId);
+});

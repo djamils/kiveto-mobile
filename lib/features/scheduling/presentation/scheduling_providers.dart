@@ -9,6 +9,7 @@ import 'package:kiveto_mobile/features/patient/patient.dart'
 import 'package:kiveto_mobile/features/scheduling/di.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/questionnaire.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/domain/local_date.dart';
@@ -137,6 +138,25 @@ appointmentProvider = FutureProvider.autoDispose
       return (
         clinicId: clinicId,
         appointment: await repository.appointment(clinicId, id),
+      );
+    });
+
+/// The pre-visit questionnaire of an appointment of the active clinic, with
+/// the clinic it belongs to (a [NotFoundFailure] without an active clinic).
+typedef ClinicQuestionnaire = ({
+  ClinicId clinicId,
+  Questionnaire questionnaire,
+});
+
+final FutureProviderFamily<ClinicQuestionnaire, AppointmentId>
+questionnaireProvider = FutureProvider.autoDispose
+    .family<ClinicQuestionnaire, AppointmentId>((ref, id) async {
+      final repository = ref.watch(questionnaireRepositoryProvider);
+      final clinicId = await activeClinicIdOf(ref);
+      if (clinicId == null) throw const NotFoundFailure();
+      return (
+        clinicId: clinicId,
+        questionnaire: await repository.questionnaire(clinicId, id),
       );
     });
 

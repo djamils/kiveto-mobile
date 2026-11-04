@@ -272,7 +272,20 @@ void main() {
             status: 201,
           ),
         };
-      });
+      })
+      // The questionnaire (15) of the appointment booked.
+      ..on(
+        'GET',
+        '$_base/appointments/$_booked',
+        PortalReply.fixture('clinics.paris.appointment.get.200.json'),
+      )
+      ..on(
+        'GET',
+        '$_base/appointments/$_booked/questionnaire',
+        PortalReply.fixture(
+          'clinics.paris.appointment.questionnaire.get.200.json',
+        ),
+      );
     final container = await pumpKivetoApp(
       tester,
       session: await memorySession(pair('A')),
@@ -388,7 +401,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(_location(container), AppRoutes.questionnaire(_booked));
-    expect(find.text('Avant la consultation'), findsWidgets);
+    expect(find.text('Avant la consultation'), findsOneWidget);
+    expect(
+      find.text('Oslo · Consultation · lun. 9 nov. à 10:00'),
+      findsOneWidget,
+    );
     expect(posts, 3);
   });
 

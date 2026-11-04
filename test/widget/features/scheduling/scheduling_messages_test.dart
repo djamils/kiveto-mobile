@@ -1,7 +1,7 @@
 // The French texts of scheduling: the status pills, the slots on the
 // clinic's clock, the window's line, the practitioner, the motifs, the pet
 // of a booking, the care warning by kind, the failure messages and their
-// kinds.
+// kinds; the questionnaire's chips, its date sent and its failures.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +9,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/questionnaire.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_messages.dart';
 import 'package:kiveto_mobile/l10n/app_localizations_fr.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
@@ -223,7 +224,8 @@ void main() {
           statusCode: 422,
         ),
       ),
-      "Le délai d'annulation en ligne est dépassé : contactez la clinique.",
+      "Le délai d'annulation en ligne est dépassé\u00a0: contactez la "
+      'clinique.',
     );
     expect(
       message(const NotFoundFailure(code: 'not_found')),
@@ -284,5 +286,52 @@ void main() {
     expect(isTransientFailure(const NetworkFailure()), isTrue);
     expect(isTransientFailure(const ServerFailure(statusCode: 503)), isTrue);
     expect(isTransientFailure(const NotFoundFailure()), isFalse);
+  });
+
+  test('the questionnaire: its chips (none for an unknown value), the day '
+      'its answers were sent, its failures', () async {
+    await initializeDateFormatting('fr_FR');
+
+    expect(
+      [for (final symptom in Symptom.values) symptomLabel(_l10n, symptom)],
+      [
+        'Rien de particulier',
+        'Toux',
+        'Vomissements',
+        'Diarrhée',
+        'Baisse d’appétit',
+        'Démangeaisons',
+        'Boiterie',
+        null,
+      ],
+    );
+    expect(
+      [
+        for (final temperament in Temperament.values)
+          temperamentLabel(_l10n, temperament),
+      ],
+      ['Calme', 'Stressé(e)', 'Peut mordre ou griffer', null],
+    );
+    expect(
+      questionnaireSentAt(ClinicInstant.parse('2026-11-04T02:00:06+01:00')),
+      ('mer.\u00a04\u00a0nov.', '02:00'),
+    );
+    expect(
+      questionnaireFailureMessage(
+        _l10n,
+        const ValidationFailure(
+          violations: [Violation(propertyPath: 'symptoms', message: 'Non.')],
+        ),
+      ),
+      'Non.',
+    );
+    expect(
+      questionnaireFailureMessage(_l10n, const NotFoundFailure()),
+      "Ce rendez-vous a été annulé ou n'existe plus.",
+    );
+    expect(
+      questionnaireFailureMessage(_l10n, const NetworkFailure()),
+      'Vérifiez votre connexion Internet, puis réessayez.',
+    );
   });
 }

@@ -1688,4 +1688,300 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get rescheduleSlotGone =>
       'Ce créneau n\'est plus proposé pour ce rendez-vous. Choisissez-en un autre.';
+
+  @override
+  String questionnaireSubtitle(String pet, String motif, String slot) {
+    return '$pet · $motif · $slot';
+  }
+
+  @override
+  String questionnaireSubtitleNoPet(String motif, String slot) {
+    return '$motif · $slot';
+  }
+
+  @override
+  String get questionnaireIntro =>
+      '2 minutes. Vos réponses sont transmises à l\'équipe soignante.';
+
+  @override
+  String questionnaireSentOn(String date, String time) {
+    return 'Réponses envoyées le $date à $time. Vous pouvez les modifier jusqu\'au rendez-vous.';
+  }
+
+  @override
+  String get questionnaireSymptomsLegend =>
+      'Depuis la dernière visite, avez-vous remarqué :';
+
+  @override
+  String questionnaireTreatmentLegend(String pet) {
+    return 'Un traitement en cours pour $pet ?';
+  }
+
+  @override
+  String get questionnaireTreatmentLegendNoPet => 'Un traitement en cours ?';
+
+  @override
+  String questionnaireTemperamentLegend(String pet) {
+    return 'Comment se passent les visites pour $pet ?';
+  }
+
+  @override
+  String get questionnaireTemperamentLegendNoPet =>
+      'Comment se passent les visites ?';
+
+  @override
+  String get questionnaireSymptomNone => 'Rien de particulier';
+
+  @override
+  String get questionnaireSymptomCough => 'Toux';
+
+  @override
+  String get questionnaireSymptomVomiting => 'Vomissements';
+
+  @override
+  String get questionnaireSymptomDiarrhea => 'Diarrhée';
+
+  @override
+  String get questionnaireSymptomAppetiteLoss => 'Baisse d’appétit';
+
+  @override
+  String get questionnaireSymptomItching => 'Démangeaisons';
+
+  @override
+  String get questionnaireSymptomLameness => 'Boiterie';
+
+  @override
+  String get questionnaireTreatmentNo => 'Non';
+
+  @override
+  String get questionnaireTreatmentYes => 'Oui';
+
+  @override
+  String get questionnaireTreatmentDetails => 'Lequel ?';
+
+  @override
+  String get questionnaireTreatmentDetailsHint => 'Nom du médicament, dose';
+
+  @override
+  String get questionnaireTemperamentCalm => 'Calme';
+
+  @override
+  String get questionnaireTemperamentStressed => 'Stressé(e)';
+
+  @override
+  String get questionnaireTemperamentMayBite => 'Peut mordre ou griffer';
+
+  @override
+  String get questionnaireNotes => 'Autre chose à signaler';
+
+  @override
+  String get questionnaireSend => 'Envoyer à la clinique';
+
+  @override
+  String get questionnaireSent => 'Questionnaire envoyé à la clinique.';
+
+  @override
+  String get questionnaireLockedTitle => 'Questionnaire clos';
+
+  @override
+  String get questionnaireLockedBody =>
+      'Ce questionnaire ne peut plus être modifié.';
+
+  @override
+  String get questionnaireLockedEmpty =>
+      'Le questionnaire n\'a pas été rempli.';
+
+  @override
+  String questionnaireLockedSentOn(String date, String time) {
+    return 'Réponses envoyées le $date à $time.';
+  }
+
+  @override
+  String get questionnaireNotFoundTitle => 'Rendez-vous introuvable';
+
+  @override
+  String get questionnaireNotFoundBody =>
+      'Ce rendez-vous a été annulé ou n\'existe plus.';
+
+  @override
+  String renewalSubtitle(String date, String vet, String pet) {
+    return 'Ordonnance du $date · $vet · $pet';
+  }
+
+  @override
+  String get renewalLinesLegend => 'Traitements à renouveler';
+
+  @override
+  String get renewalLinesCaption => 'La demande porte sur toute l\'ordonnance.';
+
+  @override
+  String renewalConditionLegend(String pet) {
+    return 'Comment va $pet avec ce traitement ?';
+  }
+
+  @override
+  String get renewalConditionImproved => 'Ça va mieux';
+
+  @override
+  String get renewalConditionNoImprovement => 'Pas d’amélioration';
+
+  @override
+  String get renewalConditionAdverseEffects => 'Effets indésirables';
+
+  @override
+  String get renewalConditionWarning =>
+      'Le vétérinaire vous proposera sans doute une consultation avant de renouveler.';
+
+  @override
+  String get renewalNote => 'Précision pour le vétérinaire';
+
+  @override
+  String get renewalFootnote =>
+      'Retrait à la clinique. Le vétérinaire décide si un renouvellement sans consultation est possible.';
+
+  @override
+  String get renewalSend => 'Envoyer la demande';
+
+  @override
+  String get renewalDoneTitle => 'Demande envoyée';
+
+  @override
+  String get renewalDoneBody =>
+      'La clinique vous préviendra quand l\'ordonnance sera prête, ou si une consultation est nécessaire.';
+
+  @override
+  String get renewalDoneBack => 'Retour aux documents';
+
+  @override
+  String get renewalNotRenewable =>
+      'Cette ordonnance ne peut pas être renouvelée en ligne : contactez la clinique.';
+
+  @override
+  String get requestRateLimited =>
+      'Vous avez envoyé beaucoup de demandes aujourd\'hui. Réessayez demain ou contactez la clinique.';
+
+  @override
+  String petChangeSubtitle(String pet) {
+    return 'Pour $pet. La clinique vérifie chaque modification avant de mettre à jour la fiche.';
+  }
+
+  @override
+  String get petChangeFieldLegend => 'Que faut-il modifier ?';
+
+  @override
+  String get petChangeFieldName => 'Nom';
+
+  @override
+  String get petChangeFieldWeight => 'Poids';
+
+  @override
+  String get petChangeFieldSterilization => 'Stérilisation';
+
+  @override
+  String get petChangeFieldChipNumber => 'Puce';
+
+  @override
+  String get petChangeFieldOther => 'Autre';
+
+  @override
+  String get petChangeNewName => 'Nouveau nom';
+
+  @override
+  String get petChangeNewWeight => 'Nouveau poids (kg)';
+
+  @override
+  String get petChangeNewWeightHint => 'Ex. : 12,4';
+
+  @override
+  String get petChangeMeasuredOn => 'Pesé le';
+
+  @override
+  String get petChangeMeasuredToday => 'Aujourd\'hui';
+
+  @override
+  String get petChangeNeuteredMale => 'Castré';
+
+  @override
+  String get petChangeIntactMale => 'Non castré';
+
+  @override
+  String get petChangeNeuteredFemale => 'Stérilisée';
+
+  @override
+  String get petChangeIntactFemale => 'Non stérilisée';
+
+  @override
+  String get petChangeNeuteredUnknown => 'Stérilisé(e)';
+
+  @override
+  String get petChangeIntactUnknown => 'Non stérilisé(e)';
+
+  @override
+  String get petChangeChipNumber => 'Numéro de puce';
+
+  @override
+  String get petChangeChipNumberHelp =>
+      'Les 15 chiffres inscrits sur la carte d\'identification.';
+
+  @override
+  String get petChangeOtherValue => 'Ce qui a changé';
+
+  @override
+  String get petChangeOtherValueHint => 'Ex. : nouvelle allergie';
+
+  @override
+  String get petChangeNote => 'Précision pour la clinique';
+
+  @override
+  String get petChangeNoteOther => 'Précisions pour la clinique';
+
+  @override
+  String get petChangeNoteOtherHelp =>
+      'Expliquez la modification à la clinique.';
+
+  @override
+  String get petChangeSend => 'Envoyer la demande';
+
+  @override
+  String get petChangeDoneTitle => 'Demande envoyée';
+
+  @override
+  String get petChangeDoneBody =>
+      'La clinique vérifiera la modification avant de mettre à jour la fiche.';
+
+  @override
+  String get petChangeDoneClose => 'Fermer';
+
+  @override
+  String get petChangeNotEligible =>
+      'Cet animal ne peut plus faire l\'objet d\'une demande de modification : contactez la clinique.';
+
+  @override
+  String get petChangeNotFound =>
+      'Cet animal n\'est plus suivi par cette clinique.';
+
+  @override
+  String get petChangePendingTitle => 'Demandes en cours';
+
+  @override
+  String petChangePendingRow(String field, String value) {
+    return '$field : $value';
+  }
+
+  @override
+  String petChangePendingSentOn(String date) {
+    return 'Envoyée le $date';
+  }
+
+  @override
+  String get petChangePendingStatus => 'En attente';
+
+  @override
+  String get petChangePendingError =>
+      'Impossible d\'afficher vos demandes en cours.';
+
+  @override
+  String petChangeWeightValue(String value) {
+    return '$value kg';
+  }
 }

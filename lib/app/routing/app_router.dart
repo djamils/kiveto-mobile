@@ -146,11 +146,14 @@ void _backOrAppointments(BuildContext context) {
   }
 }
 
-/// The change request of a pet is slice 6's: a placeholder sheet until
-/// then.
-void _reportPetChange(BuildContext context, String petId) => unawaited(
-  showPlaceholderSheet(context, AppLocalizations.of(context).petReportChange),
-);
+/// Back from a page over the Documents tab: pops it, else the tab.
+void _backOrDocuments(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(AppRoutes.documents);
+  }
+}
 
 List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
   GoRoute fullScreen(String path, String Function(AppLocalizations) title) =>
@@ -233,10 +236,7 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
           routes: [
             GoRoute(
               path: AppRoutes.pets,
-              builder: (context, state) => const PetPage(
-                onBack: _backOrHome,
-                onReportChange: _reportPetChange,
-              ),
+              builder: (context, state) => const PetPage(onBack: _backOrHome),
             ),
             GoRoute(
               path: '${AppRoutes.pets}/:petId',
@@ -244,7 +244,6 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
                 petId: state.pathParameters['petId'],
                 request: state.extra,
                 onBack: _backOrHome,
-                onReportChange: _reportPetChange,
               ),
             ),
           ],
@@ -259,9 +258,14 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
                 onFillQuestionnaire: _pushQuestionnaire,
               ),
               routes: [
-                fullScreen(
-                  ':appointmentId/questionnaire',
-                  (l10n) => l10n.screenQuestionnaireTitle,
+                GoRoute(
+                  path: ':appointmentId/questionnaire',
+                  parentNavigatorKey: root,
+                  builder: (context, state) => QuestionnairePage(
+                    appointmentId: state.pathParameters['appointmentId']!,
+                    onBack: _backOrAppointments,
+                    onSent: _goAppointments,
+                  ),
                 ),
                 GoRoute(
                   path: ':appointmentId/reschedule',
@@ -286,9 +290,14 @@ List<RouteBase> _routes(GlobalKey<NavigatorState> root) {
                 ),
               ),
               routes: [
-                fullScreen(
-                  'prescriptions/:prescriptionId/renewal',
-                  (l10n) => l10n.screenPrescriptionRenewalTitle,
+                GoRoute(
+                  path: 'prescriptions/:prescriptionId/renewal',
+                  parentNavigatorKey: root,
+                  builder: (context, state) => RenewalPage(
+                    prescriptionId: state.pathParameters['prescriptionId']!,
+                    onBack: _backOrDocuments,
+                    onDone: _goDocuments,
+                  ),
                 ),
               ],
             ),

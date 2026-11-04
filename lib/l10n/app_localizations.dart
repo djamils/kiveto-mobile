@@ -2919,6 +2919,516 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce créneau n\'est plus proposé pour ce rendez-vous. Choisissez-en un autre.'**
   String get rescheduleSlotGone;
+
+  /// Questionnaire (15): the appointment under the title.
+  ///
+  /// In fr, this message translates to:
+  /// **'{pet} · {motif} · {slot}'**
+  String questionnaireSubtitle(String pet, String motif, String slot);
+
+  /// Questionnaire (15): an appointment without pet under the title.
+  ///
+  /// In fr, this message translates to:
+  /// **'{motif} · {slot}'**
+  String questionnaireSubtitleNoPet(String motif, String slot);
+
+  /// Questionnaire (15): the line under the appointment, before the answers are sent.
+  ///
+  /// In fr, this message translates to:
+  /// **'2 minutes. Vos réponses sont transmises à l\'équipe soignante.'**
+  String get questionnaireIntro;
+
+  /// Questionnaire (15): the line under the appointment once the answers were sent and may still change (date with no-break spaces).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponses envoyées le {date} à {time}. Vous pouvez les modifier jusqu\'au rendez-vous.'**
+  String questionnaireSentOn(String date, String time);
+
+  /// Questionnaire (15): legend of the symptoms.
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis la dernière visite, avez-vous remarqué :'**
+  String get questionnaireSymptomsLegend;
+
+  /// Questionnaire (15): legend of the ongoing treatment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un traitement en cours pour {pet} ?'**
+  String questionnaireTreatmentLegend(String pet);
+
+  /// Questionnaire (15): legend of the ongoing treatment, appointment without pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un traitement en cours ?'**
+  String get questionnaireTreatmentLegendNoPet;
+
+  /// Questionnaire (15): legend of the temperament.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment se passent les visites pour {pet} ?'**
+  String questionnaireTemperamentLegend(String pet);
+
+  /// Questionnaire (15): legend of the temperament, appointment without pet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment se passent les visites ?'**
+  String get questionnaireTemperamentLegendNoPet;
+
+  /// Questionnaire (15): symptom chip, none (goes with no other).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien de particulier'**
+  String get questionnaireSymptomNone;
+
+  /// Questionnaire (15): symptom chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toux'**
+  String get questionnaireSymptomCough;
+
+  /// Questionnaire (15): symptom chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vomissements'**
+  String get questionnaireSymptomVomiting;
+
+  /// Questionnaire (15): symptom chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diarrhée'**
+  String get questionnaireSymptomDiarrhea;
+
+  /// Questionnaire (15): symptom chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Baisse d’appétit'**
+  String get questionnaireSymptomAppetiteLoss;
+
+  /// Questionnaire (15): symptom chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Démangeaisons'**
+  String get questionnaireSymptomItching;
+
+  /// Questionnaire (15): symptom chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Boiterie'**
+  String get questionnaireSymptomLameness;
+
+  /// Questionnaire (15): no ongoing treatment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non'**
+  String get questionnaireTreatmentNo;
+
+  /// Questionnaire (15): an ongoing treatment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui'**
+  String get questionnaireTreatmentYes;
+
+  /// Questionnaire (15): label of the treatment field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lequel ?'**
+  String get questionnaireTreatmentDetails;
+
+  /// Questionnaire (15): placeholder of the treatment field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom du médicament, dose'**
+  String get questionnaireTreatmentDetailsHint;
+
+  /// Questionnaire (15): temperament chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Calme'**
+  String get questionnaireTemperamentCalm;
+
+  /// Questionnaire (15): temperament chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stressé(e)'**
+  String get questionnaireTemperamentStressed;
+
+  /// Questionnaire (15): temperament chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Peut mordre ou griffer'**
+  String get questionnaireTemperamentMayBite;
+
+  /// Questionnaire (15): label of the optional notes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre chose à signaler'**
+  String get questionnaireNotes;
+
+  /// Questionnaire (15): sends the answers.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer à la clinique'**
+  String get questionnaireSend;
+
+  /// Questionnaire (15): message once the answers were saved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Questionnaire envoyé à la clinique.'**
+  String get questionnaireSent;
+
+  /// Questionnaire (15): title of the callout of a questionnaire that may no longer change.
+  ///
+  /// In fr, this message translates to:
+  /// **'Questionnaire clos'**
+  String get questionnaireLockedTitle;
+
+  /// Questionnaire (15): body of the callout of a questionnaire that may no longer change (the appointment or its consultation started, or it was closed before a reschedule).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce questionnaire ne peut plus être modifié.'**
+  String get questionnaireLockedBody;
+
+  /// Questionnaire (15): a closed questionnaire without answers.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le questionnaire n\'a pas été rempli.'**
+  String get questionnaireLockedEmpty;
+
+  /// Questionnaire (15): when the answers of a closed questionnaire were sent (date with no-break spaces).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponses envoyées le {date} à {time}.'**
+  String questionnaireLockedSentOn(String date, String time);
+
+  /// Questionnaire (15): the appointment is gone (404).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous introuvable'**
+  String get questionnaireNotFoundTitle;
+
+  /// Questionnaire (15): the appointment is gone (404).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce rendez-vous a été annulé ou n\'existe plus.'**
+  String get questionnaireNotFoundBody;
+
+  /// Renewal (17): the prescription under the title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ordonnance du {date} · {vet} · {pet}'**
+  String renewalSubtitle(String date, String vet, String pet);
+
+  /// Renewal (17): title of the lines of the prescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Traitements à renouveler'**
+  String get renewalLinesLegend;
+
+  /// Renewal (17): the request covers every line.
+  ///
+  /// In fr, this message translates to:
+  /// **'La demande porte sur toute l\'ordonnance.'**
+  String get renewalLinesCaption;
+
+  /// Renewal (17): legend of the pet condition.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment va {pet} avec ce traitement ?'**
+  String renewalConditionLegend(String pet);
+
+  /// Renewal (17): pet condition chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ça va mieux'**
+  String get renewalConditionImproved;
+
+  /// Renewal (17): pet condition chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas d’amélioration'**
+  String get renewalConditionNoImprovement;
+
+  /// Renewal (17): pet condition chip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effets indésirables'**
+  String get renewalConditionAdverseEffects;
+
+  /// Renewal (17): warning when the treatment does not help or has adverse effects.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le vétérinaire vous proposera sans doute une consultation avant de renouveler.'**
+  String get renewalConditionWarning;
+
+  /// Renewal (17): label of the optional note.
+  ///
+  /// In fr, this message translates to:
+  /// **'Précision pour le vétérinaire'**
+  String get renewalNote;
+
+  /// Renewal (17): footnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrait à la clinique. Le vétérinaire décide si un renouvellement sans consultation est possible.'**
+  String get renewalFootnote;
+
+  /// Renewal (17): sends the request.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer la demande'**
+  String get renewalSend;
+
+  /// Renewal (17): success title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée'**
+  String get renewalDoneTitle;
+
+  /// Renewal (17): success paragraph.
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique vous préviendra quand l\'ordonnance sera prête, ou si une consultation est nécessaire.'**
+  String get renewalDoneBody;
+
+  /// Renewal (17): back to the documents (5).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour aux documents'**
+  String get renewalDoneBack;
+
+  /// Renewal (17): the server refuses the renewal (422 prescription_not_renewable).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette ordonnance ne peut pas être renouvelée en ligne : contactez la clinique.'**
+  String get renewalNotRenewable;
+
+  /// Renewal (17) and change request: too many requests (429).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez envoyé beaucoup de demandes aujourd\'hui. Réessayez demain ou contactez la clinique.'**
+  String get requestRateLimited;
+
+  /// Change request sheet: subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour {pet}. La clinique vérifie chaque modification avant de mettre à jour la fiche.'**
+  String petChangeSubtitle(String pet);
+
+  /// Change request sheet: legend of the field chips.
+  ///
+  /// In fr, this message translates to:
+  /// **'Que faut-il modifier ?'**
+  String get petChangeFieldLegend;
+
+  /// Change request: the name field (chip, pending row).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get petChangeFieldName;
+
+  /// Change request: the weight field (chip, pending row).
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get petChangeFieldWeight;
+
+  /// Change request: the sterilization field (chip, legend, pending row).
+  ///
+  /// In fr, this message translates to:
+  /// **'Stérilisation'**
+  String get petChangeFieldSterilization;
+
+  /// Change request: the chip number field (chip, pending row).
+  ///
+  /// In fr, this message translates to:
+  /// **'Puce'**
+  String get petChangeFieldChipNumber;
+
+  /// Change request: another change (chip, pending row).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get petChangeFieldOther;
+
+  /// Change request sheet: label of the name field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau nom'**
+  String get petChangeNewName;
+
+  /// Change request sheet: label of the weight field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau poids (kg)'**
+  String get petChangeNewWeight;
+
+  /// Change request sheet: placeholder of the weight field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : 12,4'**
+  String get petChangeNewWeightHint;
+
+  /// Change request sheet: label of the weighing date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pesé le'**
+  String get petChangeMeasuredOn;
+
+  /// Change request sheet: the weighing date until one is picked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get petChangeMeasuredToday;
+
+  /// Change request sheet: sterilization chip, male.
+  ///
+  /// In fr, this message translates to:
+  /// **'Castré'**
+  String get petChangeNeuteredMale;
+
+  /// Change request sheet: sterilization chip, male.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non castré'**
+  String get petChangeIntactMale;
+
+  /// Change request sheet: sterilization chip, female.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stérilisée'**
+  String get petChangeNeuteredFemale;
+
+  /// Change request sheet: sterilization chip, female.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non stérilisée'**
+  String get petChangeIntactFemale;
+
+  /// Change request sheet: sterilization chip, sex not recorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stérilisé(e)'**
+  String get petChangeNeuteredUnknown;
+
+  /// Change request sheet: sterilization chip, sex not recorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non stérilisé(e)'**
+  String get petChangeIntactUnknown;
+
+  /// Change request sheet: label of the chip number field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de puce'**
+  String get petChangeChipNumber;
+
+  /// Change request sheet: help of the chip number field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les 15 chiffres inscrits sur la carte d\'identification.'**
+  String get petChangeChipNumberHelp;
+
+  /// Change request sheet: label of the field of another change.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce qui a changé'**
+  String get petChangeOtherValue;
+
+  /// Change request sheet: placeholder of the field of another change.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : nouvelle allergie'**
+  String get petChangeOtherValueHint;
+
+  /// Change request sheet: label of the optional note.
+  ///
+  /// In fr, this message translates to:
+  /// **'Précision pour la clinique'**
+  String get petChangeNote;
+
+  /// Change request sheet: label of the note of another change.
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisions pour la clinique'**
+  String get petChangeNoteOther;
+
+  /// Change request sheet: help of the note of another change.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expliquez la modification à la clinique.'**
+  String get petChangeNoteOtherHelp;
+
+  /// Change request sheet: sends the request.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer la demande'**
+  String get petChangeSend;
+
+  /// Change request sheet: success title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée'**
+  String get petChangeDoneTitle;
+
+  /// Change request sheet: success paragraph.
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique vérifiera la modification avant de mettre à jour la fiche.'**
+  String get petChangeDoneBody;
+
+  /// Change request sheet: closes the sheet after the success.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer'**
+  String get petChangeDoneClose;
+
+  /// Change request sheet: the server refuses a change for this pet (422 pet_not_eligible: deceased, missing).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet animal ne peut plus faire l\'objet d\'une demande de modification : contactez la clinique.'**
+  String get petChangeNotEligible;
+
+  /// Change request sheet: the pet is gone (404).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet animal n\'est plus suivi par cette clinique.'**
+  String get petChangeNotFound;
+
+  /// Pet screen (2): title of the change requests waiting for the clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes en cours'**
+  String get petChangePendingTitle;
+
+  /// Pet screen (2): a pending change request, its field and value.
+  ///
+  /// In fr, this message translates to:
+  /// **'{field} : {value}'**
+  String petChangePendingRow(String field, String value);
+
+  /// Pet screen (2): when a pending change request was sent (date with no-break spaces).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyée le {date}'**
+  String petChangePendingSentOn(String date);
+
+  /// Pet screen (2): pill of a pending change request.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get petChangePendingStatus;
+
+  /// Pet screen (2): the pending change requests could not be read.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'afficher vos demandes en cours.'**
+  String get petChangePendingError;
+
+  /// Change request: a proposed weight as the owner typed it.
+  ///
+  /// In fr, this message translates to:
+  /// **'{value} kg'**
+  String petChangeWeightValue(String value);
 }
 
 class _AppLocalizationsDelegate

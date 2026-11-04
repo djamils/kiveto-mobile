@@ -2469,5 +2469,450 @@
   "rescheduleSlotGone": "Ce créneau n'est plus proposé pour ce rendez-vous. Choisissez-en un autre.",
   "@rescheduleSlotGone": {
     "description": "Reschedule: the slot or the practitioner is no longer offered for the appointment (404 on the reschedule)."
+  },
+
+  "questionnaireSubtitle": "{pet} · {motif} · {slot}",
+  "@questionnaireSubtitle": {
+    "description": "Questionnaire (15): the appointment under the title.",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Moka"
+      },
+      "motif": {
+        "type": "String",
+        "example": "Vaccination"
+      },
+      "slot": {
+        "type": "String",
+        "example": "mar. 4 nov. à 10:30"
+      }
+    }
+  },
+  "questionnaireSubtitleNoPet": "{motif} · {slot}",
+  "@questionnaireSubtitleNoPet": {
+    "description": "Questionnaire (15): an appointment without pet under the title.",
+    "placeholders": {
+      "motif": {
+        "type": "String",
+        "example": "Vaccination"
+      },
+      "slot": {
+        "type": "String",
+        "example": "mar. 4 nov. à 10:30"
+      }
+    }
+  },
+  "questionnaireIntro": "2 minutes. Vos réponses sont transmises à l'équipe soignante.",
+  "@questionnaireIntro": {
+    "description": "Questionnaire (15): the line under the appointment, before the answers are sent."
+  },
+  "questionnaireSentOn": "Réponses envoyées le {date} à {time}. Vous pouvez les modifier jusqu'au rendez-vous.",
+  "@questionnaireSentOn": {
+    "description": "Questionnaire (15): the line under the appointment once the answers were sent and may still change (date with no-break spaces).",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "mar. 4 nov."
+      },
+      "time": {
+        "type": "String",
+        "example": "02:00"
+      }
+    }
+  },
+  "questionnaireSymptomsLegend": "Depuis la dernière visite, avez-vous remarqué :",
+  "@questionnaireSymptomsLegend": {
+    "description": "Questionnaire (15): legend of the symptoms."
+  },
+  "questionnaireTreatmentLegend": "Un traitement en cours pour {pet} ?",
+  "@questionnaireTreatmentLegend": {
+    "description": "Questionnaire (15): legend of the ongoing treatment.",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Moka"
+      }
+    }
+  },
+  "questionnaireTreatmentLegendNoPet": "Un traitement en cours ?",
+  "@questionnaireTreatmentLegendNoPet": {
+    "description": "Questionnaire (15): legend of the ongoing treatment, appointment without pet."
+  },
+  "questionnaireTemperamentLegend": "Comment se passent les visites pour {pet} ?",
+  "@questionnaireTemperamentLegend": {
+    "description": "Questionnaire (15): legend of the temperament.",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Moka"
+      }
+    }
+  },
+  "questionnaireTemperamentLegendNoPet": "Comment se passent les visites ?",
+  "@questionnaireTemperamentLegendNoPet": {
+    "description": "Questionnaire (15): legend of the temperament, appointment without pet."
+  },
+  "questionnaireSymptomNone": "Rien de particulier",
+  "@questionnaireSymptomNone": {
+    "description": "Questionnaire (15): symptom chip, none (goes with no other)."
+  },
+  "questionnaireSymptomCough": "Toux",
+  "@questionnaireSymptomCough": {
+    "description": "Questionnaire (15): symptom chip."
+  },
+  "questionnaireSymptomVomiting": "Vomissements",
+  "@questionnaireSymptomVomiting": {
+    "description": "Questionnaire (15): symptom chip."
+  },
+  "questionnaireSymptomDiarrhea": "Diarrhée",
+  "@questionnaireSymptomDiarrhea": {
+    "description": "Questionnaire (15): symptom chip."
+  },
+  "questionnaireSymptomAppetiteLoss": "Baisse d’appétit",
+  "@questionnaireSymptomAppetiteLoss": {
+    "description": "Questionnaire (15): symptom chip."
+  },
+  "questionnaireSymptomItching": "Démangeaisons",
+  "@questionnaireSymptomItching": {
+    "description": "Questionnaire (15): symptom chip."
+  },
+  "questionnaireSymptomLameness": "Boiterie",
+  "@questionnaireSymptomLameness": {
+    "description": "Questionnaire (15): symptom chip."
+  },
+  "questionnaireTreatmentNo": "Non",
+  "@questionnaireTreatmentNo": {
+    "description": "Questionnaire (15): no ongoing treatment."
+  },
+  "questionnaireTreatmentYes": "Oui",
+  "@questionnaireTreatmentYes": {
+    "description": "Questionnaire (15): an ongoing treatment."
+  },
+  "questionnaireTreatmentDetails": "Lequel ?",
+  "@questionnaireTreatmentDetails": {
+    "description": "Questionnaire (15): label of the treatment field."
+  },
+  "questionnaireTreatmentDetailsHint": "Nom du médicament, dose",
+  "@questionnaireTreatmentDetailsHint": {
+    "description": "Questionnaire (15): placeholder of the treatment field."
+  },
+  "questionnaireTemperamentCalm": "Calme",
+  "@questionnaireTemperamentCalm": {
+    "description": "Questionnaire (15): temperament chip."
+  },
+  "questionnaireTemperamentStressed": "Stressé(e)",
+  "@questionnaireTemperamentStressed": {
+    "description": "Questionnaire (15): temperament chip."
+  },
+  "questionnaireTemperamentMayBite": "Peut mordre ou griffer",
+  "@questionnaireTemperamentMayBite": {
+    "description": "Questionnaire (15): temperament chip."
+  },
+  "questionnaireNotes": "Autre chose à signaler",
+  "@questionnaireNotes": {
+    "description": "Questionnaire (15): label of the optional notes."
+  },
+  "questionnaireSend": "Envoyer à la clinique",
+  "@questionnaireSend": {
+    "description": "Questionnaire (15): sends the answers."
+  },
+  "questionnaireSent": "Questionnaire envoyé à la clinique.",
+  "@questionnaireSent": {
+    "description": "Questionnaire (15): message once the answers were saved."
+  },
+  "questionnaireLockedTitle": "Questionnaire clos",
+  "@questionnaireLockedTitle": {
+    "description": "Questionnaire (15): title of the callout of a questionnaire that may no longer change."
+  },
+  "questionnaireLockedBody": "Ce questionnaire ne peut plus être modifié.",
+  "@questionnaireLockedBody": {
+    "description": "Questionnaire (15): body of the callout of a questionnaire that may no longer change (the appointment or its consultation started, or it was closed before a reschedule)."
+  },
+  "questionnaireLockedEmpty": "Le questionnaire n'a pas été rempli.",
+  "@questionnaireLockedEmpty": {
+    "description": "Questionnaire (15): a closed questionnaire without answers."
+  },
+  "questionnaireLockedSentOn": "Réponses envoyées le {date} à {time}.",
+  "@questionnaireLockedSentOn": {
+    "description": "Questionnaire (15): when the answers of a closed questionnaire were sent (date with no-break spaces).",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "mar. 20 oct."
+      },
+      "time": {
+        "type": "String",
+        "example": "21:30"
+      }
+    }
+  },
+  "questionnaireNotFoundTitle": "Rendez-vous introuvable",
+  "@questionnaireNotFoundTitle": {
+    "description": "Questionnaire (15): the appointment is gone (404)."
+  },
+  "questionnaireNotFoundBody": "Ce rendez-vous a été annulé ou n'existe plus.",
+  "@questionnaireNotFoundBody": {
+    "description": "Questionnaire (15): the appointment is gone (404)."
+  },
+  "renewalSubtitle": "Ordonnance du {date} · {vet} · {pet}",
+  "@renewalSubtitle": {
+    "description": "Renewal (17): the prescription under the title.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "14 oct. 2026"
+      },
+      "vet": {
+        "type": "String",
+        "example": "Dr Camille Roux"
+      },
+      "pet": {
+        "type": "String",
+        "example": "Moka"
+      }
+    }
+  },
+  "renewalLinesLegend": "Traitements à renouveler",
+  "@renewalLinesLegend": {
+    "description": "Renewal (17): title of the lines of the prescription."
+  },
+  "renewalLinesCaption": "La demande porte sur toute l'ordonnance.",
+  "@renewalLinesCaption": {
+    "description": "Renewal (17): the request covers every line."
+  },
+  "renewalConditionLegend": "Comment va {pet} avec ce traitement ?",
+  "@renewalConditionLegend": {
+    "description": "Renewal (17): legend of the pet condition.",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Moka"
+      }
+    }
+  },
+  "renewalConditionImproved": "Ça va mieux",
+  "@renewalConditionImproved": {
+    "description": "Renewal (17): pet condition chip."
+  },
+  "renewalConditionNoImprovement": "Pas d’amélioration",
+  "@renewalConditionNoImprovement": {
+    "description": "Renewal (17): pet condition chip."
+  },
+  "renewalConditionAdverseEffects": "Effets indésirables",
+  "@renewalConditionAdverseEffects": {
+    "description": "Renewal (17): pet condition chip."
+  },
+  "renewalConditionWarning": "Le vétérinaire vous proposera sans doute une consultation avant de renouveler.",
+  "@renewalConditionWarning": {
+    "description": "Renewal (17): warning when the treatment does not help or has adverse effects."
+  },
+  "renewalNote": "Précision pour le vétérinaire",
+  "@renewalNote": {
+    "description": "Renewal (17): label of the optional note."
+  },
+  "renewalFootnote": "Retrait à la clinique. Le vétérinaire décide si un renouvellement sans consultation est possible.",
+  "@renewalFootnote": {
+    "description": "Renewal (17): footnote."
+  },
+  "renewalSend": "Envoyer la demande",
+  "@renewalSend": {
+    "description": "Renewal (17): sends the request."
+  },
+  "renewalDoneTitle": "Demande envoyée",
+  "@renewalDoneTitle": {
+    "description": "Renewal (17): success title."
+  },
+  "renewalDoneBody": "La clinique vous préviendra quand l'ordonnance sera prête, ou si une consultation est nécessaire.",
+  "@renewalDoneBody": {
+    "description": "Renewal (17): success paragraph."
+  },
+  "renewalDoneBack": "Retour aux documents",
+  "@renewalDoneBack": {
+    "description": "Renewal (17): back to the documents (5)."
+  },
+  "renewalNotRenewable": "Cette ordonnance ne peut pas être renouvelée en ligne : contactez la clinique.",
+  "@renewalNotRenewable": {
+    "description": "Renewal (17): the server refuses the renewal (422 prescription_not_renewable)."
+  },
+  "requestRateLimited": "Vous avez envoyé beaucoup de demandes aujourd'hui. Réessayez demain ou contactez la clinique.",
+  "@requestRateLimited": {
+    "description": "Renewal (17) and change request: too many requests (429)."
+  },
+  "petChangeSubtitle": "Pour {pet}. La clinique vérifie chaque modification avant de mettre à jour la fiche.",
+  "@petChangeSubtitle": {
+    "description": "Change request sheet: subtitle.",
+    "placeholders": {
+      "pet": {
+        "type": "String",
+        "example": "Moka"
+      }
+    }
+  },
+  "petChangeFieldLegend": "Que faut-il modifier ?",
+  "@petChangeFieldLegend": {
+    "description": "Change request sheet: legend of the field chips."
+  },
+  "petChangeFieldName": "Nom",
+  "@petChangeFieldName": {
+    "description": "Change request: the name field (chip, pending row)."
+  },
+  "petChangeFieldWeight": "Poids",
+  "@petChangeFieldWeight": {
+    "description": "Change request: the weight field (chip, pending row)."
+  },
+  "petChangeFieldSterilization": "Stérilisation",
+  "@petChangeFieldSterilization": {
+    "description": "Change request: the sterilization field (chip, legend, pending row)."
+  },
+  "petChangeFieldChipNumber": "Puce",
+  "@petChangeFieldChipNumber": {
+    "description": "Change request: the chip number field (chip, pending row)."
+  },
+  "petChangeFieldOther": "Autre",
+  "@petChangeFieldOther": {
+    "description": "Change request: another change (chip, pending row)."
+  },
+  "petChangeNewName": "Nouveau nom",
+  "@petChangeNewName": {
+    "description": "Change request sheet: label of the name field."
+  },
+  "petChangeNewWeight": "Nouveau poids (kg)",
+  "@petChangeNewWeight": {
+    "description": "Change request sheet: label of the weight field."
+  },
+  "petChangeNewWeightHint": "Ex. : 12,4",
+  "@petChangeNewWeightHint": {
+    "description": "Change request sheet: placeholder of the weight field."
+  },
+  "petChangeMeasuredOn": "Pesé le",
+  "@petChangeMeasuredOn": {
+    "description": "Change request sheet: label of the weighing date."
+  },
+  "petChangeMeasuredToday": "Aujourd'hui",
+  "@petChangeMeasuredToday": {
+    "description": "Change request sheet: the weighing date until one is picked."
+  },
+  "petChangeNeuteredMale": "Castré",
+  "@petChangeNeuteredMale": {
+    "description": "Change request sheet: sterilization chip, male."
+  },
+  "petChangeIntactMale": "Non castré",
+  "@petChangeIntactMale": {
+    "description": "Change request sheet: sterilization chip, male."
+  },
+  "petChangeNeuteredFemale": "Stérilisée",
+  "@petChangeNeuteredFemale": {
+    "description": "Change request sheet: sterilization chip, female."
+  },
+  "petChangeIntactFemale": "Non stérilisée",
+  "@petChangeIntactFemale": {
+    "description": "Change request sheet: sterilization chip, female."
+  },
+  "petChangeNeuteredUnknown": "Stérilisé(e)",
+  "@petChangeNeuteredUnknown": {
+    "description": "Change request sheet: sterilization chip, sex not recorded."
+  },
+  "petChangeIntactUnknown": "Non stérilisé(e)",
+  "@petChangeIntactUnknown": {
+    "description": "Change request sheet: sterilization chip, sex not recorded."
+  },
+  "petChangeChipNumber": "Numéro de puce",
+  "@petChangeChipNumber": {
+    "description": "Change request sheet: label of the chip number field."
+  },
+  "petChangeChipNumberHelp": "Les 15 chiffres inscrits sur la carte d'identification.",
+  "@petChangeChipNumberHelp": {
+    "description": "Change request sheet: help of the chip number field."
+  },
+  "petChangeOtherValue": "Ce qui a changé",
+  "@petChangeOtherValue": {
+    "description": "Change request sheet: label of the field of another change."
+  },
+  "petChangeOtherValueHint": "Ex. : nouvelle allergie",
+  "@petChangeOtherValueHint": {
+    "description": "Change request sheet: placeholder of the field of another change."
+  },
+  "petChangeNote": "Précision pour la clinique",
+  "@petChangeNote": {
+    "description": "Change request sheet: label of the optional note."
+  },
+  "petChangeNoteOther": "Précisions pour la clinique",
+  "@petChangeNoteOther": {
+    "description": "Change request sheet: label of the note of another change."
+  },
+  "petChangeNoteOtherHelp": "Expliquez la modification à la clinique.",
+  "@petChangeNoteOtherHelp": {
+    "description": "Change request sheet: help of the note of another change."
+  },
+  "petChangeSend": "Envoyer la demande",
+  "@petChangeSend": {
+    "description": "Change request sheet: sends the request."
+  },
+  "petChangeDoneTitle": "Demande envoyée",
+  "@petChangeDoneTitle": {
+    "description": "Change request sheet: success title."
+  },
+  "petChangeDoneBody": "La clinique vérifiera la modification avant de mettre à jour la fiche.",
+  "@petChangeDoneBody": {
+    "description": "Change request sheet: success paragraph."
+  },
+  "petChangeDoneClose": "Fermer",
+  "@petChangeDoneClose": {
+    "description": "Change request sheet: closes the sheet after the success."
+  },
+  "petChangeNotEligible": "Cet animal ne peut plus faire l'objet d'une demande de modification : contactez la clinique.",
+  "@petChangeNotEligible": {
+    "description": "Change request sheet: the server refuses a change for this pet (422 pet_not_eligible: deceased, missing)."
+  },
+  "petChangeNotFound": "Cet animal n'est plus suivi par cette clinique.",
+  "@petChangeNotFound": {
+    "description": "Change request sheet: the pet is gone (404)."
+  },
+  "petChangePendingTitle": "Demandes en cours",
+  "@petChangePendingTitle": {
+    "description": "Pet screen (2): title of the change requests waiting for the clinic."
+  },
+  "petChangePendingRow": "{field} : {value}",
+  "@petChangePendingRow": {
+    "description": "Pet screen (2): a pending change request, its field and value.",
+    "placeholders": {
+      "field": {
+        "type": "String",
+        "example": "Poids"
+      },
+      "value": {
+        "type": "String",
+        "example": "12,4 kg"
+      }
+    }
+  },
+  "petChangePendingSentOn": "Envoyée le {date}",
+  "@petChangePendingSentOn": {
+    "description": "Pet screen (2): when a pending change request was sent (date with no-break spaces).",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "4 nov. 2026"
+      }
+    }
+  },
+  "petChangePendingStatus": "En attente",
+  "@petChangePendingStatus": {
+    "description": "Pet screen (2): pill of a pending change request."
+  },
+  "petChangePendingError": "Impossible d'afficher vos demandes en cours.",
+  "@petChangePendingError": {
+    "description": "Pet screen (2): the pending change requests could not be read."
+  },
+  "petChangeWeightValue": "{value} kg",
+  "@petChangeWeightValue": {
+    "description": "Change request: a proposed weight as the owner typed it.",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "12,4"
+      }
+    }
   }
 }

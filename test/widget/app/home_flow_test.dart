@@ -1,9 +1,10 @@
 // Slice 3 in the real app (router, shell, seams, PortalHttp on the fake
 // backend): the home under the bottom nav, its exits (a pet's sheet in the
 // Animaux tab and back home, the appointments and documents tabs, the
-// booking and the questionnaire over the shell), the change request
-// placeholder, and switching to Lyon (the home, the pets, the documents,
-// the badge, a restart).
+// booking over the shell), the questionnaire filled from the home (slice 6:
+// back on the appointments, its banner and the home's button gone), the
+// change request sheet of a pet, and switching to Lyon (the home, the pets,
+// the documents, the badge, a restart).
 
 import 'dart:convert';
 import 'dart:io';
@@ -47,6 +48,18 @@ String _top(ProviderContainer container) => container
     .last
     .matchedLocation;
 
+/// The capture [fixture] with [change] applied to its JSON body.
+PortalReply _edited(
+  String fixture,
+  void Function(Map<String, Object?> body) change,
+) {
+  final body = jsonDecode(
+    File('$portalFixtures/$fixture').readAsStringSync(),
+  ) as Map<String, Object?>;
+  change(body);
+  return PortalReply.json(jsonEncode(body));
+}
+
 /// Julien's Paris home with its questionnaire not started.
 PortalReply _questionnaireToFill() {
   final body = jsonDecode(
@@ -58,7 +71,7 @@ PortalReply _questionnaireToFill() {
 }
 
 /// Julien signed in: his /me, and for both clinics the home, the pets, the
-/// pet's sheet, care items and visits, the documents.
+/// pet's sheet, care items and visits, the documents, the requests.
 FakePortalBackend _julien() {
   final backend = FakePortalBackend()
     ..on('GET', _me, PortalReply.fixture('me.get.200.json'));
@@ -97,6 +110,13 @@ FakePortalBackend _julien() {
         'GET',
         '$base/documents',
         PortalReply.fixture('clinics.$name.documents.get.200.json'),
+      )
+      ..on(
+        'GET',
+        '$base/requests?limit=50',
+        clinic == _paris
+            ? PortalReply.fixture('clinics.paris.requests.get.200.json')
+            : PortalReply.json('{"items":[],"nextCursor":null}'),
       );
   }
   return backend;
@@ -176,11 +196,53 @@ void main() {
     expect(find.text('Accueil'), findsNothing);
   });
 
-  testWidgets('« Remplir le questionnaire » pushes the questionnaire', (
-    tester,
-  ) async {
+  testWidgets('« Remplir le questionnaire » pushes the questionnaire; once '
+      'sent, the appointments without its banner, the home without its '
+      'button', (tester) async {
+    const base = '$api/clinics/$_paris';
+    const questionnaire = '$base/appointments/$_appointment/questionnaire';
+    var sent = false;
     final backend = _julien()
-      ..on('GET', '$api/clinics/$_paris/home', _questionnaireToFill());
+      ..onRequest(
+        'GET',
+        '$base/home',
+        (_) => sent
+            ? PortalReply.fixture('clinics.paris.home.get.200.json')
+            : _questionnaireToFill(),
+      )
+      ..on(
+        'GET',
+        '$base/appointments/$_appointment',
+        _edited('clinics.paris.appointment.get.200.json', (body) {
+          body['id'] = _appointment;
+          body['startAt'] = '2026-11-11T10:30:00+01:00';
+          body['endAt'] = '2026-11-11T11:00:00+01:00';
+          (body['motif']! as Map<String, Object?>)['label'] = 'Rendez-vous';
+        }),
+      )
+      ..on(
+        'GET',
+        questionnaire,
+        PortalReply.fixture(
+          'clinics.paris.appointment.questionnaire.get.200.json',
+        ),
+      )
+      ..onRequest('PUT', questionnaire, (_) {
+        sent = true;
+        return PortalReply.fixture(
+          'clinics.paris.appointment.questionnaire.put.200.json',
+        );
+      })
+      ..on(
+        'GET',
+        '$base/appointments?scope=upcoming',
+        _edited('clinics.paris.appointments.upcoming.get.200.json', (body) {
+          for (final item in body['items']! as List<Object?>) {
+            (item! as Map<String, Object?>)['questionnaireStatus'] =
+                'submitted';
+          }
+        }),
+      );
     final container = await pumpKivetoApp(
       tester,
       session: await memorySession(pair('A')),
@@ -191,11 +253,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(_top(container), AppRoutes.questionnaire(_appointment));
-    expect(find.text('Avant la consultation'), findsWidgets);
+    expect(find.text('Avant la consultation'), findsOneWidget);
+    expect(
+      find.text('Oslo · Rendez-vous · mer. 11 nov. à 10:30'),
+      findsOneWidget,
+    );
+    expect(find.text('Rien de particulier'), findsOneWidget);
+
+    await _tapVisible(tester, find.text('Non'));
+    await _tapVisible(tester, find.text('Calme'));
+    await tester.tap(find.text('Envoyer à la clinique'));
+    await tester.pumpAndSettle();
+
+    expect(_location(container), AppRoutes.appointments);
+    expect(find.text('Questionnaire envoyé à la clinique.'), findsOneWidget);
+    expect(find.text('Questionnaire à compléter'), findsNothing);
+
+    await tester.tap(find.text('Accueil'));
+    await tester.pumpAndSettle();
+    expect(find.text('Remplir le questionnaire'), findsNothing);
+    expect(backend.requestsTo('$base/home'), hasLength(2));
   });
 
   testWidgets('the Animaux tab: the first pet; « Signaler une '
-      'modification » opens the placeholder sheet', (tester) async {
+      'modification » opens its change request sheet', (tester) async {
     final container = await pumpKivetoApp(
       tester,
       session: await memorySession(pair('A')),
@@ -221,7 +302,10 @@ void main() {
     expect(
       find.descendant(
         of: sheet,
-        matching: find.text('Cet écran arrive dans une prochaine version.'),
+        matching: find.text(
+          'Pour Oslo. La clinique vérifie chaque modification avant de '
+          'mettre à jour la fiche.',
+        ),
       ),
       findsOneWidget,
     );
