@@ -1,6 +1,6 @@
 // The default deviceLocationProvider on a fake geolocator platform: the
 // location service off, the permission asked when not decided yet, refused
-// (then or for good), granted (a coarse position, rounded to 2 decimals,
+// (then or for good), granted (a coarse position, rounded to 3 decimals,
 // low accuracy within 15 s), and the platform's failures.
 
 import 'dart:async';
@@ -80,9 +80,9 @@ void main() {
     ),
   );
 
-  test('granted: a coarse position, rounded to 2 decimals, low accuracy '
+  test('granted: a coarse position, rounded to 3 decimals, low accuracy '
       'within 15 s; nothing asked', () async {
-    expect(await locate(), const GeoPoint(48.88, 2.34));
+    expect(await locate(), const GeoPoint(48.884, 2.337));
     expect(platform.requests, 0);
     expect(platform.settings?.accuracy, LocationAccuracy.low);
     expect(platform.settings?.timeLimit, const Duration(seconds: 15));
@@ -102,7 +102,7 @@ void main() {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
 
-    expect(await locate(), const GeoPoint(48.88, 2.34));
+    expect(await locate(), const GeoPoint(48.884, 2.337));
     expect(platform.settings, isNot(isA<AndroidSettings>()));
     expect(platform.settings?.accuracy, LocationAccuracy.low);
   });
@@ -110,7 +110,7 @@ void main() {
   test('not decided yet: asked, then granted', () async {
     platform.checked = LocationPermission.denied;
 
-    expect(await locate(), const GeoPoint(48.88, 2.34));
+    expect(await locate(), const GeoPoint(48.884, 2.337));
     expect(platform.requests, 1);
   });
 

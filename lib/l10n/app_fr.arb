@@ -3190,6 +3190,10 @@
   "@listingBookingNoMotif": {
     "description": "New-client booking, step 1: reached without a motif chosen."
   },
+  "listingBookingNoSlot": "Choisissez d'abord un créneau.",
+  "@listingBookingNoSlot": {
+    "description": "New-client booking, step 2: reached without a slot chosen (the slot taken meanwhile)."
+  },
   "listingBookingSlotLabel": "Créneau",
   "@listingBookingSlotLabel": {
     "description": "New-client booking, step 1: label of the bottom bar."
@@ -3264,6 +3268,10 @@
   "@appointmentRequestCancelled": {
     "description": "Appointments (4): pill of a cancelled request."
   },
+  "appointmentRequestConfirmed": "Confirmée",
+  "@appointmentRequestConfirmed": {
+    "description": "Appointments (4): pill of a request the clinic confirmed (its appointment is in that clinic's list)."
+  },
   "appointmentRequestPendingLine": "La clinique doit confirmer votre demande.",
   "@appointmentRequestPendingLine": {
     "description": "Appointments (4): status line of a pending request."
@@ -3279,6 +3287,10 @@
   "appointmentRequestCancelledLine": "La demande a été annulée.",
   "@appointmentRequestCancelledLine": {
     "description": "Appointments (4): status line of a cancelled request."
+  },
+  "appointmentRequestConfirmedLine": "Le rendez-vous apparaît dans les rendez-vous de cette clinique.",
+  "@appointmentRequestConfirmedLine": {
+    "description": "Appointments (4): status line of a confirmed request of a clinic that is not the active one."
   },
   "appointmentRequestsError": "Impossible de charger vos demandes de rendez-vous.",
   "@appointmentRequestsError": {

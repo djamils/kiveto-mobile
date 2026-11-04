@@ -3718,6 +3718,12 @@ abstract class AppLocalizations {
   /// **'Choisissez d\'abord un motif.'**
   String get listingBookingNoMotif;
 
+  /// New-client booking, step 2: reached without a slot chosen (the slot taken meanwhile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez d\'abord un créneau.'**
+  String get listingBookingNoSlot;
+
   /// New-client booking, step 1: label of the bottom bar.
   ///
   /// In fr, this message translates to:
@@ -3814,6 +3820,12 @@ abstract class AppLocalizations {
   /// **'Annulée'**
   String get appointmentRequestCancelled;
 
+  /// Appointments (4): pill of a request the clinic confirmed (its appointment is in that clinic's list).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmée'**
+  String get appointmentRequestConfirmed;
+
   /// Appointments (4): status line of a pending request.
   ///
   /// In fr, this message translates to:
@@ -3837,6 +3849,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'La demande a été annulée.'**
   String get appointmentRequestCancelledLine;
+
+  /// Appointments (4): status line of a confirmed request of a clinic that is not the active one.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le rendez-vous apparaît dans les rendez-vous de cette clinique.'**
+  String get appointmentRequestConfirmedLine;
 
   /// Appointments (4): the booking requests could not be read.
   ///

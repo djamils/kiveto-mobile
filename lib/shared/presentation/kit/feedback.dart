@@ -12,12 +12,11 @@ enum _CalloutKind { info, brand, warning, danger }
 /// C-33: the boxes of information: neutral info (a), brand with an action
 /// (b), warning (c), danger with an action (e).
 class KivetoCallout extends StatelessWidget {
-  /// C-33a: on canvas, an optional title, a body and an optional brand
-  /// link.
+  /// C-33a: on canvas, a title, a body and an optional brand link.
   const new info({
+    required String this.title,
     required this.body,
     super.key,
-    this.title,
     this.actionLabel,
     this.onAction,
   }) : actionLoading = false,
@@ -48,8 +47,8 @@ class KivetoCallout extends StatelessWidget {
     super.key,
     this.actionLabel,
     this.onAction,
-    this.actionLoading = false,
   }) : title = null,
+       actionLoading = false,
        _kind = _CalloutKind.danger;
 
   final String? title;
@@ -57,7 +56,7 @@ class KivetoCallout extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
 
-  /// The action is on its way: its button shows a spinner.
+  /// The brand callout's action is on its way: its button shows a spinner.
   final bool actionLoading;
   final _CalloutKind _kind;
 
@@ -75,15 +74,13 @@ class KivetoCallout extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (title != null) ...[
-                Text(
-                  title,
-                  style: KivetoText.labelStrong.copyWith(
-                    color: brand ? KivetoColors.onBrandSoft : KivetoColors.ink,
-                  ),
+              Text(
+                title!,
+                style: KivetoText.labelStrong.copyWith(
+                  color: brand ? KivetoColors.onBrandSoft : KivetoColors.ink,
                 ),
-                SizedBox(height: brand ? KivetoSpace.m : KivetoSpace.ml),
-              ],
+              ),
+              SizedBox(height: brand ? KivetoSpace.m : KivetoSpace.ml),
               Text(
                 body,
                 style: KivetoText.bodySmall.copyWith(
@@ -147,7 +144,6 @@ class KivetoCallout extends StatelessWidget {
                 KivetoButton.danger(
                   label: action,
                   onPressed: onAction,
-                  loading: actionLoading,
                   size: KivetoButtonSize.small,
                 ),
               ],

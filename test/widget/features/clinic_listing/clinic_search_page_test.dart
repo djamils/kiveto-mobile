@@ -10,6 +10,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/features/clinic_listing/domain/clinic_listing.dart';
 import 'package:kiveto_mobile/features/clinic_listing/presentation/clinic_card.dart';
 import 'package:kiveto_mobile/features/clinic_listing/presentation/clinic_listing_providers.dart';
@@ -78,12 +79,13 @@ void main() {
     FakePortalBackend backend, {
     DeviceLocator? locate,
     bool callAnswered = true,
+    SessionManager? session,
   }) async {
     final container = await pumpPage(
       tester,
       ClinicSearchPage(onOpenListing: (context, id) => opened.add(id)),
       backend: backend,
-      session: await memorySession(pair('A')),
+      session: session ?? await memorySession(pair('A')),
       overrides: [
         if (locate != null) deviceLocationProvider.overrideWithValue(locate),
         phoneDialerProvider.overrideWithValue((uri) async {
@@ -286,7 +288,7 @@ void main() {
   });
 
   testWidgets("a record no longer offered: « Ce dossier n'est plus "
-      'proposé. », the records read again', (tester) async {
+      'proposé. », /me and the records read again', (tester) async {
     final backend = _backend()
       ..on(
         'POST',
@@ -308,6 +310,8 @@ void main() {
 
     expect(find.text("Ce dossier n'est plus proposé."), findsOneWidget);
     expect(backend.requestsTo(_suggestions), hasLength(2));
+    // Perhaps accepted elsewhere: its pending link shows.
+    expect(backend.requestsTo('$api/me'), hasLength(2));
     expect(find.byType(LinkSuggestionCallout), findsNothing);
   });
 
@@ -731,5 +735,73 @@ void main() {
 
     expect(backend.requestsTo('$_listings?q=Lyon'), hasLength(1));
     expect(find.text('1 clinique'), findsOneWidget);
+  });
+
+  testWidgets('another search on its way: the last results stay in view '
+      'under a progress bar, then the new ones replace them', (tester) async {
+    final answer = Completer<PortalReply>();
+    final backend = _backend()
+      ..onRequest('GET', '$_listings?q=Lyon', (request) => answer.future);
+    await pump(tester, backend);
+
+    await tester.enterText(find.byType(TextField), 'Lyon');
+    await tester.pump(searchDebounce);
+    await tester.pump();
+
+    expect(find.byType(LoadingView), findsNothing);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.text('3 cliniques'), findsOneWidget);
+    expect(find.byType(ClinicCard), findsNWidgets(3));
+
+    answer.complete(PortalReply.fixture('clinic-listings.search.get.200.json'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(find.text('1 clinique'), findsOneWidget);
+    expect(find.byType(ClinicCard), findsOneWidget);
+  });
+
+  testWidgets('an empty page with a next one: no count line', (tester) async {
+    await pump(
+      tester,
+      _backend()
+        ..on(
+          'GET',
+          _listings,
+          PortalReply.json('{"items":[],"nextCursor":"c1"}'),
+        )
+        ..on(
+          'GET',
+          '$_listings?cursor=c1',
+          problem('service_unavailable', 503),
+        ),
+    );
+
+    expect(find.textContaining('Plus de'), findsNothing);
+    expect(find.textContaining('0 clinique'), findsNothing);
+    expect(find.text('Impossible de charger la suite.'), findsOneWidget);
+  });
+
+  testWidgets('another session: the records read again with its tokens, the '
+      "first account's gone", (tester) async {
+    final session = await memorySession(pair('A'));
+    final backend = _backend()
+      ..onRequest(
+        'GET',
+        _suggestions,
+        (request) => PortalReply.fixture(
+          bearerOf(request) == 'Bearer A'
+              ? 'me.link-suggestions.get.200.json'
+              : 'me.link-suggestions.empty.get.200.json',
+        ),
+      );
+    await pump(tester, backend, session: session);
+    expect(find.byType(LinkSuggestionCallout), findsOneWidget);
+
+    await session.open(pair('B'));
+    await tester.pumpAndSettle();
+
+    expect(bearerOf(backend.requestsTo(_suggestions).last), 'Bearer B');
+    expect(find.byType(LinkSuggestionCallout), findsNothing);
   });
 }

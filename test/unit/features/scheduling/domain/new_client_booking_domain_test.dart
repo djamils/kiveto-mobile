@@ -19,9 +19,10 @@ AppointmentRequest _request(
   String id,
   String startAt, {
   AppointmentRequestStatus status = AppointmentRequestStatus.pending,
+  String clinicName = 'Clinique Vétérinaire de Lyon',
 }) => AppointmentRequest(
   id: AppointmentRequestId(id),
-  clinicName: 'Clinique Vétérinaire de Lyon',
+  clinicName: clinicName,
   motifLabel: 'Consultation',
   startAt: ClinicInstant.parse(startAt),
   status: status,
@@ -70,32 +71,61 @@ void main() {
       _request('recent', '2026-11-09T08:59:00+01:00'),
     ];
 
-    test('to come: from now on, the soonest first, the confirmed left out', () {
-      expect(
-        [
-          for (final request in requestsFor(
-            AppointmentScope.upcoming,
-            requests,
-            now,
-          ))
-            request.id.value,
-        ],
-        ['now', 'soon', 'later'],
-      );
+    List<String> ids(
+      AppointmentScope scope,
+      List<AppointmentRequest> requests, {
+      String? active = 'Clinique Vétérinaire de Lyon',
+    }) => [
+      for (final request in requestsFor(
+        scope,
+        requests,
+        now,
+        activeClinicName: active,
+      ))
+        request.id.value,
+    ];
+
+    test('to come: from now on, the soonest first; a confirmed one of the '
+        'active clinic left out', () {
+      expect(ids(AppointmentScope.upcoming, requests), [
+        'now',
+        'soon',
+        'later',
+      ]);
     });
 
     test('past: before now, the latest first', () {
+      expect(ids(AppointmentScope.past, requests), ['recent', 'old', 'older']);
+    });
+
+    test("a confirmed request is kept unless it is the active clinic's "
+        '(its name trimmed, case ignored), in the tab of its slot', () {
+      final confirmed = [
+        _request(
+          'lyon',
+          '2026-11-10T09:00:00+01:00',
+          status: AppointmentRequestStatus.confirmed,
+        ),
+        _request(
+          'paris',
+          '2026-11-05T09:00:00+01:00',
+          status: AppointmentRequestStatus.confirmed,
+          clinicName: 'Clinique Vétérinaire de Paris',
+        ),
+      ];
+
       expect(
-        [
-          for (final request in requestsFor(
-            AppointmentScope.past,
-            requests,
-            now,
-          ))
-            request.id.value,
-        ],
-        ['recent', 'old', 'older'],
+        ids(
+          AppointmentScope.upcoming,
+          confirmed,
+          active: '  clinique vétérinaire de LYON ',
+        ),
+        isEmpty,
       );
+      expect(ids(AppointmentScope.past, confirmed), ['paris']);
+      // No active clinic known: every confirmed request is kept.
+      expect(ids(AppointmentScope.upcoming, confirmed, active: null), ['lyon']);
+      expect(ids(AppointmentScope.past, confirmed, active: null), ['paris']);
     });
   });
 

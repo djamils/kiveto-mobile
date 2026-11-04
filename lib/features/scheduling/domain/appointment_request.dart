@@ -63,19 +63,29 @@ final class AppointmentRequestPage {
 }
 
 /// The requests screen 4 shows in [scope] at [now] (UTC): a confirmed one
-/// is left out (its appointment shows in its clinic's list); the others
-/// are to come when they start at [now] or later (the soonest first),
+/// of the active clinic ([activeClinicName], trimmed, case ignored) is left
+/// out (its appointment shows in that clinic's list), any other is kept;
+/// they are to come when they start at [now] or later (the soonest first),
 /// past otherwise (the latest first).
 List<AppointmentRequest> requestsFor(
   AppointmentScope scope,
   List<AppointmentRequest> requests,
-  DateTime now,
-) {
+  DateTime now, {
+  String? activeClinicName,
+}) {
+  String normalized(String name) => name.trim().toLowerCase();
+  final active = switch (activeClinicName) {
+    final String name => normalized(name),
+    null => null,
+  };
+  bool listed(AppointmentRequest request) =>
+      request.status != AppointmentRequestStatus.confirmed ||
+      normalized(request.clinicName) != active;
   bool upcoming(AppointmentRequest request) =>
       !request.startAt.instant.isBefore(now);
   final shown = [
     for (final request in requests)
-      if (request.status != AppointmentRequestStatus.confirmed &&
+      if (listed(request) &&
           upcoming(request) == (scope == AppointmentScope.upcoming))
         request,
   ];

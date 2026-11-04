@@ -58,6 +58,10 @@ class _ClinicSearchPageState extends ConsumerState<ClinicSearchPage> {
   String? _accepting;
   final _accepted = <String>{};
 
+  /// The results last shown and their search: kept on screen while the
+  /// first page of another search loads.
+  ({ListingQuery query, ClinicSearchState results})? _shown;
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -243,19 +247,12 @@ class _ClinicSearchPageState extends ConsumerState<ClinicSearchPage> {
     final provider = clinicSearchProvider(query);
     Widget fill(Widget child) =>
         SliverFillRemaining(hasScrollBody: false, child: child);
-    Widget padded(Widget sliver) => SliverPadding(
-      padding: const EdgeInsets.fromLTRB(
-        KivetoSpace.gutter,
-        KivetoSpace.xs,
-        KivetoSpace.gutter,
-        KivetoSpace.xl,
-      ),
-      sliver: sliver,
-    );
+    Widget padded(Widget sliver) => _padded(sliver);
     switch (ref.watch(provider)) {
       case AsyncValue(isLoading: true, hasError: true):
         return [fill(const LoadingView())];
       case AsyncData(:final value):
+        _shown = (query: query, results: value);
         final items = value.items;
         if (items.isEmpty && value.nextCursor == null) {
           return [
@@ -272,51 +269,10 @@ class _ClinicSearchPageState extends ConsumerState<ClinicSearchPage> {
             ),
           ];
         }
-        final more = value.nextCursor != null;
-        return [
-          padded(
-            SliverList.separated(
-              itemCount: 1 + items.length + (more ? 1 : 0),
-              separatorBuilder: (context, index) =>
-                  const SizedBox(height: KivetoSpace.m),
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  // No total in the API: « Plus de … » while a page
-                  // remains.
-                  final count = items.length;
-                  return Text(
-                    switch ((query.near == null, more)) {
-                      (true, false) => l10n.clinicSearchCount(count),
-                      (true, true) => l10n.clinicSearchMoreCount(count),
-                      (false, false) => l10n.clinicSearchNearCount(count),
-                      (false, true) => l10n.clinicSearchMoreNearCount(count),
-                    },
-                    style: KivetoText.labelSmall.copyWith(
-                      color: KivetoColors.inkMuted,
-                    ),
-                  );
-                }
-                if (index == items.length + 1) {
-                  return MoreFooter(
-                    loading: value.loadingMore,
-                    failed: value.moreError != null,
-                    onLoad: () =>
-                        unawaited(ref.read(provider.notifier).loadMore()),
-                  );
-                }
-                final clinic = items[index - 1];
-                return ClinicCard(
-                  key: ValueKey(clinic.id),
-                  clinic: clinic,
-                  onOpen: () => widget.onOpenListing(context, clinic.id.value),
-                  onCall: (phone) => unawaited(callClinic(context, ref, phone)),
-                );
-              },
-            ),
-          ),
-        ];
+        return [_list(l10n, query, value, provider: provider)];
       case AsyncError(:final error)
           when error is ValidationFailure && error.violations.isNotEmpty:
+        _shown = null;
         // The server's word on the search (« Saisissez au moins 2
         // caractères. ») in place of the results.
         return [
@@ -330,14 +286,104 @@ class _ClinicSearchPageState extends ConsumerState<ClinicSearchPage> {
           ),
         ];
       case AsyncError(:final error):
+        _shown = null;
         return [
           fill(
             ErrorView(error: error, onRetry: () => ref.invalidate(provider)),
           ),
         ];
       default:
-        return [fill(const LoadingView())];
+        // Another search's first page on its way: the last results stay
+        // in view under a thin progress bar.
+        return switch (_shown) {
+          (:final query, :final results) when results.items.isNotEmpty => [
+            _list(l10n, query, results),
+          ],
+          _ => [fill(const LoadingView())],
+        };
     }
+  }
+
+  Widget _padded(Widget sliver) => SliverPadding(
+    padding: const EdgeInsets.fromLTRB(
+      KivetoSpace.gutter,
+      KivetoSpace.xs,
+      KivetoSpace.gutter,
+      KivetoSpace.xl,
+    ),
+    sliver: sliver,
+  );
+
+  /// The count and the cards of [query]'s [results]; the footer reads the
+  /// next page through [provider]. Without [provider] the results are the
+  /// last ones shown while another search loads: a progress bar above the
+  /// count, no footer.
+  Widget _list(
+    AppLocalizations l10n,
+    ListingQuery query,
+    ClinicSearchState results, {
+    AsyncNotifierProvider<ClinicSearchNotifier, ClinicSearchState>? provider,
+  }) {
+    final items = results.items;
+    final more = results.nextCursor != null;
+    final stale = provider == null;
+    final footer = more && !stale;
+    // No count over an empty page that has a next one.
+    final header = stale || items.isNotEmpty;
+    final first = header ? 1 : 0;
+    return _padded(
+      SliverList.separated(
+        itemCount: first + items.length + (footer ? 1 : 0),
+        separatorBuilder: (context, index) =>
+            const SizedBox(height: KivetoSpace.m),
+        itemBuilder: (context, index) {
+          if (header && index == 0) {
+            // No total in the API: « Plus de … » while a page remains.
+            final count = items.length;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (stale) ...[
+                  LinearProgressIndicator(
+                    minHeight: 2,
+                    color: KivetoColors.brand,
+                    backgroundColor: KivetoColors.brandSoft,
+                    semanticsLabel: l10n.commonLoading,
+                  ),
+                  const SizedBox(height: KivetoSpace.s),
+                ],
+                if (items.isNotEmpty)
+                  Text(
+                    switch ((query.near == null, more)) {
+                      (true, false) => l10n.clinicSearchCount(count),
+                      (true, true) => l10n.clinicSearchMoreCount(count),
+                      (false, false) => l10n.clinicSearchNearCount(count),
+                      (false, true) => l10n.clinicSearchMoreNearCount(count),
+                    },
+                    style: KivetoText.labelSmall.copyWith(
+                      color: KivetoColors.inkMuted,
+                    ),
+                  ),
+              ],
+            );
+          }
+          if (index == first + items.length) {
+            return MoreFooter(
+              loading: results.loadingMore,
+              failed: results.moreError != null,
+              onLoad: () => unawaited(ref.read(provider!.notifier).loadMore()),
+            );
+          }
+          final clinic = items[index - first];
+          return ClinicCard(
+            key: ValueKey(clinic.id),
+            clinic: clinic,
+            onOpen: () => widget.onOpenListing(context, clinic.id.value),
+            onCall: (phone) => unawaited(callClinic(context, ref, phone)),
+          );
+        },
+      ),
+    );
   }
 }
 

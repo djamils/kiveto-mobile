@@ -2198,6 +2198,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingBookingNoMotif => 'Choisissez d\'abord un motif.';
 
   @override
+  String get listingBookingNoSlot => 'Choisissez d\'abord un créneau.';
+
+  @override
   String get listingBookingSlotLabel => 'Créneau';
 
   @override
@@ -2255,6 +2258,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appointmentRequestCancelled => 'Annulée';
 
   @override
+  String get appointmentRequestConfirmed => 'Confirmée';
+
+  @override
   String get appointmentRequestPendingLine =>
       'La clinique doit confirmer votre demande.';
 
@@ -2268,6 +2274,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appointmentRequestCancelledLine => 'La demande a été annulée.';
+
+  @override
+  String get appointmentRequestConfirmedLine =>
+      'Le rendez-vous apparaît dans les rendez-vous de cette clinique.';
 
   @override
   String get appointmentRequestsError =>

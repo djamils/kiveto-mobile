@@ -388,6 +388,35 @@ void main() {
     expect(activeOf(active), const ClinicId(_parisClinic));
   });
 
+  testWidgets('two confirmed clinics of the same name: none chosen, the '
+      'booking opens on the active clinic, unchanged', (tester) async {
+    final container = await pump(
+      tester,
+      _backend()..on(
+        'GET',
+        '$api/me',
+        _edited('me.get.200.json', (body) {
+          final paris =
+              ((body! as Map<String, Object?>)['clinics']! as List<Object?>)
+                      .first!
+                  as Map<String, Object?>;
+          paris['name'] = 'Clinique Vétérinaire de Lyon';
+        }),
+      ),
+    );
+    final active = container.listen(activeClinicProvider, (_, _) {});
+    await tester.pumpAndSettle();
+    expect(activeOf(active), const ClinicId(_parisClinic));
+
+    await tester.tap(find.text('Déjà client'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(KivetoButton, 'Prendre rendez-vous'));
+    await tester.pumpAndSettle();
+
+    expect(exits, ['book']);
+    expect(activeOf(active), const ClinicId(_parisClinic));
+  });
+
   testWidgets('the name matched trimmed and case ignored: the clinic of the '
       'account switched', (tester) async {
     final container = await pump(

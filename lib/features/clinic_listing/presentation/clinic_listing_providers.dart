@@ -147,9 +147,9 @@ typedef DeviceLocator = Future<GeoPoint> Function();
 /// to the platform). Asks the permission when it was not decided yet.
 final deviceLocationProvider = Provider<DeviceLocator>((ref) => _locateDevice);
 
-/// A coordinate rounded to 2 decimals (about 1 km): enough to sort the
-/// directory by distance, and the same search for two taps nearby.
-double _coarse(double degrees) => (degrees * 100).round() / 100;
+/// A coordinate rounded to 3 decimals (about 100 m, the precision of the
+/// distances the cards print): the same search for two taps nearby.
+double _coarse(double degrees) => (degrees * 1000).round() / 1000;
 
 /// One coarse position (low accuracy, 15 s at most), rounded.
 Future<GeoPoint> _locateDevice() async {

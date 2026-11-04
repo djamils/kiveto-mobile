@@ -19,10 +19,10 @@ final linkSuggestionsProvider = FutureProvider<List<LinkSuggestion>>((ref) {
 
 /// Asks to be linked to the clinic of [suggestion] (the owner's tap on
 /// « Rattacher ce dossier », nowhere else). Accepted, `/me` lists the
-/// clinic as pending and the suggestions are read again; a suggestion no
-/// longer offered (`404`) reloads the suggestions too, and the failure is
-/// rethrown for the page to say so. [container] is captured before the
-/// call: the page may close meanwhile.
+/// clinic as pending and the suggestions are read again; a suggestion
+/// no longer offered (`404`: perhaps accepted elsewhere) reloads both
+/// too, and the failure is rethrown for the page to say so. [container] is
+/// captured before the call: the page may close meanwhile.
 Future<void> acceptLinkSuggestion(
   ProviderContainer container,
   LinkSuggestion suggestion,
@@ -31,7 +31,9 @@ Future<void> acceptLinkSuggestion(
   try {
     await repository.accept(suggestion.id);
   } on NotFoundFailure {
-    container.invalidate(linkSuggestionsProvider);
+    container
+      ..invalidate(meProvider)
+      ..invalidate(linkSuggestionsProvider);
     rethrow;
   }
   container

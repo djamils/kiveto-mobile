@@ -249,12 +249,13 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets("no slot chosen: « Choisissez d'abord un motif. »", (
+    testWidgets("no slot chosen: « Choisissez d'abord un créneau. »", (
       tester,
     ) async {
       await pump(tester, page(), _backend(), slot: false);
 
-      expect(find.text("Choisissez d'abord un motif."), findsOneWidget);
+      expect(find.text("Choisissez d'abord un créneau."), findsOneWidget);
+      expect(find.text("Choisissez d'abord un motif."), findsNothing);
       await tester.tap(find.text('Retour'));
       expect(exits, ['back']);
     });
@@ -338,8 +339,8 @@ void main() {
       expect(exits, ['appointments', 'directory']);
     });
 
-    testWidgets('back on the step: the pet of the draft refilled; a typed '
-        'change reaches the draft', (tester) async {
+    testWidgets('back on the step: the pet of the draft refilled; what is '
+        'typed is kept outside the draft, its key unchanged', (tester) async {
       final container = await pumpPage(
         tester,
         page(),
@@ -374,27 +375,44 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Capturé');
       await tester.pump();
-      expect(
-        container.read(listingBookingProvider(_lyon)).draft.pet,
-        const NewPet('Capturé', Species.cat),
-      );
       await tester.tap(find.widgetWithText(KivetoChoiceChip, 'Chien'));
       await tester.pump();
-      expect(
-        container.read(listingBookingProvider(_lyon)).draft.pet,
-        const NewPet('Capturé', Species.dog),
-      );
-      // Another content, another key; an empty name leaves the draft as
-      // it was.
-      expect(
-        container.read(listingBookingProvider(_lyon)).draft.key,
-        isNot(key),
-      );
+      final state = container.read(listingBookingProvider(_lyon));
+      expect(state.typed, (name: 'Capturé', species: Species.dog));
+      expect(state.draft.pet, const NewPet('Capture', Species.cat));
+      expect(state.draft.key, key);
       await tester.enterText(find.byType(TextField), '');
       await tester.pump();
+      expect(container.read(listingBookingProvider(_lyon)).typed, (
+        name: '',
+        species: Species.dog,
+      ));
+      expect(enabled(tester, 'Envoyer la demande'), isFalse);
+    });
+
+    testWidgets('back on the step: what was typed wins over the pet sent', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        page(),
+        backend: _backend(),
+        clock: FixedClock(_now),
+        session: await memorySession(pair('A')),
+        overrides: [bookingKeyFactoryProvider.overrideWithValue(keys.next)],
+        prepare: (container) {
+          container.listen(listingBookingProvider(_lyon), (_, _) {});
+          container.read(listingBookingProvider(_lyon).notifier)
+            ..start(_consultation, clinicName: _clinicName)
+            ..chooseSlot(_lemoine, _thursday13)
+            ..setPet('Capture', Species.cat)
+            ..keepTyped('Pixel', null);
+        },
+      );
+
       expect(
-        container.read(listingBookingProvider(_lyon)).draft.pet,
-        const NewPet('Capturé', Species.dog),
+        tester.widget<TextField>(find.byType(TextField)).controller?.text,
+        'Pixel',
       );
       expect(enabled(tester, 'Envoyer la demande'), isFalse);
     });
@@ -432,10 +450,11 @@ void main() {
         ..onRequest('POST', _appointments, (request) => answer.future);
       final container = await pump(tester, page(), backend);
       await fill(tester);
-      final draft = container.read(listingBookingProvider(_lyon)).draft;
 
       await tester.tap(button('Envoyer la demande'));
       await tester.pump();
+      final draft = container.read(listingBookingProvider(_lyon)).draft;
+      expect(draft.pet, const NewPet('Capture', Species.cat));
       final booking = container.read(listingBookingProvider(_lyon).notifier)
         ..start(
           const BookingMotif(
@@ -512,6 +531,41 @@ void main() {
       expect(find.text('Demande envoyée'), findsOneWidget);
     });
 
+    testWidgets('a network failure, the name edited then put back: the '
+        'retry sends the same key', (tester) async {
+      var answers = 0;
+      final backend = _backend()
+        ..onRequest('POST', _appointments, (request) {
+          answers++;
+          return answers < 2
+              ? problem('service_unavailable', 503)
+              : PortalReply.fixture('$_fixtures.post.201.json', status: 201);
+        });
+      await pump(tester, page(), backend);
+      await fill(tester);
+      await send(tester);
+      expect(find.byType(KivetoCallout), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Captur');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), 'Capture');
+      await tester.pump();
+      // The species tapped again changes nothing either.
+      await tester.tap(find.widgetWithText(KivetoChoiceChip, 'Chat'));
+      await tester.pump();
+      expect(find.byType(KivetoCallout), findsOneWidget);
+      await tester.tap(find.widgetWithText(KivetoButton, 'Réessayer'));
+      await tester.pumpAndSettle();
+
+      final sentKeys = [
+        for (final request in backend.requestsTo(_appointments))
+          request.headers['Idempotency-Key'],
+      ];
+      expect(sentKeys, hasLength(2));
+      expect(sentKeys.last, sentKeys.first);
+      expect(find.text('Demande envoyée'), findsOneWidget);
+    });
+
     testWidgets('the slot taken (409, capture): marked taken, back to the '
         'slot step', (tester) async {
       final container = await pump(
@@ -571,6 +625,85 @@ void main() {
         AsyncData(:final value) => value?.clinicId,
         _ => null,
       }, const ClinicId('01960000-0000-7000-8000-000000000101'));
+    });
+
+    testWidgets('already a client while /me still had the link pending: /me '
+        'read again, then the clinic of the same name active', (tester) async {
+      var confirmed = false;
+      final backend = _backend()
+        ..onRequest(
+          'GET',
+          '$api/me',
+          (request) => PortalReply.fixture(
+            confirmed ? 'me.get.200.json' : 'me.pending-link.get.200.json',
+          ),
+        )
+        ..onRequest('POST', _appointments, (request) {
+          // The clinic confirmed the link meanwhile.
+          confirmed = true;
+          return PortalReply.fixture(
+            '$_fixtures.already-linked.post.422.json',
+            status: 422,
+          );
+        });
+      final container = await pump(tester, page(), backend);
+      final active = container.listen(activeClinicProvider, (_, _) {});
+      await tester.pumpAndSettle();
+      expect(switch (active.read()) {
+        AsyncData(:final value) => value,
+        _ => const Object(),
+      }, isNull);
+      final reads = backend.requestsTo('$api/me').length;
+      await fill(tester);
+      await send(tester);
+
+      await tester.tap(
+        find.widgetWithText(KivetoButton, 'Prendre rendez-vous'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(backend.requestsTo('$api/me').length, greaterThan(reads));
+      expect(exits, ['book']);
+      expect(switch (active.read()) {
+        AsyncData(:final value) => value?.clinicId,
+        _ => null,
+      }, const ClinicId('01960000-0000-7000-8000-000000000101'));
+    });
+
+    testWidgets('refused on another property (422 on startAt): its message '
+        'above the button', (tester) async {
+      await pump(
+        tester,
+        page(),
+        _backend()..on(
+          'POST',
+          _appointments,
+          PortalReply.json(
+            jsonEncode({
+              'type': 'validation_failed',
+              'title': 'Données invalides.',
+              'status': 422,
+              'violations': [
+                {
+                  'propertyPath': 'startAt',
+                  'message': 'Ce créneau ne correspond à aucun horaire.',
+                },
+              ],
+            }),
+            status: 422,
+          ),
+        ),
+      );
+      await fill(tester);
+      await send(tester);
+
+      expect(
+        find.descendant(
+          of: find.byType(KivetoCallout),
+          matching: find.text('Ce créneau ne correspond à aucun horaire.'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('too many requests pending (422 booking_request_limit, '
@@ -654,6 +787,11 @@ void main() {
 
       expect(find.text("Le nom de l'animal est obligatoire."), findsOneWidget);
       expect(find.byType(KivetoCallout), findsNothing);
+
+      // Edited: the server's word on the name sent goes.
+      await tester.enterText(find.byType(TextField), 'Capture 2');
+      await tester.pump();
+      expect(find.text("Le nom de l'animal est obligatoire."), findsNothing);
     });
 
     testWidgets('a name over 80 characters: said, « Envoyer » disabled', (

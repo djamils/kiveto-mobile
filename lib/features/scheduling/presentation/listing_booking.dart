@@ -66,6 +66,9 @@ enum ListingOutcome {
   ignored,
 }
 
+/// The new pet as typed on step 2, complete or not.
+typedef TypedPet = ({String name, Species? species});
+
 @immutable
 final class ListingBookingState {
   const new({
@@ -73,6 +76,7 @@ final class ListingBookingState {
     this.clinicName,
     this.submission = const ListingIdle(),
     this.slotTaken = false,
+    this.typed,
   });
 
   /// The intent: no clinic of the account (a listing is not one), the
@@ -86,6 +90,10 @@ final class ListingBookingState {
   /// The last request found its slot taken: the slot step says so until
   /// the next choice.
   final bool slotTaken;
+
+  /// The pet as last typed on step 2 (refilled when the step is shown
+  /// again); it reaches the draft only when the request is sent.
+  final TypedPet? typed;
 }
 
 final class ListingBooking extends Notifier<ListingBookingState> {
@@ -111,6 +119,7 @@ final class ListingBooking extends Notifier<ListingBookingState> {
     state = ListingBookingState(
       draft: change(state.draft),
       clinicName: state.clinicName,
+      typed: state.typed,
     );
   }
 
@@ -133,6 +142,7 @@ final class ListingBooking extends Notifier<ListingBookingState> {
         state = ListingBookingState(
           draft: current.draft.withMotif(motif),
           clinicName: clinicName,
+          typed: current.typed,
         );
     }
   }
@@ -145,8 +155,22 @@ final class ListingBooking extends Notifier<ListingBookingState> {
   void chooseSlot(Practitioner practitioner, ClinicInstant slot) =>
       _choose((draft) => draft.withPractitioner(practitioner).withSlot(slot));
 
-  /// Step 2: the new pet as typed (the same name and species keep the
-  /// draft, so its key).
+  /// Step 2: the pet as typed, kept for the step shown again; the draft,
+  /// its key and the submission stay as they are (a retry of the request
+  /// sent keeps its key whatever was typed in between).
+  void keepTyped(String name, Species? species) {
+    final current = state;
+    state = ListingBookingState(
+      draft: current.draft,
+      clinicName: current.clinicName,
+      submission: current.submission,
+      slotTaken: current.slotTaken,
+      typed: (name: name, species: species),
+    );
+  }
+
+  /// Step 2, « Envoyer la demande »: the new pet into the draft (the same
+  /// name and species keep the draft, so its key).
   void setPet(String name, Species species) =>
       _choose((draft) => draft.withPet(NewPet(name, species)));
 
@@ -171,6 +195,7 @@ final class ListingBooking extends Notifier<ListingBookingState> {
       draft: draft,
       clinicName: current.clinicName,
       submission: const ListingSending(),
+      typed: current.typed,
     );
     try {
       final sent = await ref
@@ -183,6 +208,7 @@ final class ListingBooking extends Notifier<ListingBookingState> {
         draft: draft,
         clinicName: current.clinicName,
         submission: ListingSent(sent),
+        typed: current.typed,
       );
       return ListingOutcome.sent;
     } on Object catch (error) {
@@ -192,6 +218,7 @@ final class ListingBooking extends Notifier<ListingBookingState> {
           draft: draft.markTaken(request.startAt),
           clinicName: current.clinicName,
           slotTaken: true,
+          typed: current.typed,
         );
         ref.invalidate(availabilityProvider);
         return ListingOutcome.slotTaken;
@@ -200,6 +227,7 @@ final class ListingBooking extends Notifier<ListingBookingState> {
         draft: draft,
         clinicName: current.clinicName,
         submission: ListingFailed(error),
+        typed: current.typed,
       );
       return ListingOutcome.failed;
     }

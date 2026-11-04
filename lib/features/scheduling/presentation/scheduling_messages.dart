@@ -244,14 +244,19 @@ String questionnaireFailureMessage(AppLocalizations l10n, Object error) =>
     };
 
 /// The pill of a booking request of the account: « En attente » (neutral)
-/// while the clinic decides, « Refusée », « Expirée » or « Annulée »
-/// (danger) once declined; a status or a reason this app does not know is
+/// while the clinic decides, « Confirmée » (success), « Refusée »,
+/// « Expirée » or « Annulée » (danger) once declined (refused without a
+/// reason: « Refusée »); a status or a reason this app does not know is
 /// neutral (« En attente », « Refusée »).
 (String, StatusTone) appointmentRequestPill(
   AppLocalizations l10n,
   AppointmentRequest request,
 ) => switch ((request.status, request.declineReason)) {
-  (AppointmentRequestStatus.declined, DeclineReason.declined) => (
+  (AppointmentRequestStatus.confirmed, _) => (
+    l10n.appointmentRequestConfirmed,
+    StatusTone.success,
+  ),
+  (AppointmentRequestStatus.declined, DeclineReason.declined || null) => (
     l10n.appointmentRequestDeclined,
     StatusTone.danger,
   ),
@@ -278,7 +283,9 @@ String? appointmentRequestLine(
   AppointmentRequest request,
 ) => switch ((request.status, request.declineReason)) {
   (AppointmentRequestStatus.pending, _) => l10n.appointmentRequestPendingLine,
-  (AppointmentRequestStatus.declined, DeclineReason.declined) =>
+  (AppointmentRequestStatus.confirmed, _) =>
+    l10n.appointmentRequestConfirmedLine,
+  (AppointmentRequestStatus.declined, DeclineReason.declined || null) =>
     l10n.appointmentRequestDeclinedLine,
   (AppointmentRequestStatus.declined, DeclineReason.expired) =>
     l10n.appointmentRequestExpiredLine,

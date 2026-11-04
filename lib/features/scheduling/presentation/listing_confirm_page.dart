@@ -71,11 +71,12 @@ class _ListingConfirmPageState extends ConsumerState<ListingConfirmPage> {
   @override
   void initState() {
     super.initState();
-    // Back on the step: the pet as it was sent or typed.
-    if (ref.read(listingBookingProvider(_id)).draft.pet case NewPet(
-      :final name,
-      :final species,
-    )) {
+    // Back on the step: the pet as it was typed, else as it was sent.
+    final booking = ref.read(listingBookingProvider(_id));
+    if (booking.typed case (:final name, :final species)) {
+      _name.text = name;
+      _species = species;
+    } else if (booking.draft.pet case NewPet(:final name, :final species)) {
       _name.text = name;
       _species = species;
     }
@@ -98,14 +99,13 @@ class _ListingConfirmPageState extends ConsumerState<ListingConfirmPage> {
     }
   }
 
-  /// The pet as typed, into the draft once complete (the same content keeps
-  /// the key; a refused request goes back to idle): it is there when the
-  /// step is shown again.
+  /// The pet as typed, kept outside the draft for the step shown again: it
+  /// reaches the draft (and its key) only with « Envoyer la demande ».
   void _typed() {
     setState(() {});
-    if (newPetOf(_name.text, _species) case (final name, final species)) {
-      ref.read(listingBookingProvider(_id).notifier).setPet(name, species);
-    }
+    ref
+        .read(listingBookingProvider(_id).notifier)
+        .keepTyped(_name.text, _species);
   }
 
   /// Already a client: `/me` read again (the clinic may have confirmed the
@@ -140,6 +140,7 @@ class _ListingConfirmPageState extends ConsumerState<ListingConfirmPage> {
     final motif = draft.motif;
     final slot = draft.slot;
     if (motif == null || slot == null) {
+      // A motif without a slot: the slot taken meanwhile, on the way back.
       return FlowScaffold(
         children: [
           WizardHeader(
@@ -152,7 +153,9 @@ class _ListingConfirmPageState extends ConsumerState<ListingConfirmPage> {
           ),
           EmptyState(
             glyph: LucideGlyph.calendar,
-            title: l10n.listingBookingNoMotif,
+            title: motif == null
+                ? l10n.listingBookingNoMotif
+                : l10n.listingBookingNoSlot,
             action: KivetoButton.outline(
               label: l10n.commonBack,
               onPressed: () => widget.onBack(context),
@@ -229,7 +232,15 @@ class _ListingConfirmPageState extends ConsumerState<ListingConfirmPage> {
             framed: false,
             name: _name,
             species: _species,
-            nameError: error == null ? null : violationOf(error, _newPetName),
+            // The server's word on the name, until it is edited.
+            nameError:
+                error == null ||
+                    switch (draft.pet) {
+                      NewPet(:final name) => name != _name.text.trim(),
+                      _ => true,
+                    }
+                ? null
+                : violationOf(error, _newPetName),
             onNameChanged: _typed,
             onSpecies: (species) {
               _species = species;

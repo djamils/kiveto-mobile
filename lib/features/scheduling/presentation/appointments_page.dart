@@ -258,10 +258,16 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
       case AsyncValue(isLoading: true, hasError: true):
         return const [];
       case AsyncData(:final value):
+        // A confirmed request of the active clinic shows as its appointment.
+        final active = switch (ref.watch(activeClinicProvider)) {
+          AsyncData(:final value) => value?.name,
+          _ => null,
+        };
         final shown = requestsFor(
           _scope,
           value,
           ref.watch(clockProvider).now(),
+          activeClinicName: active,
         );
         if (shown.isEmpty) return const [];
         return [

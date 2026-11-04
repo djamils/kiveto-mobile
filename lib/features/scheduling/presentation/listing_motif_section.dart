@@ -68,8 +68,9 @@ class ListingMotifSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    // The draft lives while the sheet is shown under the booking's steps.
-    ref.watch(listingBookingProvider(listingId));
+    // The draft lives while the sheet is shown under the booking's steps
+    // (listened, not watched: its changes do not rebuild the sheet).
+    ref.listen(listingBookingProvider(listingId), (_, _) {});
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
