@@ -19,16 +19,18 @@ class KivetoCallout extends StatelessWidget {
     super.key,
     this.actionLabel,
     this.onAction,
-  }) : _kind = _CalloutKind.info;
+  }) : actionLoading = false,
+       _kind = _CalloutKind.info;
 
   /// C-33b: brand-soft with a border, a title, a body and a small primary
-  /// button.
+  /// button ([actionLoading]: a spinner in it, not tappable).
   const new brand({
     required String this.title,
     required this.body,
     super.key,
     this.actionLabel,
     this.onAction,
+    this.actionLoading = false,
   }) : _kind = _CalloutKind.brand;
 
   /// C-33c: an amber text box.
@@ -36,6 +38,7 @@ class KivetoCallout extends StatelessWidget {
     : title = null,
       actionLabel = null,
       onAction = null,
+      actionLoading = false,
       _kind = _CalloutKind.warning;
 
   /// C-33e: a red text box with a small danger button.
@@ -45,12 +48,16 @@ class KivetoCallout extends StatelessWidget {
     this.actionLabel,
     this.onAction,
   }) : title = null,
+       actionLoading = false,
        _kind = _CalloutKind.danger;
 
   final String? title;
   final String body;
   final String? actionLabel;
   final VoidCallback? onAction;
+
+  /// The brand callout's action is on its way: its button shows a spinner.
+  final bool actionLoading;
   final _CalloutKind _kind;
 
   @override
@@ -89,6 +96,7 @@ class KivetoCallout extends StatelessWidget {
                   KivetoButton.primary(
                     label: action,
                     onPressed: onAction,
+                    loading: actionLoading,
                     size: KivetoButtonSize.small,
                   )
                 else

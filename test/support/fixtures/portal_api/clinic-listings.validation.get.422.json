@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"q","message":"Saisissez au moins 2 caractères.","code":"portal_rule"}],"detail":"q: Saisissez au moins 2 caractères.","type":"validation_failed","title":"Données invalides."}

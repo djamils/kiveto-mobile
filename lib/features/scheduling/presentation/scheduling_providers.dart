@@ -8,10 +8,13 @@ import 'package:kiveto_mobile/features/patient/patient.dart'
     show careItemsProvider, petsProvider;
 import 'package:kiveto_mobile/features/scheduling/di.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/appointment_request.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/booking.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/booking_venue.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/questionnaire.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
+import 'package:kiveto_mobile/shared/domain/listing_id.dart';
 import 'package:kiveto_mobile/shared/domain/local_date.dart';
 import 'package:kiveto_mobile/shared/domain/portal_file.dart';
 import 'package:share_plus/share_plus.dart';
@@ -65,22 +68,40 @@ bookingMotifsProvider = FutureProvider.autoDispose
           .motifs(clinicId, petId: petId);
     });
 
-/// The practitioners bookable online for a motif of a clinic.
-final FutureProviderFamily<List<Practitioner>, (ClinicId, MotifId)>
-practitionersProvider = FutureProvider.autoDispose
-    .family<List<Practitioner>, (ClinicId, MotifId)>((ref, key) {
+/// The motifs a clinic of the directory opens online to new clients, in
+/// its order.
+final FutureProviderFamily<List<BookingMotif>, ListingId>
+listingMotifsProvider = FutureProvider.autoDispose
+    .family<List<BookingMotif>, ListingId>((ref, listingId) {
       ref.watch(sessionStatusProvider);
-      final (clinicId, motifId) = key;
-      return ref
-          .watch(schedulingRepositoryProvider)
-          .practitioners(clinicId, motifId);
+      return ref.watch(newClientBookingRepositoryProvider).motifs(listingId);
+    });
+
+/// The practitioners bookable online for a motif of a venue: a clinic of
+/// the account, or a clinic of the directory for a new client.
+final FutureProviderFamily<List<Practitioner>, (BookingVenue, MotifId)>
+practitionersProvider = FutureProvider.autoDispose
+    .family<List<Practitioner>, (BookingVenue, MotifId)>((ref, key) {
+      ref.watch(sessionStatusProvider);
+      final (venue, motifId) = key;
+      return switch (venue) {
+        ClinicVenue(:final clinicId) =>
+          ref
+              .watch(schedulingRepositoryProvider)
+              .practitioners(clinicId, motifId),
+        ListingVenue(:final listingId) =>
+          ref
+              .watch(newClientBookingRepositoryProvider)
+              .practitioners(listingId, motifId),
+      };
     });
 
 /// The days one availability request covers (the API's maximum).
 const availabilityWindowDays = 14;
 
-/// The availability of a practitioner for a motif from a day on.
-typedef AvailabilityKey = (ClinicId, MotifId, PractitionerId, LocalDate);
+/// The availability of a practitioner for a motif of a venue from a day
+/// on.
+typedef AvailabilityKey = (BookingVenue, MotifId, PractitionerId, LocalDate);
 
 /// The answer of one availability request: [availabilityWindowDays] days
 /// from [from].
@@ -96,27 +117,42 @@ final class AvailabilityWindow {
   LocalDate get next => from.addDays(availabilityWindowDays);
 }
 
-/// The availability of a practitioner for a motif, [availabilityWindowDays]
-/// days from a day. The day comes from the device's clock: the clinic,
-/// in another zone, may still be on the day before and refuse it as past
-/// (`422 validation_failed` on `from`), so it is asked once more from the
-/// next day.
+/// The availability of a practitioner for a motif of a venue,
+/// [availabilityWindowDays] days from a day. The day comes from the
+/// device's clock: the clinic, in another zone, may still be on the day
+/// before and refuse it as past (`422 validation_failed` on `from`), so
+/// it is asked once more from the next day (both venues).
 final FutureProviderFamily<AvailabilityWindow, AvailabilityKey>
 availabilityProvider = FutureProvider.autoDispose
     .family<AvailabilityWindow, AvailabilityKey>((ref, key) async {
       ref.watch(sessionStatusProvider);
-      final repository = ref.watch(schedulingRepositoryProvider);
-      final (clinicId, motifId, practitionerId, from) = key;
+      final (venue, motifId, practitionerId, from) = key;
+      final Future<List<AvailabilityDay>> Function(LocalDate from, LocalDate to)
+      days;
+      switch (venue) {
+        case ClinicVenue(:final clinicId):
+          final repository = ref.watch(schedulingRepositoryProvider);
+          days = (from, to) => repository.availability(
+            clinicId,
+            motifId,
+            practitionerId,
+            from,
+            to,
+          );
+        case ListingVenue(:final listingId):
+          final repository = ref.watch(newClientBookingRepositoryProvider);
+          days = (from, to) => repository.availability(
+            listingId,
+            motifId,
+            practitionerId,
+            from,
+            to,
+          );
+      }
       Future<AvailabilityWindow> read(LocalDate start) async =>
           AvailabilityWindow(
             from: start,
-            days: await repository.availability(
-              clinicId,
-              motifId,
-              practitionerId,
-              start,
-              start.addDays(availabilityWindowDays - 1),
-            ),
+            days: await days(start, start.addDays(availabilityWindowDays - 1)),
           );
       try {
         return await read(from);
@@ -125,6 +161,26 @@ availabilityProvider = FutureProvider.autoDispose
         return await read(from.addDays(1));
       }
     });
+
+/// The booking requests of the account as a new client (its first page:
+/// enough for the few a new client may have), for the account of the
+/// session; reloaded after every change the owner makes
+/// ([appointmentsRevisionProvider]). Signed out, it fails with an
+/// [UnauthorizedFailure] without calling the API.
+final FutureProvider<List<AppointmentRequest>> appointmentRequestsProvider =
+    FutureProvider<List<AppointmentRequest>>((ref) async {
+      ref.watch(appointmentsRevisionProvider);
+      if (ref.watch(sessionStatusProvider) == SessionStatus.signedOut) {
+        throw const UnauthorizedFailure();
+      }
+      final page = await ref
+          .watch(newClientBookingRepositoryProvider)
+          .requests(limit: appointmentRequestsLimit);
+      return page.items;
+    });
+
+/// The requests read on screen 4 (the API's maximum page).
+const appointmentRequestsLimit = 50;
 
 /// An appointment of the active clinic, with the clinic it belongs to (a
 /// [NotFoundFailure] without an active clinic).

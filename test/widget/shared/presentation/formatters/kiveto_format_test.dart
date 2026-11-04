@@ -80,4 +80,22 @@ void main() {
     expect(KivetoFormat.phone('+33 6 12'), '+33 6 12');
     expect(KivetoFormat.phone(''), '');
   });
+
+  test('the directory: weekdays by ISO number, times of day, distances', () {
+    expect(
+      [for (var day = 1; day <= 7; day++) KivetoFormat.weekdayName(day)],
+      ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
+    );
+    expect(
+      [for (var day = 1; day <= 7; day++) KivetoFormat.weekdayAbbrev(day)],
+      ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+    );
+    expect(KivetoFormat.clockTime(8, 30), '08:30');
+    expect(KivetoFormat.clockTime(19, 0), '19:00');
+    expect(KivetoFormat.distance(400), '0,4 km');
+    expect(KivetoFormat.distance(2074), '2,1 km');
+    expect(KivetoFormat.distance(30), '0,1 km');
+    expect(KivetoFormat.distance(9960), '10 km');
+    expect(KivetoFormat.distance(12345), '12 km');
+  });
 }

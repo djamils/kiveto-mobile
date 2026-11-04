@@ -60,6 +60,35 @@ abstract final class KivetoFormat {
     );
   }
 
+  /// `Lundi`: the day of the week [isoDay] (1 = Monday … 7 = Sunday).
+  static String weekdayName(int isoDay) =>
+      _capitalize(DateFormat('EEEE', _locale).format(_isoDay(isoDay)));
+
+  /// `Lun`: the day of the week [isoDay] (1 = Monday … 7 = Sunday)
+  /// abbreviated, without its dot (« Lun – Ven »).
+  static String weekdayAbbrev(int isoDay) {
+    final weekday = DateFormat('EEE', _locale).format(_isoDay(isoDay));
+    return _capitalize(
+      weekday.endsWith('.')
+          ? weekday.substring(0, weekday.length - 1)
+          : weekday,
+    );
+  }
+
+  /// `08:30`: a time of day of the clinic's clock.
+  static String clockTime(int hour, int minute) =>
+      '${'$hour'.padLeft(2, '0')}:${'$minute'.padLeft(2, '0')}';
+
+  /// A distance in kilometres, a no-break space before the unit: one
+  /// decimal under 10 km (`0,4 km`, `2,1 km`, at least `0,1 km`), none from
+  /// 10 km (`12 km`).
+  static String distance(int meters) {
+    // A clinic next door reads « 0,1 km », never « 0,0 km ».
+    final tenths = math.max(1, (meters / 100).round());
+    if (tenths >= 100) return '${(meters / 1000).round()} km';
+    return '${tenths ~/ 10},${tenths % 10} km';
+  }
+
   /// `nov.`: the month of a date tile.
   static String monthShort(LocalDate date) =>
       DateFormat('MMM', _locale).format(_utc(date));
@@ -142,6 +171,9 @@ abstract final class KivetoFormat {
     instant.hour,
     instant.minute,
   );
+
+  /// A day of the week [isoDay] (2024-01-01 was a Monday).
+  static DateTime _isoDay(int isoDay) => DateTime.utc(2024, 1, isoDay);
 
   static DateTime _utc(LocalDate date) =>
       DateTime.utc(date.year, date.month, date.day);

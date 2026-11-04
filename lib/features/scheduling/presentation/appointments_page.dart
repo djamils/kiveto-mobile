@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/features/scheduling/domain/appointment.dart';
+import 'package:kiveto_mobile/features/scheduling/domain/appointment_request.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/appointment_card.dart';
+import 'package:kiveto_mobile/features/scheduling/presentation/appointment_request_card.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/cancel_appointment_sheet.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_messages.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_providers.dart';
@@ -12,27 +14,33 @@ import 'package:kiveto_mobile/l10n/app_localizations.dart';
 import 'package:kiveto_mobile/shared/domain/api_failure.dart';
 import 'package:kiveto_mobile/shared/domain/clinic_id.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
+import 'package:kiveto_mobile/shared/presentation/async/more_footer.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/feedback.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/navigation.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/surfaces.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
-import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_text.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Screen 4, « Rendez-vous » (mockup 04): the appointments of the active
-/// clinic, « À venir » (from the nearest) and « Passés » (from the most
-/// recent, page after page), as C-28 cards; « Annuler » opens the
-/// cancellation sheet (16).
+/// Screen 4, « Rendez-vous » (mockup 04): the account's booking requests as
+/// a new client (« Demandes de rendez-vous », those still pending or
+/// declined, in the tab of their slot), then the appointments of the
+/// active clinic, « À venir » (from the nearest) and « Passés » (from the
+/// most recent, page after page), as C-28 cards; « Annuler » opens the
+/// cancellation sheet (16). Without an active clinic: the requests, then
+/// « Aucune clinique rattachée » and no plus button.
 ///
 /// Exits: [onBook] (the round plus button, the empty upcoming tab),
-/// [onReschedule] and [onFillQuestionnaire] with an appointment id.
+/// [onReschedule] and [onFillQuestionnaire] with an appointment id,
+/// [onFindClinic] (no clinic: the clinic search).
 class AppointmentsPage extends ConsumerStatefulWidget {
   const new({
     required this.onBook,
     required this.onReschedule,
     required this.onFillQuestionnaire,
+    required this.onFindClinic,
     super.key,
   });
 
@@ -40,6 +48,7 @@ class AppointmentsPage extends ConsumerStatefulWidget {
   final void Function(BuildContext context, String appointmentId) onReschedule;
   final void Function(BuildContext context, String appointmentId)
   onFillQuestionnaire;
+  final void Function(BuildContext context) onFindClinic;
 
   @override
   ConsumerState<AppointmentsPage> createState() => _AppointmentsPageState();
@@ -62,10 +71,14 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
     ref.invalidate(appointmentListProvider(_scope));
   }
 
-  /// Pull-to-refresh: both lists from their first page; done when the
+  /// Pull-to-refresh: `/me` (a link or a request the clinic confirmed
+  /// since), the requests, both lists from their first page; done when the
   /// shown one answered.
   Future<void> _refresh() async {
-    ref.invalidate(appointmentListProvider);
+    ref
+      ..invalidate(meProvider)
+      ..invalidate(appointmentRequestsProvider)
+      ..invalidate(appointmentListProvider);
     try {
       await ref.read(appointmentListProvider(_scope).future);
     } on Object {
@@ -76,6 +89,11 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // No plus button once it is known there is no clinic to book in.
+    final noClinic = switch (ref.watch(activeClinicProvider)) {
+      AsyncData(value: null) => true,
+      _ => false,
+    };
     return Scaffold(
       backgroundColor: KivetoColors.canvas,
       body: SafeArea(
@@ -98,11 +116,13 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
                   children: [
                     KivetoPageHeader(
                       l10n.screenAppointmentsTitle,
-                      trailing: KivetoIconButton.fab(
-                        glyph: LucideGlyph.plus,
-                        semanticLabel: l10n.appointmentsNew,
-                        onPressed: () => widget.onBook(context),
-                      ),
+                      trailing: noClinic
+                          ? null
+                          : KivetoIconButton.fab(
+                              glyph: LucideGlyph.plus,
+                              semanticLabel: l10n.appointmentsNew,
+                              onPressed: () => widget.onBook(context),
+                            ),
                     ),
                     const SizedBox(height: KivetoSpace.xl2),
                     KivetoSegmentedControl<AppointmentScope>(
@@ -122,6 +142,7 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
                   ],
                 ),
               ),
+              ..._requests(l10n),
               ..._content(l10n),
             ],
           ),
@@ -142,8 +163,8 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
         final clinicId = value.clinicId;
         // An empty page with a next one is no empty list: its footer reads
         // on.
-        if (clinicId == null ||
-            (value.items.isEmpty && value.nextCursor == null)) {
+        if (clinicId == null) return [fill(_noClinic(l10n))];
+        if (value.items.isEmpty && value.nextCursor == null) {
           return [fill(_empty(l10n, scope))];
         }
         final clinic = switch (ref.watch(activeClinicProvider)) {
@@ -167,7 +188,7 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
                   const SizedBox(height: KivetoSpace.xl2),
               itemBuilder: (context, index) {
                 if (index == items.length) {
-                  return _MoreFooter(
+                  return MoreFooter(
                     loading: value.loadingMore,
                     failed: value.moreError != null,
                     onLoad: () => unawaited(
@@ -220,12 +241,79 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
     }
   }
 
+  /// The requests of the tab shown (« Demandes de rendez-vous »), before the
+  /// appointments: none while they load; their failure in their place, the
+  /// appointments unaffected.
+  List<Widget> _requests(AppLocalizations l10n) {
+    Widget section(List<Widget> children) => SliverPadding(
+      padding: const EdgeInsets.fromLTRB(
+        KivetoSpace.gutter,
+        0,
+        KivetoSpace.gutter,
+        KivetoSpace.xl2,
+      ),
+      sliver: SliverList.list(children: children),
+    );
+    switch (ref.watch(appointmentRequestsProvider)) {
+      case AsyncValue(isLoading: true, hasError: true):
+        return const [];
+      case AsyncData(:final value):
+        // A confirmed request of the active clinic shows as its appointment.
+        final active = switch (ref.watch(activeClinicProvider)) {
+          AsyncData(:final value) => value?.name,
+          _ => null,
+        };
+        final shown = requestsFor(
+          _scope,
+          value,
+          ref.watch(clockProvider).now(),
+          activeClinicName: active,
+        );
+        if (shown.isEmpty) return const [];
+        return [
+          section([
+            KivetoSectionHeader(l10n.appointmentRequestsTitle),
+            for (final request in shown) ...[
+              const SizedBox(height: KivetoSpace.m),
+              AppointmentRequestCard(
+                key: ValueKey((_scope, request.id)),
+                request: request,
+              ),
+            ],
+          ]),
+        ];
+      case AsyncError():
+        return [
+          section([
+            KivetoCallout.danger(
+              body: l10n.appointmentRequestsError,
+              actionLabel: l10n.commonRetry,
+              onAction: () => ref.invalidate(appointmentRequestsProvider),
+            ),
+          ]),
+        ];
+      default:
+        return const [];
+    }
+  }
+
   void _cancel(ClinicId clinicId, Appointment appointment) => unawaited(
     showCancelAppointmentSheet(
       context,
       appointment,
       clinicId: clinicId,
       onReschedule: () => widget.onReschedule(context, appointment.id.value),
+    ),
+  );
+
+  Widget _noClinic(AppLocalizations l10n) => EmptyState(
+    glyph: LucideGlyph.calendar,
+    title: l10n.noClinicTitle,
+    body: l10n.noClinicAppointmentsBody,
+    action: KivetoButton.primary(
+      label: l10n.screenClinicsTitle,
+      size: KivetoButtonSize.small,
+      onPressed: () => widget.onFindClinic(context),
     ),
   );
 
@@ -245,85 +333,4 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
           title: l10n.appointmentsEmptyPastTitle,
         ),
       };
-}
-
-/// The end of a list with more pages: built as it nears the viewport, it
-/// reads the next page; a spinner while it comes, « Impossible de charger
-/// la suite. » and a retry when it failed.
-class _MoreFooter extends StatefulWidget {
-  const new({
-    required this.loading,
-    required this.failed,
-    required this.onLoad,
-  });
-
-  final bool loading;
-  final bool failed;
-  final VoidCallback onLoad;
-
-  @override
-  State<_MoreFooter> createState() => _MoreFooterState();
-}
-
-class _MoreFooterState extends State<_MoreFooter> {
-  @override
-  void initState() {
-    super.initState();
-    _loadWhenIdle();
-  }
-
-  @override
-  void didUpdateWidget(_MoreFooter oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Also when the list was replaced under a footer kept in place (a
-    // reload from the first page after a stale cursor).
-    _loadWhenIdle();
-  }
-
-  /// Built and neither loading nor failed: read the next page (after the
-  /// frame: the list's state changes; `loadMore` ignores a second call).
-  void _loadWhenIdle() {
-    if (widget.loading || widget.failed) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) widget.onLoad();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    if (widget.failed && !widget.loading) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: KivetoSpace.sm),
-        child: Column(
-          children: [
-            Text(
-              l10n.appointmentsMoreError,
-              textAlign: TextAlign.center,
-              style: KivetoText.bodySmall,
-            ),
-            const SizedBox(height: KivetoSpace.sm),
-            KivetoButton.outline(
-              label: l10n.commonRetry,
-              size: KivetoButtonSize.small,
-              onPressed: widget.onLoad,
-            ),
-          ],
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: KivetoSpace.ml),
-      child: Center(
-        child: SizedBox.square(
-          dimension: 24,
-          child: CircularProgressIndicator(
-            color: KivetoColors.brand,
-            strokeWidth: 2.5,
-            semanticsLabel: l10n.commonLoading,
-          ),
-        ),
-      ),
-    );
-  }
 }

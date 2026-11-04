@@ -78,13 +78,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get screenPrescriptionRenewalTitle => 'Demander un renouvellement';
 
   @override
-  String get screenClinicListingTitle => 'Fiche clinique';
-
-  @override
   String get screenKitGalleryTitle => 'Kit d\'interface';
-
-  @override
-  String get placeholderBody => 'Cet écran arrive dans une prochaine version.';
 
   @override
   String get welcomeKitGalleryLink => 'Ouvrir le kit d\'interface';
@@ -1984,4 +1978,323 @@ class AppLocalizationsFr extends AppLocalizations {
   String petChangeWeightValue(String value) {
     return '$value kg';
   }
+
+  @override
+  String get clinicSearchSubtitle =>
+      'Trouvez votre clinique pour prendre rendez-vous.';
+
+  @override
+  String get clinicSearchFieldLabel => 'Rechercher une clinique';
+
+  @override
+  String get clinicSearchFieldHint => 'Nom ou ville';
+
+  @override
+  String get clinicSearchNearMe => 'Autour de moi';
+
+  @override
+  String get clinicSearchLocating => 'Localisation…';
+
+  @override
+  String clinicSearchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cliniques',
+      one: '1 clinique',
+      zero: 'Aucune clinique',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String clinicSearchNearCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cliniques à proximité',
+      one: '1 clinique à proximité',
+      zero: 'Aucune clinique à proximité',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String clinicSearchMoreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Plus de $count cliniques',
+      one: 'Plus d\'une clinique',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String clinicSearchMoreNearCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Plus de $count cliniques à proximité',
+      one: 'Plus d\'une clinique à proximité',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get clinicSearchOnline => 'RDV en ligne';
+
+  @override
+  String get clinicSearchUnlisted => 'Pas encore sur Kiveto';
+
+  @override
+  String clinicSearchNextSlot(String slot) {
+    return 'Prochain créneau : $slot';
+  }
+
+  @override
+  String get clinicSearchEmptyTitle => 'Aucune clinique trouvée';
+
+  @override
+  String get clinicSearchEmptyBody =>
+      'Essayez un autre nom ou une autre ville.';
+
+  @override
+  String get clinicSearchEmptyNearBody =>
+      'Aucune clinique de l\'annuaire autour de vous. Touchez « Autour de moi » pour chercher par nom.';
+
+  @override
+  String get clinicSearchLocationDenied =>
+      'Autorisez l\'accès à votre position pour voir les cliniques autour de vous.';
+
+  @override
+  String get clinicSearchLocationDeniedForever =>
+      'L\'accès à votre position est refusé pour Kiveto : autorisez-le dans les réglages du téléphone.';
+
+  @override
+  String get clinicSearchLocationDisabled =>
+      'Activez la localisation de votre téléphone pour voir les cliniques autour de vous.';
+
+  @override
+  String get clinicSearchLocationFailed =>
+      'Votre position n\'a pas pu être déterminée. Réessayez.';
+
+  @override
+  String linkSuggestionTitle(String clinic) {
+    return '$clinic a un dossier à votre numéro';
+  }
+
+  @override
+  String get linkSuggestionBody =>
+      'Rattachez-le pour retrouver vos animaux et votre historique.';
+
+  @override
+  String get linkSuggestionAccept => 'Rattacher ce dossier';
+
+  @override
+  String get linkSuggestionGone => 'Ce dossier n\'est plus proposé.';
+
+  @override
+  String get linkSuggestionsError =>
+      'Impossible de vérifier les dossiers à votre numéro.';
+
+  @override
+  String linkPendingTitle(String clinic) {
+    return 'Rattachement demandé : $clinic';
+  }
+
+  @override
+  String get linkPendingBody =>
+      'La clinique doit confirmer le rattachement. Vos animaux et votre historique apparaîtront dès sa confirmation.';
+
+  @override
+  String clinicListingOpenUntil(String time) {
+    return 'Ouvert · ferme à $time';
+  }
+
+  @override
+  String clinicListingOpensLater(String time) {
+    return 'Fermé · ouvre à $time';
+  }
+
+  @override
+  String clinicListingOpensTomorrow(String time) {
+    return 'Fermé · ouvre demain à $time';
+  }
+
+  @override
+  String clinicListingOpensOn(String day, String time) {
+    return 'Fermé · ouvre $day à $time';
+  }
+
+  @override
+  String get clinicListingWho => 'Vous êtes';
+
+  @override
+  String get clinicListingKnownClient => 'Déjà client';
+
+  @override
+  String get clinicListingKnownClientSub => 'de cette clinique';
+
+  @override
+  String get clinicListingNewClient => 'Nouveau client';
+
+  @override
+  String get clinicListingNewClientSub => 'première visite';
+
+  @override
+  String get clinicListingNewHint =>
+      'Vous décrirez votre animal à l\'étape suivante. La clinique confirme les rendez-vous des nouveaux clients.';
+
+  @override
+  String get clinicListingKnownHint =>
+      'Si la clinique a votre numéro de mobile, votre dossier vous est proposé dans « Trouver une clinique » : rattachez-le. Déjà rattaché ? Prenez rendez-vous depuis votre espace.';
+
+  @override
+  String get clinicListingFindRecord => 'Retrouver mon dossier';
+
+  @override
+  String get clinicListingHours => 'Horaires';
+
+  @override
+  String get clinicListingClosed => 'Fermé';
+
+  @override
+  String get clinicListingGoneTitle => 'Clinique introuvable';
+
+  @override
+  String get clinicListingGoneBody =>
+      'Cette clinique n\'est plus dans l\'annuaire.';
+
+  @override
+  String listingMotifUrgency(String phone) {
+    return 'Urgence ? Appelez directement la clinique au $phone.';
+  }
+
+  @override
+  String get listingMotifNotOpen =>
+      'Cette clinique ne propose pas encore la prise de rendez-vous en ligne aux nouveaux clients.';
+
+  @override
+  String get listingMotifNoNewClients =>
+      'Cette clinique n\'accepte pas de nouveaux clients pour le moment.';
+
+  @override
+  String get listingMotifCall => 'Appeler la clinique';
+
+  @override
+  String get listingMotifEmpty =>
+      'Aucun motif n\'est ouvert en ligne aux nouveaux clients.';
+
+  @override
+  String listingBookingStepLabel(int step) {
+    return 'Étape $step sur 2';
+  }
+
+  @override
+  String get listingBookingPetTitle => 'Votre animal';
+
+  @override
+  String get listingBookingNoMotif => 'Choisissez d\'abord un motif.';
+
+  @override
+  String get listingBookingNoSlot => 'Choisissez d\'abord un créneau.';
+
+  @override
+  String get listingBookingSlotLabel => 'Créneau';
+
+  @override
+  String get listingBookingSlotEmpty => 'À choisir';
+
+  @override
+  String get listingBookingFootnote =>
+      'La clinique confirme les rendez-vous des nouveaux clients. Vous suivez votre demande dans Rendez-vous.';
+
+  @override
+  String listingBookingSentMessage(String date, String time) {
+    return 'La clinique doit confirmer votre rendez-vous du $date à $time.';
+  }
+
+  @override
+  String get listingBookingSentNote =>
+      'Vous suivez votre demande dans Rendez-vous. Si la clinique ne peut pas la confirmer, vous en êtes informé.';
+
+  @override
+  String get listingBookingSeeAppointments => 'Voir mes rendez-vous';
+
+  @override
+  String get listingBookingBackToDirectory => 'Retour à l\'annuaire';
+
+  @override
+  String get listingBookingAlreadyLinked =>
+      'Vous êtes déjà client de cette clinique : prenez rendez-vous depuis votre espace.';
+
+  @override
+  String get listingBookingLimit =>
+      'Vous avez déjà des demandes de rendez-vous en attente : attendez la réponse des cliniques.';
+
+  @override
+  String get listingBookingNotOpen =>
+      'Cette clinique ne prend plus de demandes en ligne de nouveaux clients.';
+
+  @override
+  String get listingBookingNotFound =>
+      'Cette clinique ou ce créneau n\'est plus disponible.';
+
+  @override
+  String get listingBookingRateLimited =>
+      'Trop de demandes en peu de temps : réessayez plus tard.';
+
+  @override
+  String get appointmentRequestsTitle => 'Demandes de rendez-vous';
+
+  @override
+  String get appointmentRequestDeclined => 'Refusée';
+
+  @override
+  String get appointmentRequestExpired => 'Expirée';
+
+  @override
+  String get appointmentRequestCancelled => 'Annulée';
+
+  @override
+  String get appointmentRequestConfirmed => 'Confirmée';
+
+  @override
+  String get appointmentRequestPendingLine =>
+      'La clinique doit confirmer votre demande.';
+
+  @override
+  String get appointmentRequestDeclinedLine =>
+      'La clinique n\'a pas pu confirmer ce rendez-vous.';
+
+  @override
+  String get appointmentRequestExpiredLine =>
+      'Sans réponse de la clinique à temps, la demande a expiré.';
+
+  @override
+  String get appointmentRequestCancelledLine => 'La demande a été annulée.';
+
+  @override
+  String get appointmentRequestConfirmedLine =>
+      'Le rendez-vous apparaît dans les rendez-vous de cette clinique.';
+
+  @override
+  String get appointmentRequestsError =>
+      'Impossible de charger vos demandes de rendez-vous.';
+
+  @override
+  String get noClinicTitle => 'Aucune clinique rattachée';
+
+  @override
+  String get noClinicAppointmentsBody =>
+      'Trouvez une clinique pour prendre un premier rendez-vous.';
+
+  @override
+  String get noClinicPetsBody =>
+      'Vos animaux apparaîtront ici dès qu\'une clinique vous aura rattaché.';
+
+  @override
+  String get noClinicDocumentsBody =>
+      'Les documents partagés par votre clinique apparaîtront ici.';
 }

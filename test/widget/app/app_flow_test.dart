@@ -15,6 +15,7 @@ import 'package:kiveto_mobile/app/routing/shell_seams.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/core/security/session_manager.dart';
 import 'package:kiveto_mobile/features/client/client.dart';
+import 'package:kiveto_mobile/features/clinic_listing/clinic_listing.dart';
 import 'package:kiveto_mobile/features/identity_access/identity_access.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
@@ -262,7 +263,7 @@ void main() {
 
     expect(session.status, SessionStatus.signedIn);
     expect(_location(container), AppRoutes.clinics);
-    expect(find.text('Trouver une clinique'), findsOneWidget);
+    expect(find.byType(ClinicSearchPage), findsOneWidget);
   });
 
   testWidgets('"Modifier" on the code page: back to the welcome page, the '

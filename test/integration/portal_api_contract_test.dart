@@ -1291,6 +1291,484 @@ void main() {
     });
   });
 
+  group('the clinic listing captures (slice 7)', () {
+    const listings = '$_api/clinic-listings';
+    const lyonListing = '01a19a12-79bb-7408-9051-a42bd37f652d';
+    const parisListing = '01a19a11-0518-78b1-9eea-49198a26a6a7';
+    const vercorsListing = '01a19a12-79dd-76b5-980f-ef11ab1a74e5';
+    const consultation = '01a19a10-d3d1-7031-bd42-3d901474af59';
+    const lemoine = '01a19a0e-29db-7550-a605-8ac512a656c1';
+
+    /// The status of a refusal on the strict chain (a problem body without
+    /// violations does not decode as the typed 422).
+    int? strictStatus(TonikResult<Object?, Response<Object?>> result) =>
+        switch (result) {
+          TonikError(:final DioException error) => error.response?.statusCode,
+          _ => null,
+        };
+
+    test('the search: by name, by place (distance), page after page; the '
+        '422 of a short query and the 400 of a stale cursor are typed '
+        'values', () async {
+      final api = ClinicListingApi(server);
+      Future<ClinicListings> read(String fixture) async {
+        backend.on('GET', listings, PortalReply.fixture(fixture));
+        return switch (_value(await api.listClinicListings())) {
+          ListClinicListingsResponse200(:final body) => body,
+          final other => fail('unexpected $other'),
+        };
+      }
+
+      final all = await read('clinic-listings.get.200.json');
+      expect(all.items.map((listing) => listing.name), [
+        'Clinique du Vercors',
+        'Clinique Vétérinaire de Lyon',
+        'Clinique Vétérinaire de Paris',
+      ]);
+      final vercors = all.items.first;
+      expect(vercors.address?.listingAddressView, isNull);
+      expect(vercors.phone, isNull);
+      expect(vercors.distanceM, isNull);
+      expect(vercors.onKiveto, isTrue);
+      expect(vercors.onlineBooking, isFalse);
+      expect(vercors.tags, ['Rurale']);
+      expect(vercors.nextAvailableAt, isNull);
+      final lyon = all.items[1];
+      final address = lyon.address!.listingAddressView!;
+      expect(address.line, '7 quai Saint-Antoine, Bâtiment B');
+      expect(address.postalCode, '69002');
+      expect(address.city, 'Lyon');
+      expect(lyon.phone, '+33478920145');
+      expect(lyon.onlineBooking, isTrue);
+      expect(all.nextCursor, isNull);
+
+      final near = await read('clinic-listings.near.get.200.json');
+      expect(near.items.single.id, parisListing);
+      expect(near.items.single.distanceM, 2074);
+      expect((await read('clinic-listings.search.get.200.json')).items, [
+        isA<ClinicListingSummaryView>().having((l) => l.id, 'id', lyonListing),
+      ]);
+      expect(
+        (await read('clinic-listings.search-empty.get.200.json')).items,
+        isEmpty,
+      );
+      final first = await read('clinic-listings.page1.get.200.json');
+      expect(first.items, hasLength(2));
+      expect(first.nextCursor, isNotNull);
+      final second = await read('clinic-listings.page2.get.200.json');
+      expect(second.items.single.id, parisListing);
+      expect(second.nextCursor, isNull);
+
+      for (final (fixture, status) in [
+        ('clinic-listings.validation.get.422.json', 422),
+        ('clinic-listings.coordinates.get.422.json', 422),
+        ('clinic-listings.cursor-invalid.get.400.json', 400),
+      ]) {
+        backend.on(
+          'GET',
+          '$listings?q=a',
+          PortalReply.fixture(
+            fixture,
+            status: status,
+            contentType: 'application/problem+json',
+          ),
+        );
+        final result = _value(await api.listClinicListings(q: 'a'));
+        expect(
+          result,
+          status == 400
+              ? isA<ListClinicListingsResponse400>()
+              : isA<ListClinicListingsResponse422>(),
+        );
+      }
+      expect(
+        backend.requests.last.uri.toString(),
+        'http://portal.test$listings?q=a',
+      );
+    });
+
+    test('a clinic: address, hours by ISO day (split days kept), no address '
+        'nor hours; the 404 of an unknown one', () async {
+      final api = ClinicListingApi(server);
+      Future<ClinicListingDetail> read(String id, String fixture) async {
+        backend.on('GET', '$listings/$id', PortalReply.fixture(fixture));
+        return switch (_value(await api.getClinicListing(listingId: id))) {
+          GetClinicListingResponse200(:final body) => body,
+          final other => fail('unexpected $other'),
+        };
+      }
+
+      final lyon = await read(lyonListing, 'clinic-listings.lyon.get.200.json');
+      expect(lyon.name, 'Clinique Vétérinaire de Lyon');
+      expect(lyon.timezone, 'Europe/Paris');
+      expect(lyon.acceptsNewClients, isTrue);
+      expect(lyon.onlineBooking, isTrue);
+      expect(lyon.openingHours, hasLength(6));
+      expect(lyon.openingHours.last.day, 6);
+      expect(lyon.openingHours.last.opensAt, '09:00');
+      expect(lyon.openingHours.last.closesAt, '12:00');
+      final paris = await read(
+        parisListing,
+        'clinic-listings.paris.get.200.json',
+      );
+      expect(paris.onlineBooking, isFalse);
+      expect(
+        paris.openingHours
+            .where((hours) => hours.day == 1)
+            .map((hours) => '${hours.opensAt}-${hours.closesAt}'),
+        ['09:00-12:30', '14:00-19:00'],
+      );
+      final vercors = await read(
+        vercorsListing,
+        'clinic-listings.vercors.get.200.json',
+      );
+      expect(vercors.address?.listingAddressView, isNull);
+      expect(vercors.phone, isNull);
+      expect(vercors.openingHours, isEmpty);
+      expect(vercors.acceptsNewClients, isFalse);
+
+      const unknown = '01a19a12-0000-7000-8000-000000000000';
+      backend.on(
+        'GET',
+        '$listings/$unknown',
+        PortalReply.fixture(
+          'clinic-listings.unknown.get.404.json',
+          status: 404,
+          contentType: 'application/problem+json',
+        ),
+      );
+      expect(
+        _value(await api.getClinicListing(listingId: unknown)),
+        isA<GetClinicListingResponse404>(),
+      );
+    });
+
+    test('the new-client booking reads: motifs, practitioners, availability; '
+        'the 422s of a clinic closed to new clients, of no motif', () async {
+      final api = ClinicListingApi(server);
+      backend
+        ..on(
+          'GET',
+          '$listings/$lyonListing/booking/motifs',
+          PortalReply.fixture(
+            'clinic-listings.lyon.booking.motifs.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$listings/$parisListing/booking/motifs',
+          PortalReply.fixture(
+            'clinic-listings.paris.booking.motifs.get.422.json',
+            status: 422,
+            contentType: 'application/problem+json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$listings/$lyonListing/booking/practitioners?motifId=$consultation',
+          PortalReply.fixture(
+            'clinic-listings.lyon.booking.practitioners.get.200.json',
+          ),
+        )
+        ..on(
+          'GET',
+          '$listings/$lyonListing/booking/availability?motifId=$consultation'
+              '&practitionerId=$lemoine&from=2026-11-04&to=2026-11-17',
+          PortalReply.fixture(
+            'clinic-listings.lyon.booking.availability.get.200.json',
+          ),
+        );
+
+      final motifs = switch (_value(
+        await api.listListingMotifs(listingId: lyonListing),
+      )) {
+        ListListingMotifsResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      expect(motifs.single.id, consultation);
+      expect(motifs.single.label, 'Consultation');
+      expect(motifs.single.durationMin, 30);
+      expect(motifs.single.suggested, isFalse);
+      expect(
+        motifs.single.description,
+        'Un problème de santé, un avis, un contrôle de routine.',
+      );
+      expect(
+        _value(await api.listListingMotifs(listingId: parisListing)),
+        isA<ListListingMotifsResponse422>(),
+      );
+      final practitioners = switch (_value(
+        await api.listListingPractitioners(
+          listingId: lyonListing,
+          motifId: consultation,
+        ),
+      )) {
+        ListListingPractitionersResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      expect(practitioners.map((p) => p.displayName), [
+        'Dr Sarah Lemoine',
+        'Dr Éric Rousseau',
+      ]);
+      final availability = switch (_value(
+        await api.getListingAvailability(
+          listingId: lyonListing,
+          motifId: consultation,
+          practitionerId: lemoine,
+          from: Date(2026, 11, 4),
+          to: Date(2026, 11, 17),
+        ),
+      )) {
+        GetListingAvailabilityResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      expect(availability.days, hasLength(14));
+      expect(availability.days.first.slots, isEmpty);
+      expect(availability.days[4].open, isFalse);
+      final slot = availability.days[1].slots.first.startAt;
+      expect(slot.toTimeZonedIso8601String(), '2026-11-05T13:00:00+01:00');
+
+      backend.on(
+        'GET',
+        '$listings/$lyonListing/booking/practitioners?motifId=',
+        PortalReply.fixture(
+          'clinic-listings.lyon.booking.practitioners.validation.get.422.json',
+          status: 422,
+          contentType: 'application/problem+json',
+        ),
+      );
+      final missing = await ClinicListingApi(
+        portalServer(backend, interceptors: [_successOnly()]),
+      ).listListingPractitioners(listingId: lyonListing, motifId: '');
+      expect(strictStatus(missing), 422);
+    });
+
+    test('a new-client booking: 201 pending, its replay; slot taken, the '
+        'refusals of a linked client, of a second request, of a reused or '
+        'missing key, of a nameless pet', () async {
+      const path = '$listings/$lyonListing/booking/appointments';
+      const fixtures = 'clinic-listings.lyon.booking.appointments';
+      final body = ListingBooking(
+        newPet: const NewPet(name: 'Capture', species: NewPetSpeciesModel.cat),
+        motifId: consultation,
+        practitionerId: lemoine,
+        startAt: OffsetDateTime.parse('2026-11-12T14:00:00+01:00'),
+      );
+      Future<TonikResult<RequestListingAppointmentResponse, Response<Object?>>>
+      request(String fixture, int status, {CustomServer? on}) async {
+        backend.on(
+          'POST',
+          path,
+          PortalReply.fixture(
+            fixture,
+            status: status,
+            contentType: status < 300
+                ? 'application/json'
+                : 'application/problem+json',
+          ),
+        );
+        return await ClinicListingApi(on ?? server).requestListingAppointment(
+          listingId: lyonListing,
+          idempotencyKey: 'key-1',
+          body: body,
+        );
+      }
+
+      final created = switch (_value(
+        await request('$fixtures.post.201.json', 201),
+      )) {
+        RequestListingAppointmentResponse201(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      expect(created.id, '01a1a496-639e-7512-a3b9-e5c2596e2c3d');
+      expect(created.clinic.name, 'Clinique Vétérinaire de Lyon');
+      expect(created.clinic.city, 'Lyon');
+      expect(created.pet.name, 'Capture');
+      expect(created.pet.species, BookingRequestPetViewSpeciesModel.cat);
+      expect(created.motif, 'Consultation');
+      expect(
+        created.startAt.toTimeZonedIso8601String(),
+        '2026-11-12T14:00:00+01:00',
+      );
+      expect(
+        created.status,
+        ListingBookingBookingRequestViewStatusModel.pending,
+      );
+      expect(created.declineReason, isNull);
+      expect(created.appointmentId, isNull);
+      final sent = backend.requests.last;
+      expect(sent.headers['Idempotency-Key'], 'key-1');
+      expect(jsonDecode(utf8.decode(sent.body)), {
+        'newPet': {'name': 'Capture', 'species': 'cat'},
+        'motifId': consultation,
+        'practitionerId': lemoine,
+        'startAt': '2026-11-12T14:00:00+01:00',
+      });
+
+      // The replay answers the stored body (spaced, raw UTF-8).
+      final replay = switch (_value(
+        await request('$fixtures.replay.post.201.json', 201),
+      )) {
+        RequestListingAppointmentResponse201(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      expect(replay.id, created.id);
+      expect(replay.clinic.name, 'Clinique Vétérinaire de Lyon');
+
+      expect(
+        _value(await request('$fixtures.slot-taken.post.409.json', 409)),
+        isA<RequestListingAppointmentResponse409>(),
+      );
+      // A violation is a typed 422 (its body names the field).
+      switch (await request('$fixtures.validation.post.422.json', 422)) {
+        case TonikSuccess(
+          value: RequestListingAppointmentResponse422(),
+          :final response,
+        ):
+          expect(
+            utf8.decode(response.data! as List<int>),
+            contains('"propertyPath":"newPet.name"'),
+          );
+        case final other:
+          fail('unexpected $other');
+      }
+      final missingKey = _value(
+        await request('$fixtures.key-missing.post.400.json', 400),
+      );
+      expect(missingKey, isA<RequestListingAppointmentResponse400>());
+
+      // Business refusals carry no violations: on the strict chain they are
+      // TonikErrors carrying the response, which the app maps by `type`.
+      final strict = portalServer(backend, interceptors: [_successOnly()]);
+      for (final fixture in ['already-linked', 'limit', 'key-reused']) {
+        final result = await request(
+          '$fixtures.$fixture.post.422.json',
+          422,
+          on: strict,
+        );
+        expect(strictStatus(result), 422, reason: fixture);
+        final data = switch (result) {
+          TonikError(:final DioException error) => error.response?.data,
+          _ => null,
+        };
+        expect(
+          utf8.decode(data! as List<int>),
+          contains(switch (fixture) {
+            'already-linked' => '"type":"already_linked"',
+            'limit' => '"type":"booking_request_limit"',
+            _ => '"type":"idempotency_key_reused"',
+          }),
+        );
+      }
+    });
+
+    test('the booking requests: pending, declined (expired, declined), '
+        'confirmed with its appointment', () async {
+      final account = AccountApi(server);
+      Future<BookingRequests> read(String fixture) async {
+        backend.on(
+          'GET',
+          '$_api/me/booking-requests',
+          PortalReply.fixture(fixture),
+        );
+        return switch (_value(await account.listBookingRequests())) {
+          ListBookingRequestsResponse200(:final body) => body,
+          final other => fail('unexpected $other'),
+        };
+      }
+
+      final pending = (await read('me.booking-requests.pending.get.200.json'))
+          .items
+          .single;
+      expect(pending.status, BookingRequestViewStatusModel.pending);
+      expect(pending.declineReason, isNull);
+      final declined = await read('me.booking-requests.declined.get.200.json');
+      expect(declined.items.map((item) => item.declineReason), [
+        BookingRequestViewDeclineReasonModel.expired,
+        BookingRequestViewDeclineReasonModel.declined,
+        BookingRequestViewDeclineReasonModel.expired,
+      ]);
+      expect(declined.items.first.pet.name, 'Biscotte');
+      expect(
+        declined.items.first.startAt.toTimeZonedIso8601String(),
+        '2026-11-10T09:00:00+01:00',
+      );
+      final confirmed = (await read(
+        'me.booking-requests.confirmed.get.200.json',
+      )).items.single;
+      expect(confirmed.status, BookingRequestViewStatusModel.confirmed);
+      expect(confirmed.appointmentId, '01a19a12-9db0-7703-80f3-d1f2f41e32e5');
+      expect(confirmed.pet.species, BookingRequestPetViewSpeciesModel.dog);
+    });
+
+    test('a link suggestion accepted: 202 pending, the 404 of an unknown one, '
+        '/me with the pending link, no suggestion left', () async {
+      final account = AccountApi(server);
+      const id =
+          '25ee8fbda0546a36b8f686d0504b04b343c4a8a0851fb2b523e621361b972cd6';
+      backend
+        ..on(
+          'POST',
+          '$_api/me/link-suggestions/$id/accept',
+          PortalReply.fixture(
+            'me.link-suggestions.accept.post.202.json',
+            status: 202,
+          ),
+        )
+        ..on(
+          'GET',
+          '$_api/me',
+          PortalReply.fixture('me.pending-link.get.200.json'),
+        )
+        ..on(
+          'GET',
+          '$_api/me/link-suggestions',
+          PortalReply.fixture('me.link-suggestions.empty.get.200.json'),
+        );
+
+      final accepted = switch (_value(
+        await account.acceptLinkSuggestion(suggestionId: id),
+      )) {
+        AcceptLinkSuggestionResponse202(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      expect(
+        accepted.linkStatus,
+        LinkSuggestionAcceptanceLinkSuggestionAcceptedViewLinkStatusModel
+            .pending,
+      );
+      final me = switch (_value(await account.getMe())) {
+        GetMeResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      final link = me.clinics.single;
+      expect(link.linkStatus, ClinicLinkViewLinkStatusModel.pending);
+      expect(link.linkedAt, isNull);
+      expect(link.petNames, isEmpty);
+      expect(link.unreadDocuments, 0);
+      expect(switch (_value(await account.listLinkSuggestions())) {
+        ListLinkSuggestionsResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      }, isEmpty);
+
+      const unknown =
+          '0000000000000000000000000000000000000000000000000000000000000000';
+      backend.on(
+        'POST',
+        '$_api/me/link-suggestions/$unknown/accept',
+        PortalReply.fixture(
+          'me.link-suggestions.accept.unknown.post.404.json',
+          status: 404,
+          contentType: 'application/problem+json',
+        ),
+      );
+      final missing = await AccountApi(
+        portalServer(backend, interceptors: [_successOnly()]),
+      ).acceptLinkSuggestion(suggestionId: unknown);
+      expect(strictStatus(missing), 404);
+    });
+  });
+
   group('PATCH /me', () {
     test('sends a merge-patch body; 422 problem+json is a typed '
         'ConstraintViolation', () async {

@@ -56,6 +56,20 @@ dependencies:
   flutter_riverpod: 3.4.3
   # Tokens, refresh token and device id: Keychain / Android Keystore.
   flutter_secure_storage: 11.2.0
+  # Slice 7 (clinic_listing): « Autour de moi » on screen 10 reads one
+  # coarse position (low accuracy, 15 s at most) to sort the directory by
+  # distance; Android ACCESS_COARSE_LOCATION, iOS
+  # NSLocationWhenInUseUsageDescription; the call sits behind
+  # `deviceLocationProvider` (tests override it). Checked on pub.dev on
+  # 2026-11-04 and pinned exactly: latest, publisher baseflow.com, 160/160
+  # points, ~2.9 M downloads in 30 days, Dart >= 3.5 / Flutter >= 2.8;
+  # `fvm flutter pub add --dry-run geolocator:14.1.2` resolves, adding
+  # geolocator_android 5.2.1, geolocator_apple 2.4.3, geolocator_linux
+  # 0.2.6, geolocator_platform_interface 4.4.1, geolocator_web 4.1.4,
+  # geolocator_windows 0.2.5, dbus 0.7.15, geoclue 0.1.1, gsettings 0.2.8,
+  # package_info_plus 10.2.2, package_info_plus_platform_interface 4.1.0,
+  # petitparser 7.1.0 and xml 7.1.0.
+  geolocator: 14.1.2
   # The router: the 5-tab shell, the redirects, the /invitation deep link.
   go_router: 18.1.2
   # French dates and amounts; the same 0.20.3 as the ^0.20.3 of the SDK's

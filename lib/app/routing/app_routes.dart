@@ -40,6 +40,13 @@ abstract final class AppRoutes {
   static String clinicListing(String listingId) =>
       '/clinic-listings/${_id(listingId)}'; // 11
 
+  /// The new-client booking of a clinic of the directory, over its sheet
+  /// (11): the slot (step 1 of 2), then the pet and the request.
+  static String listingSlot(String listingId) =>
+      '${clinicListing(listingId)}/booking/slot';
+  static String listingConfirm(String listingId) =>
+      '${clinicListing(listingId)}/booking/confirm';
+
   /// Debug builds only: the UI kit gallery.
   static const kitGallery = '/debug/kit';
 
@@ -63,13 +70,16 @@ const Set<String> _public = {
 /// invitations); a redirect would unmount it mid-branch.
 const Set<String> _signInOnly = {AppRoutes.welcome, AppRoutes.register};
 
-/// The locations that need a confirmed clinic.
-const List<String> _clinicScoped = [
-  AppRoutes.home,
+/// The locations that need a confirmed clinic, with everything under them.
+const List<String> _clinicScoped = [AppRoutes.home, '/booking'];
+
+/// The tabs an account without a confirmed clinic still opens (their root
+/// says why it is empty; Rendez-vous lists its booking requests): only the
+/// pages under them need a clinic.
+const List<String> _clinicScopedBelow = [
   AppRoutes.pets,
   AppRoutes.appointments,
   AppRoutes.documents,
-  '/booking',
 ];
 
 bool _under(String path, String root) =>
@@ -90,7 +100,8 @@ String? redirectFor({
   if (!signedIn) return _public.contains(path) ? null : AppRoutes.welcome;
   if (_signInOnly.contains(path)) return AppRoutes.home;
   if (hasConfirmedClinic == false &&
-      _clinicScoped.any((root) => _under(path, root))) {
+      (_clinicScoped.any((root) => _under(path, root)) ||
+          _clinicScopedBelow.any((root) => path.startsWith('$root/')))) {
     return AppRoutes.clinics;
   }
   return null;

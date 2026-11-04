@@ -88,7 +88,9 @@ class KivetoListRow extends StatelessWidget {
          size: 18,
          color: KivetoColors.inkMuted,
        ),
-       padding = const EdgeInsets.symmetric(horizontal: 14),
+       // The mockup draws one-line metas; a meta that wraps keeps 8 above
+       // and below (one-line rows stay 52 high).
+       padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
        _minHeight = 52,
        _metaGap = 1;
 
@@ -525,11 +527,15 @@ class KivetoDetailHeader extends StatelessWidget {
     this.extra,
     this.extraIsPositive = false,
     this.onBack,
+    this.large = false,
   });
 
   final String title;
   final String? subtitle;
   final String? extra;
+
+  /// The title at 26/700 (a clinic's sheet, 11) instead of 24/700.
+  final bool large;
 
   /// Shows [extra] in 13/600 green (an "Ouvert" status).
   final bool extraIsPositive;
@@ -546,7 +552,10 @@ class KivetoDetailHeader extends StatelessWidget {
         if (onBack != null) KivetoIconButton.back(onPressed: onBack),
         Semantics(
           header: true,
-          child: Text(title, style: KivetoText.flowTitle),
+          child: Text(
+            title,
+            style: large ? KivetoText.pageTitle : KivetoText.flowTitle,
+          ),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: KivetoSpace.s),

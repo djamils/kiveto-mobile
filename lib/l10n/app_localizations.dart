@@ -214,23 +214,11 @@ abstract class AppLocalizations {
   /// **'Demander un renouvellement'**
   String get screenPrescriptionRenewalTitle;
 
-  /// Title of the clinic sheet of the directory (11).
-  ///
-  /// In fr, this message translates to:
-  /// **'Fiche clinique'**
-  String get screenClinicListingTitle;
-
   /// Title of the debug-only gallery of the UI kit.
   ///
   /// In fr, this message translates to:
   /// **'Kit d\'interface'**
   String get screenKitGalleryTitle;
-
-  /// Body of a screen not built yet.
-  ///
-  /// In fr, this message translates to:
-  /// **'Cet écran arrive dans une prochaine version.'**
-  String get placeholderBody;
 
   /// Debug builds only: the link from the welcome screen to the UI kit gallery.
   ///
@@ -3429,6 +3417,474 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{value} kg'**
   String petChangeWeightValue(String value);
+
+  /// Clinic search (10): the subtitle under the greeting.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouvez votre clinique pour prendre rendez-vous.'**
+  String get clinicSearchSubtitle;
+
+  /// Clinic search (10): accessible name of the search field (visually hidden).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher une clinique'**
+  String get clinicSearchFieldLabel;
+
+  /// Clinic search (10): hint of the search field.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom ou ville'**
+  String get clinicSearchFieldHint;
+
+  /// Clinic search (10): the chip that searches around the device position.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autour de moi'**
+  String get clinicSearchNearMe;
+
+  /// Clinic search (10): the near-me chip, disabled while the position is read.
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation…'**
+  String get clinicSearchLocating;
+
+  /// Clinic search (10): how many clinics are listed (by name).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune clinique} =1{1 clinique} other{{count} cliniques}}'**
+  String clinicSearchCount(int count);
+
+  /// Clinic search (10): how many clinics are listed around the position.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune clinique à proximité} =1{1 clinique à proximité} other{{count} cliniques à proximité}}'**
+  String clinicSearchNearCount(int count);
+
+  /// Clinic search (10): the clinics listed so far (by name) while a next page exists.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Plus d\'une clinique} other{Plus de {count} cliniques}}'**
+  String clinicSearchMoreCount(int count);
+
+  /// Clinic search (10): the clinics listed so far around the position while a next page exists.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Plus d\'une clinique à proximité} other{Plus de {count} cliniques à proximité}}'**
+  String clinicSearchMoreNearCount(int count);
+
+  /// Clinic search (10): pill of a clinic that takes new clients online.
+  ///
+  /// In fr, this message translates to:
+  /// **'RDV en ligne'**
+  String get clinicSearchOnline;
+
+  /// Clinic search (10): pill of a clinic only listed (not on Kiveto).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore sur Kiveto'**
+  String get clinicSearchUnlisted;
+
+  /// Clinic search (10): the next slot open to a new client (no-break space before the colon).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochain créneau : {slot}'**
+  String clinicSearchNextSlot(String slot);
+
+  /// Clinic search (10): no clinic matches the search.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune clinique trouvée'**
+  String get clinicSearchEmptyTitle;
+
+  /// Clinic search (10): body of the empty search.
+  ///
+  /// In fr, this message translates to:
+  /// **'Essayez un autre nom ou une autre ville.'**
+  String get clinicSearchEmptyBody;
+
+  /// Clinic search (10): body of an empty search around the position (no-break spaces inside the quotes).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune clinique de l\'annuaire autour de vous. Touchez « Autour de moi » pour chercher par nom.'**
+  String get clinicSearchEmptyNearBody;
+
+  /// Clinic search (10): SnackBar when the location permission is refused.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorisez l\'accès à votre position pour voir les cliniques autour de vous.'**
+  String get clinicSearchLocationDenied;
+
+  /// Clinic search (10): SnackBar when the location permission is refused for good (the system no longer asks; no-break space before the colon).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'accès à votre position est refusé pour Kiveto : autorisez-le dans les réglages du téléphone.'**
+  String get clinicSearchLocationDeniedForever;
+
+  /// Clinic search (10): SnackBar when the location service is off.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez la localisation de votre téléphone pour voir les cliniques autour de vous.'**
+  String get clinicSearchLocationDisabled;
+
+  /// Clinic search (10): SnackBar when no position could be read in time.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre position n\'a pas pu être déterminée. Réessayez.'**
+  String get clinicSearchLocationFailed;
+
+  /// Clinic search (10): title of a clinic record found at the account phone number (no article before the clinic name).
+  ///
+  /// In fr, this message translates to:
+  /// **'{clinic} a un dossier à votre numéro'**
+  String linkSuggestionTitle(String clinic);
+
+  /// Clinic search (10): body of a record found at the account phone number.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rattachez-le pour retrouver vos animaux et votre historique.'**
+  String get linkSuggestionBody;
+
+  /// Clinic search (10): asks to be linked to the record found.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rattacher ce dossier'**
+  String get linkSuggestionAccept;
+
+  /// Clinic search (10): SnackBar when the record is no longer offered (404).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce dossier n\'est plus proposé.'**
+  String get linkSuggestionGone;
+
+  /// Clinic search (10): the records at the account phone number could not be read.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de vérifier les dossiers à votre numéro.'**
+  String get linkSuggestionsError;
+
+  /// Clinic search (10): title of a link the clinic has yet to confirm (no-break space before the colon).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rattachement demandé : {clinic}'**
+  String linkPendingTitle(String clinic);
+
+  /// Clinic search (10): body of a link the clinic has yet to confirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique doit confirmer le rattachement. Vos animaux et votre historique apparaîtront dès sa confirmation.'**
+  String get linkPendingBody;
+
+  /// Clinic sheet (11): open now (device clock), until when.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvert · ferme à {time}'**
+  String clinicListingOpenUntil(String time);
+
+  /// Clinic sheet (11): closed now, opening later today.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermé · ouvre à {time}'**
+  String clinicListingOpensLater(String time);
+
+  /// Clinic sheet (11): closed until tomorrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermé · ouvre demain à {time}'**
+  String clinicListingOpensTomorrow(String time);
+
+  /// Clinic sheet (11): closed until another day of the week (lower case).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermé · ouvre {day} à {time}'**
+  String clinicListingOpensOn(String day, String time);
+
+  /// Clinic sheet (11): title of the known / new client choice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes'**
+  String get clinicListingWho;
+
+  /// Clinic sheet (11): who card of a known client.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà client'**
+  String get clinicListingKnownClient;
+
+  /// Clinic sheet (11): second line of the known client card.
+  ///
+  /// In fr, this message translates to:
+  /// **'de cette clinique'**
+  String get clinicListingKnownClientSub;
+
+  /// Clinic sheet (11): who card of a new client.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau client'**
+  String get clinicListingNewClient;
+
+  /// Clinic sheet (11): second line of the new client card.
+  ///
+  /// In fr, this message translates to:
+  /// **'première visite'**
+  String get clinicListingNewClientSub;
+
+  /// Clinic sheet (11): hint of the new client choice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous décrirez votre animal à l\'étape suivante. La clinique confirme les rendez-vous des nouveaux clients.'**
+  String get clinicListingNewHint;
+
+  /// Clinic sheet (11): hint of the known client choice (no-break spaces inside the quotes, before the colon and the question mark).
+  ///
+  /// In fr, this message translates to:
+  /// **'Si la clinique a votre numéro de mobile, votre dossier vous est proposé dans « Trouver une clinique » : rattachez-le. Déjà rattaché ? Prenez rendez-vous depuis votre espace.'**
+  String get clinicListingKnownHint;
+
+  /// Clinic sheet (11): known client, back to the clinic search (its record suggestions).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrouver mon dossier'**
+  String get clinicListingFindRecord;
+
+  /// Clinic sheet (11): title of the opening hours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Horaires'**
+  String get clinicListingHours;
+
+  /// Clinic sheet (11): a closed day of the opening hours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermé'**
+  String get clinicListingClosed;
+
+  /// Clinic sheet (11): the clinic is not in the directory (404).
+  ///
+  /// In fr, this message translates to:
+  /// **'Clinique introuvable'**
+  String get clinicListingGoneTitle;
+
+  /// Clinic sheet (11): body of the clinic not found.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette clinique n\'est plus dans l\'annuaire.'**
+  String get clinicListingGoneBody;
+
+  /// Clinic sheet (11): emergency hint under the motifs (no-break space before the question mark; the phone kept on one line).
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgence ? Appelez directement la clinique au {phone}.'**
+  String listingMotifUrgency(String phone);
+
+  /// Clinic sheet (11): the clinic takes no online request of new clients.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette clinique ne propose pas encore la prise de rendez-vous en ligne aux nouveaux clients.'**
+  String get listingMotifNotOpen;
+
+  /// Clinic sheet (11): the clinic takes no new client.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette clinique n\'accepte pas de nouveaux clients pour le moment.'**
+  String get listingMotifNoNewClients;
+
+  /// Clinic sheet (11): calls the clinic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler la clinique'**
+  String get listingMotifCall;
+
+  /// Clinic sheet (11): no motif open online to new clients.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun motif n\'est ouvert en ligne aux nouveaux clients.'**
+  String get listingMotifEmpty;
+
+  /// New-client booking: the step counter of the header.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {step} sur 2'**
+  String listingBookingStepLabel(int step);
+
+  /// New-client booking, step 2: title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre animal'**
+  String get listingBookingPetTitle;
+
+  /// New-client booking, step 1: reached without a motif chosen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez d\'abord un motif.'**
+  String get listingBookingNoMotif;
+
+  /// New-client booking, step 2: reached without a slot chosen (the slot taken meanwhile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez d\'abord un créneau.'**
+  String get listingBookingNoSlot;
+
+  /// New-client booking, step 1: label of the bottom bar.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créneau'**
+  String get listingBookingSlotLabel;
+
+  /// New-client booking, step 1: bottom bar value before a slot is chosen.
+  ///
+  /// In fr, this message translates to:
+  /// **'À choisir'**
+  String get listingBookingSlotEmpty;
+
+  /// New-client booking, step 2: footnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique confirme les rendez-vous des nouveaux clients. Vous suivez votre demande dans Rendez-vous.'**
+  String get listingBookingFootnote;
+
+  /// New-client booking: success message (the date with no-break spaces).
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique doit confirmer votre rendez-vous du {date} à {time}.'**
+  String listingBookingSentMessage(String date, String time);
+
+  /// New-client booking: success note.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous suivez votre demande dans Rendez-vous. Si la clinique ne peut pas la confirmer, vous en êtes informé.'**
+  String get listingBookingSentNote;
+
+  /// New-client booking: opens the Rendez-vous tab (success, request limit).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes rendez-vous'**
+  String get listingBookingSeeAppointments;
+
+  /// New-client booking: back to the clinic search after the success.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à l\'annuaire'**
+  String get listingBookingBackToDirectory;
+
+  /// New-client booking: refused, the account is already a client of the clinic (422 already_linked).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes déjà client de cette clinique : prenez rendez-vous depuis votre espace.'**
+  String get listingBookingAlreadyLinked;
+
+  /// New-client booking: refused, too many pending requests (422 booking_request_limit).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà des demandes de rendez-vous en attente : attendez la réponse des cliniques.'**
+  String get listingBookingLimit;
+
+  /// New-client booking: refused, online requests closed (422 booking_not_open).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette clinique ne prend plus de demandes en ligne de nouveaux clients.'**
+  String get listingBookingNotOpen;
+
+  /// New-client booking: refused, the clinic or the choice is gone (404).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette clinique ou ce créneau n\'est plus disponible.'**
+  String get listingBookingNotFound;
+
+  /// New-client booking: refused, too many requests (429).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de demandes en peu de temps : réessayez plus tard.'**
+  String get listingBookingRateLimited;
+
+  /// Appointments (4): title of the new-client booking requests.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes de rendez-vous'**
+  String get appointmentRequestsTitle;
+
+  /// Appointments (4): pill of a request the clinic refused.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusée'**
+  String get appointmentRequestDeclined;
+
+  /// Appointments (4): pill of a request left without an answer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expirée'**
+  String get appointmentRequestExpired;
+
+  /// Appointments (4): pill of a cancelled request.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulée'**
+  String get appointmentRequestCancelled;
+
+  /// Appointments (4): pill of a request the clinic confirmed (its appointment is in that clinic's list).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmée'**
+  String get appointmentRequestConfirmed;
+
+  /// Appointments (4): status line of a pending request.
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique doit confirmer votre demande.'**
+  String get appointmentRequestPendingLine;
+
+  /// Appointments (4): status line of a refused request.
+  ///
+  /// In fr, this message translates to:
+  /// **'La clinique n\'a pas pu confirmer ce rendez-vous.'**
+  String get appointmentRequestDeclinedLine;
+
+  /// Appointments (4): status line of an expired request.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans réponse de la clinique à temps, la demande a expiré.'**
+  String get appointmentRequestExpiredLine;
+
+  /// Appointments (4): status line of a cancelled request.
+  ///
+  /// In fr, this message translates to:
+  /// **'La demande a été annulée.'**
+  String get appointmentRequestCancelledLine;
+
+  /// Appointments (4): status line of a confirmed request of a clinic that is not the active one.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le rendez-vous apparaît dans les rendez-vous de cette clinique.'**
+  String get appointmentRequestConfirmedLine;
+
+  /// Appointments (4): the booking requests could not be read.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos demandes de rendez-vous.'**
+  String get appointmentRequestsError;
+
+  /// The tabs of an account without a confirmed clinic (2, 4, 5): empty state title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune clinique rattachée'**
+  String get noClinicTitle;
+
+  /// Appointments (4) without a confirmed clinic: empty state body.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouvez une clinique pour prendre un premier rendez-vous.'**
+  String get noClinicAppointmentsBody;
+
+  /// Pets tab without a confirmed clinic: empty state body.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos animaux apparaîtront ici dès qu\'une clinique vous aura rattaché.'**
+  String get noClinicPetsBody;
+
+  /// Documents tab without a confirmed clinic: empty state body.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les documents partagés par votre clinique apparaîtront ici.'**
+  String get noClinicDocumentsBody;
 }
 
 class _AppLocalizationsDelegate

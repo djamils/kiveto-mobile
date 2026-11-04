@@ -209,7 +209,7 @@ class KivetoChoiceChip extends StatelessWidget {
 
 /// C-13c: a summary chip on canvas with a trailing icon (edit a step,
 /// switch clinic); C-13d ([KivetoSummaryChip.action]): white with a
-/// leading icon.
+/// leading icon (and an optional trailing one: « Autour de moi ✕ »).
 class KivetoSummaryChip extends StatelessWidget {
   const new({
     required this.label,
@@ -223,7 +223,8 @@ class KivetoSummaryChip extends StatelessWidget {
     required this.onPressed,
     required LucideGlyph this.leadingGlyph,
     super.key,
-  }) : trailingGlyph = null;
+    this.trailingGlyph,
+  });
 
   final String label;
   final VoidCallback? onPressed;

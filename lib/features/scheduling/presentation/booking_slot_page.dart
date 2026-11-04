@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_mobile/core/di/core_providers.dart';
 import 'package:kiveto_mobile/features/patient/patient.dart' show deviceToday;
+import 'package:kiveto_mobile/features/scheduling/domain/booking_venue.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/booking_layout.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/booking_wizard.dart';
 import 'package:kiveto_mobile/features/scheduling/presentation/scheduling_messages.dart';
@@ -82,7 +83,7 @@ class BookingSlotPage extends ConsumerWidget {
           const BookingClinicPending()
         else if (motif != null)
           SlotPicker(
-            clinicId: clinicId,
+            venue: ClinicVenue(clinicId),
             motifId: motif.id,
             today: deviceToday(ref.watch(clockProvider)),
             selectedPractitionerId: draft.practitioner?.id,

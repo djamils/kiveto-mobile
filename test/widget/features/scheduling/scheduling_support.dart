@@ -79,10 +79,15 @@ PortalReply meWithParis(void Function(Map<String, Object?> paris) change) =>
       );
     });
 
-/// Julien signed in, Paris active: `/me`, Oslo, the motifs, the
-/// practitioners and Dupont's first window from the 3rd.
+/// Julien signed in, Paris active: `/me`, no booking request, Oslo, the
+/// motifs, the practitioners and Dupont's first window from the 3rd.
 FakePortalBackend julienBackend() => FakePortalBackend()
   ..on('GET', '$api/me', PortalReply.fixture('me.get.200.json'))
+  ..on(
+    'GET',
+    '$api/me/booking-requests?limit=50',
+    PortalReply.fixture('me.booking-requests.get.200.json'),
+  )
   ..on(
     'GET',
     '$parisBase/pets',
