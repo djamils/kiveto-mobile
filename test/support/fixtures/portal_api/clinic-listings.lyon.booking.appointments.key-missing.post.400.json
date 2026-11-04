@@ -1,0 +1,1 @@
+{"title":"En-t\u00eate Idempotency-Key manquant ou invalide.","detail":"L'en-t\u00eate Idempotency-Key est obligatoire : de 1 \u00e0 128 caract\u00e8res ASCII visibles.","status":400,"type":"idempotency_key_missing","trace":"[stripped]"}

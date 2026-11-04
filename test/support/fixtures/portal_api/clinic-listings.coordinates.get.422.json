@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"lat","message":"La latitude est comprise entre -90 et 90.","code":"portal_rule"}],"detail":"lat: La latitude est comprise entre -90 et 90.","type":"validation_failed","title":"Données invalides."}
