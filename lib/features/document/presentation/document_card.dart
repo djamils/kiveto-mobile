@@ -59,23 +59,35 @@ class DocumentCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // The dot follows the last word, also when the
-                        // title wraps.
-                        Text.rich(
-                          TextSpan(
-                            text: document.title,
-                            children: [
-                              if (document.unread)
-                                const WidgetSpan(
-                                  alignment: PlaceholderAlignment.middle,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(left: 6),
+                        // The dot after the title, on its first line. An
+                        // inline dot always offers a line break before it,
+                        // and sat alone on a second line under a title
+                        // that filled the first.
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                document.title,
+                                style: KivetoText.labelStrong,
+                                // The dot right after the longest line,
+                                // not at the far edge.
+                                textWidthBasis: TextWidthBasis.longestLine,
+                              ),
+                            ),
+                            if (document.unread)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 6),
+                                child: Text.rich(
+                                  const WidgetSpan(
+                                    alignment: PlaceholderAlignment.middle,
                                     child: UnreadDot(),
                                   ),
+                                  style: KivetoText.labelStrong,
                                 ),
-                            ],
-                          ),
-                          style: KivetoText.labelStrong,
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Text(meta, style: KivetoText.caption),
