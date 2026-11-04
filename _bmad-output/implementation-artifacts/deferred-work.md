@@ -259,3 +259,17 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-client-account.md`
   summary: The device-calendar conversion of the account's instants (`deviceDateOf`, `deviceTimeOf` in `lib/features/client/presentation/account_messages.dart`: « Export du … », « Disponible jusqu'au … à … », « Accordé le … », « rattachée le … ») cannot fail a test: every test instant is at midday UTC and CI runs in UTC, so dropping `.toLocal()` or the device offset passes `make ci`. Pin a non-UTC `TZ` (e.g. `Europe/Paris`) for the test step of `make ci` and add an instant near midnight UTC; patient's `deviceToday` has the same blind spot.
   evidence: Code review (verification-gap layer), filed defer: `account_page_test.dart` and `account_sheets_test.dart` move every capture instant to `T12:00:00+00:00`; `.github/workflows/ci.yml` sets no `TZ`; there is no `flutter_test_config.dart`.
+
+## Deferred from: spec-clinic-listing.md (slice 7, 2026-11-04)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-clinic-listing.md`
+  summary: A listing of the directory is matched to a clinic of the account by name only (`selectConfirmedClinicNamed`: trimmed, case-insensitive, exactly one confirmed match): « Déjà client » → « Prendre rendez-vous » on 11 and the `already_linked` action of the new-client booking select that clinic before the known-client wizard, and without a single match the wizard opens on the active clinic (its chip switches). Two clinics with the same name, or a renamed one, defeat it. A backend proposal: expose, for a signed-in account, the link (or the `clinicId`) of a listing in `GET /clinic-listings/{l}`, or the clinic's name and city in the `already_linked` problem.
+  evidence: Build review (blind hunter, intent auditor), verified, medium: listing ids are not clinic ids (contract); the dev data's names match on both sides.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-clinic-listing.md`
+  summary: The « Ouvert · ferme à … » / « Fermé · ouvre … » line of screen 11 is computed on the device's clock and zone, not the clinic's (`ClinicListingDetail.timezone` is read but unused): a clinic in another zone than the device (overseas France, a travelling owner) shows a wrong status. Computing it needs time-zone data (the `timezone` package, checked under CLAUDE.md §7) or a server-computed field; same gap as the device-today entries of slices 3 and 4.
+  evidence: Build review (blind hunter, edge-case hunter, intent auditor), verified, medium; the spec's Design Notes chose the device clock for lack of a zone database.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-clinic-listing.md`
+  summary: iOS: geolocator_apple compiles the « always » location API unless `BYPASS_PERMISSION_LOCATION_ALWAYS` is set (an environment variable read by its `Package.swift` under Swift Package Manager); the app only asks for when-in-use (`NSLocationWhenInUseUsageDescription`), so App Review may ask about an always-permission code path. Set it in the iOS build (make start / CI) when iOS is built.
+  evidence: Build review (blind hunter), verified in the geolocator README, low; iOS is out of this effort's scope (never built).
