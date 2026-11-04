@@ -1,6 +1,7 @@
 import 'package:kiveto_mobile/shared/presentation/icons/kiveto_icon.dart';
 import 'package:kiveto_mobile/shared/presentation/icons/lucide_glyph.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/buttons.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:kiveto_mobile/shared/presentation/kit/pills.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
@@ -455,62 +456,64 @@ class KivetoSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final subtitle = this.subtitle;
     // Above the keyboard, and scrollable when the content is taller than
-    // the room left. iOS phone and number pads have no return key: when
-    // the sheet scrolls, a drag on it closes them; a sheet that fits shows
-    // all its content above the keyboard. (No always-scrollable physics:
-    // it would take the modal sheet's own swipe-down.)
+    // the room left. iOS phone, number and multiline pads have no key that
+    // closes them: when the sheet scrolls, a drag on it closes them (one
+    // that scrolls a multiline field's own text keeps them); a sheet that
+    // fits shows all its content above the keyboard. (No always-scrollable
+    // physics: it would take the modal sheet's own swipe-down.)
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: EdgeInsets.fromLTRB(
-          KivetoSpace.gutter,
-          10,
-          KivetoSpace.gutter,
-          kivetoBottomPadding(context, 28),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: KivetoColors.borderChip,
-                  borderRadius: BorderRadius.circular(3),
+      child: KeyboardDismissOnDrag(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            KivetoSpace.gutter,
+            10,
+            KivetoSpace.gutter,
+            kivetoBottomPadding(context, 28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: KivetoColors.borderChip,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: KivetoSpace.xl2),
-            Semantics(
-              header: true,
-              child: Text(
-                title,
-                style: kivetoTextStyle(
-                  22,
-                  FontWeight.w700,
-                  letterSpacingEm: -0.01,
-                  color: KivetoColors.ink,
+              const SizedBox(height: KivetoSpace.xl2),
+              Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  style: kivetoTextStyle(
+                    22,
+                    FontWeight.w700,
+                    letterSpacingEm: -0.01,
+                    color: KivetoColors.ink,
+                  ),
                 ),
               ),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: KivetoSpace.s),
-              Text(
-                subtitle,
-                style: KivetoText.body.copyWith(
-                  color: KivetoColors.inkSecondary,
+              if (subtitle != null) ...[
+                const SizedBox(height: KivetoSpace.s),
+                Text(
+                  subtitle,
+                  style: KivetoText.body.copyWith(
+                    color: KivetoColors.inkSecondary,
+                  ),
                 ),
-              ),
+              ],
+              const SizedBox(height: KivetoSpace.xl2),
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) const SizedBox(height: KivetoSpace.sm),
+                children[i],
+              ],
             ],
-            const SizedBox(height: KivetoSpace.xl2),
-            for (var i = 0; i < children.length; i++) ...[
-              if (i > 0) const SizedBox(height: KivetoSpace.sm),
-              children[i],
-            ],
-          ],
+          ),
         ),
       ),
     );

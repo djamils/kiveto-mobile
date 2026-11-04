@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kiveto_mobile/features/client/client.dart';
 import 'package:kiveto_mobile/shared/presentation/async/async_views.dart';
+import 'package:kiveto_mobile/shared/presentation/kit/forms.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_colors.dart';
 import 'package:kiveto_mobile/shared/presentation/tokens/kiveto_layout.dart';
 import 'package:material_ui/material_ui.dart';
@@ -31,26 +32,27 @@ class FlowScaffold extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              // A drag closes the keyboard (an iOS multiline field has no
-              // dismiss key), also when the content fits.
-              child: SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  KivetoSpace.gutter,
-                  KivetoSpace.xl,
-                  KivetoSpace.gutter,
-                  KivetoSpace.xl,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < children.length; i++) ...[
-                      if (i > 0) SizedBox(height: gap),
-                      children[i],
+              // A drag on the page closes the keyboard (an iOS multiline field
+              // has no dismiss key), also when the content fits (always
+              // scrollable); one that scrolls a field's own text keeps it.
+              child: KeyboardDismissOnDrag(
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    KivetoSpace.gutter,
+                    KivetoSpace.xl,
+                    KivetoSpace.gutter,
+                    KivetoSpace.xl,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var i = 0; i < children.length; i++) ...[
+                        if (i > 0) SizedBox(height: gap),
+                        children[i],
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),

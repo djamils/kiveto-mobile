@@ -202,166 +202,168 @@ class _InvitationPageState extends ConsumerState<InvitationPage> {
       body: SafeArea(
         bottom: false,
         // iOS number pads have no return key: a drag closes them.
-        child: CustomScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  KivetoSpace.authGutter,
-                  KivetoSpace.xl7,
-                  KivetoSpace.authGutter,
-                  kivetoBottomPadding(context, 28),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: KivetoBrandLockup(),
-                        ),
-                        const SizedBox(height: KivetoSpace.xl6),
-                        KivetoTag.brand(
-                          l10n.identityInvitationTag(preview.clinicName),
-                        ),
-                        const SizedBox(height: KivetoSpace.m),
-                        Semantics(
-                          header: true,
-                          child: Text(
-                            _title(l10n, preview),
-                            style: KivetoText.displaySmall,
+        child: KeyboardDismissOnDrag(
+          child: CustomScrollView(
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    KivetoSpace.authGutter,
+                    KivetoSpace.xl7,
+                    KivetoSpace.authGutter,
+                    kivetoBottomPadding(context, 28),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: KivetoBrandLockup(),
                           ),
-                        ),
-                        const SizedBox(height: KivetoSpace.m),
-                        Text(
-                          l10n.identityInvitationIntro,
-                          style: KivetoText.bodyLarge,
-                        ),
-                        const SizedBox(height: KivetoSpace.xl6),
-                        if (email != null) ...[
-                          _ReadOnlyField(
-                            label: l10n.identityEmailLabel,
-                            value: email,
-                            helpText: l10n.identityInvitationEmailHelp,
+                          const SizedBox(height: KivetoSpace.xl6),
+                          KivetoTag.brand(
+                            l10n.identityInvitationTag(preview.clinicName),
                           ),
-                          const SizedBox(height: KivetoSpace.xl),
-                        ],
-                        KivetoCodeField(
-                          label: l10n.identityInvitationCodeLabel(
-                            preview.maskedPhone,
-                          ),
-                          hintText: l10n.identityInvitationCodeHint,
-                          controller: _code,
-                          errorText: codeFieldError,
-                          onChanged: (_) {
-                            controller.clearAcceptError();
-                            setState(() {});
-                          },
-                        ),
-                        if (challenge == null)
-                          KivetoTextButton(
-                            label: l10n.identityInvitationResend,
-                            onPressed: canResend
-                                ? () => unawaited(controller.resend())
-                                : null,
-                          )
-                        else
-                          ResendCountdown(
-                            availableAt: challenge.resendAvailableAt,
-                            builder: (context, remaining) => KivetoTextButton(
-                              label: remaining > Duration.zero
-                                  ? l10n.identityInvitationResendIn(
-                                      ResendCountdown.format(remaining),
-                                    )
-                                  : l10n.identityInvitationResend,
-                              onPressed: remaining > Duration.zero || !canResend
-                                  ? null
-                                  : () => unawaited(controller.resend()),
+                          const SizedBox(height: KivetoSpace.m),
+                          Semantics(
+                            header: true,
+                            child: Text(
+                              _title(l10n, preview),
+                              style: KivetoText.displaySmall,
                             ),
                           ),
-                        if (codeError != null)
-                          Semantics(
-                            liveRegion: true,
-                            child: Text(
-                              identityErrorText(l10n, codeError),
-                              style: KivetoText.bodySmall.copyWith(
-                                color: KivetoColors.danger,
+                          const SizedBox(height: KivetoSpace.m),
+                          Text(
+                            l10n.identityInvitationIntro,
+                            style: KivetoText.bodyLarge,
+                          ),
+                          const SizedBox(height: KivetoSpace.xl6),
+                          if (email != null) ...[
+                            _ReadOnlyField(
+                              label: l10n.identityEmailLabel,
+                              value: email,
+                              helpText: l10n.identityInvitationEmailHelp,
+                            ),
+                            const SizedBox(height: KivetoSpace.xl),
+                          ],
+                          KivetoCodeField(
+                            label: l10n.identityInvitationCodeLabel(
+                              preview.maskedPhone,
+                            ),
+                            hintText: l10n.identityInvitationCodeHint,
+                            controller: _code,
+                            errorText: codeFieldError,
+                            onChanged: (_) {
+                              controller.clearAcceptError();
+                              setState(() {});
+                            },
+                          ),
+                          if (challenge == null)
+                            KivetoTextButton(
+                              label: l10n.identityInvitationResend,
+                              onPressed: canResend
+                                  ? () => unawaited(controller.resend())
+                                  : null,
+                            )
+                          else
+                            ResendCountdown(
+                              availableAt: challenge.resendAvailableAt,
+                              builder: (context, remaining) => KivetoTextButton(
+                                label: remaining > Duration.zero
+                                    ? l10n.identityInvitationResendIn(
+                                        ResendCountdown.format(remaining),
+                                      )
+                                    : l10n.identityInvitationResend,
+                                onPressed:
+                                    remaining > Duration.zero || !canResend
+                                    ? null
+                                    : () => unawaited(controller.resend()),
                               ),
                             ),
-                          )
-                        else if (ready.resent)
-                          Semantics(
-                            liveRegion: true,
-                            child: Text(
-                              l10n.identityCodeResentSms,
+                          if (codeError != null)
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                identityErrorText(l10n, codeError),
+                                style: KivetoText.bodySmall.copyWith(
+                                  color: KivetoColors.danger,
+                                ),
+                              ),
+                            )
+                          else if (ready.resent)
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                l10n.identityCodeResentSms,
+                                style: KivetoText.bodySmall,
+                              ),
+                            ),
+                          const SizedBox(height: KivetoSpace.xl),
+                          TermsConsent(
+                            value: _accepted,
+                            onChanged: (value) =>
+                                setState(() => _accepted = value),
+                          ),
+                          if (otherError != null) ...[
+                            const SizedBox(height: KivetoSpace.xl),
+                            Semantics(
+                              liveRegion: true,
+                              child: KivetoCallout.danger(body: otherError),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: KivetoSpace.xl5),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          KivetoButton.primary(
+                            label: l10n.identityInvitationSubmit,
+                            loading: ready.accepting,
+                            onPressed: canAccept
+                                ? () => unawaited(_accept())
+                                : null,
+                          ),
+                          if (!signedIn) ...[
+                            const SizedBox(height: KivetoSpace.l),
+                            KivetoInlineLinks(
+                              linkParts(
+                                l10n.identityInvitationExistingAccount(
+                                  l10n.identityInvitationAttach,
+                                ),
+                                [
+                                  (
+                                    l10n.identityInvitationAttach,
+                                    () => widget.onSignIn(context),
+                                  ),
+                                ],
+                                underline: false,
+                              ),
+                              textAlign: TextAlign.center,
                               style: KivetoText.bodySmall,
                             ),
-                          ),
-                        const SizedBox(height: KivetoSpace.xl),
-                        TermsConsent(
-                          value: _accepted,
-                          onChanged: (value) =>
-                              setState(() => _accepted = value),
-                        ),
-                        if (otherError != null) ...[
-                          const SizedBox(height: KivetoSpace.xl),
-                          Semantics(
-                            liveRegion: true,
-                            child: KivetoCallout.danger(body: otherError),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: KivetoSpace.xl5),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        KivetoButton.primary(
-                          label: l10n.identityInvitationSubmit,
-                          loading: ready.accepting,
-                          onPressed: canAccept
-                              ? () => unawaited(_accept())
-                              : null,
-                        ),
-                        if (!signedIn) ...[
-                          const SizedBox(height: KivetoSpace.l),
-                          KivetoInlineLinks(
-                            linkParts(
-                              l10n.identityInvitationExistingAccount(
-                                l10n.identityInvitationAttach,
-                              ),
-                              [
-                                (
-                                  l10n.identityInvitationAttach,
-                                  () => widget.onSignIn(context),
-                                ),
-                              ],
-                              underline: false,
+                          ],
+                          if (signedIn) ...[
+                            // Signed in, reached by a link: the way back.
+                            const SizedBox(height: KivetoSpace.s),
+                            KivetoLinkButton(
+                              label: l10n.identityBackHome,
+                              onPressed: () => widget.onDone(context),
                             ),
-                            textAlign: TextAlign.center,
-                            style: KivetoText.bodySmall,
-                          ),
+                          ],
                         ],
-                        if (signedIn) ...[
-                          // Signed in, reached by a link: the way back.
-                          const SizedBox(height: KivetoSpace.s),
-                          KivetoLinkButton(
-                            label: l10n.identityBackHome,
-                            onPressed: () => widget.onDone(context),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

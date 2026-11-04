@@ -16,7 +16,10 @@ abstract interface class InstallMarker {
 ///
 /// The preferences are opened at the first use, so that an unavailable
 /// platform fails that call rather than the construction, and a platform
-/// that never asks (Android) never opens them.
+/// that never asks (Android) never opens them. A clean-up of the platform
+/// preferences must remove its own keys, never clear the whole store
+/// (`SharedPreferencesAsync.clear()`): that would delete this marker and
+/// sign iOS users out again at the next launch.
 final class PreferencesInstallMarker implements InstallMarker {
   new(this._open);
 

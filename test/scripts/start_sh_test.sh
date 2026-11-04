@@ -142,7 +142,7 @@ printf '{"API_BASE_URL": "http://10.0.2.2:81", "API_HOST_HEADER": "portal.kiveto
   >"$P/config/env/staging.ios.json"
 start ios staging
 expect_status 1 "$RC" 'ios ENV=staging with 10.0.2.2: exit 1' "$OUT"
-expect_contains "$OUT" 'point API_BASE_URL of config/env/staging.ios.json at 127.0.0.1' 'ios ENV=staging with 10.0.2.2: names the edit to make'
+expect_contains "$OUT" 'point API_BASE_URL of config/env/staging.ios.json at 127.0.0.1 (simulator) or Mac-de-Djamil.local (iPhone)' 'ios ENV=staging with 10.0.2.2: names the edit to make'
 expect_eq '' "$(cat "$KV_T/run.log")" 'ios ENV=staging with 10.0.2.2: no flutter run'
 
 # --- iOS, a physical iPhone -------------------------------------------------------
@@ -156,8 +156,9 @@ reset
 physical
 start ios
 expect_status 1 "$RC" 'physical iPhone + loopback file: exit 1' "$OUT"
-expect_contains "$OUT" 'device-ios is a physical iPhone and config/env/dev.ios.json targets the loopback' 'physical iPhone + loopback file: says why'
-expect_contains "$OUT" 'fix: set API_BASE_URL in config/env/dev.ios.json to http://Mac-de-Djamil.local:81' 'physical iPhone + loopback file: names the Bonjour URL of the Mac'
+expect_contains "$OUT" 'device-ios is a physical iPhone and the API_BASE_URL of config/env/dev.ios.json is on the loopback' 'physical iPhone + loopback file: says why'
+expect_contains "$OUT" 'fix: in config/env/dev.ios.json, replace that host with Mac-de-Djamil.local' 'physical iPhone + loopback file: names the Bonjour name of the Mac'
+expect_contains "$OUT" 'e.g. http://Mac-de-Djamil.local:81 for the dev backend' 'physical iPhone + loopback file: gives the dev URL as an example'
 expect_eq '' "$(cat "$KV_T/run.log")" 'physical iPhone + loopback file: no flutter run'
 
 reset
@@ -173,7 +174,34 @@ physical
 rm "$KV_T/scutil.txt"
 start ios
 expect_status 1 "$RC" 'physical iPhone, scutil failing: exit 1' "$OUT"
-expect_contains "$OUT" 'to http://<mac-name>.local:81' 'physical iPhone, scutil failing: says <mac-name>'
+expect_contains "$OUT" 'replace that host with <mac-name>.local' 'physical iPhone, scutil failing: says <mac-name>'
+
+# Every loopback host of API_BASE_URL, whatever its case.
+for host in 127.0.0.2 '[::1]' LOCALHOST; do
+  reset
+  physical
+  printf '{"API_BASE_URL": "http://%s:81", "API_HOST_HEADER": "portal.kiveto.local"}\n' "$host" \
+    >"$P/config/env/dev.ios.json"
+  start ios
+  expect_status 1 "$RC" "physical iPhone + $host: exit 1" "$OUT"
+  expect_eq '' "$(cat "$KV_T/run.log")" "physical iPhone + $host: no flutter run"
+done
+
+# Only the host of API_BASE_URL counts, not another key.
+reset
+physical
+printf '{"API_BASE_URL": "http://Mac-de-Djamil.local:81", "API_HOST_HEADER": "portal.kiveto.local", "OTHER": "http://localhost:9000"}\n' \
+  >"$P/config/env/dev.ios.json"
+start ios
+expect_status 0 "$RC" 'physical iPhone, localhost in another key: exit 0' "$OUT"
+expect_contains "$(cat "$KV_T/run.log")" '--dart-define-from-file=config/env/dev.ios.json' 'physical iPhone, localhost in another key: flutter run'
+
+reset
+printf '{"API_BASE_URL": "http://127.0.0.1:81", "API_HOST_HEADER": "portal.kiveto.local", "OTHER": "http://10.0.2.2:81"}\n' \
+  >"$P/config/env/dev.ios.json"
+start ios
+expect_status 0 "$RC" 'ios, 10.0.2.2 in another key: exit 0' "$OUT"
+expect_contains "$(cat "$KV_T/run.log")" '--dart-define-from-file=config/env/dev.ios.json' 'ios, 10.0.2.2 in another key: flutter run'
 
 reset
 physical

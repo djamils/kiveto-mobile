@@ -2,7 +2,8 @@
 // scheme (Info.plist registers $(KIVETO_DEV_URL_SCHEME), Debug.xcconfig
 // alone sets it, the Runner's Debug configuration alone uses
 // Debug.xcconfig), the launch screen's status bar, the purpose of the local
-// network prompt, and the location permission kept to « when in use ».
+// network prompt, the location permission kept to « when in use », and no
+// signing team committed.
 
 import 'dart:io';
 
@@ -146,6 +147,19 @@ void main() {
         isNot(contains('#include "Debug.xcconfig"')),
       );
     });
+  });
+
+  test('no signing team nor provisioning profile committed (a free '
+      "account's personal team stays on the Mac that picked it)", () {
+    final settings = RegExp(
+      '"?(DEVELOPMENT_TEAM|PROVISIONING_PROFILE(?:_SPECIFIER)?)'
+      r'(\[[^\]]*\])?"?\s*=\s*([^;]*);',
+    ).allMatches(_read('ios/Runner.xcodeproj/project.pbxproj'));
+    expect([
+      for (final setting in settings)
+        if (!const {'', '""'}.contains(setting.group(3)!.trim()))
+          setting.group(0),
+    ], isEmpty);
   });
 
   test('the Runner target: Debug on Debug.xcconfig, Release and Profile on '

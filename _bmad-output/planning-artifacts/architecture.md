@@ -26,7 +26,9 @@ Updated on 2026-11-04 by slice 7 (clinic_listing): §5 lists geolocator
 `feature/ios-support` (iOS step 1, from Windows): §6 lists
 `config/env/dev.ios.json.dist`, §7 the env file per platform of
 `make install` and `make start`, the `BYPASS_PERMISSION_LOCATION_ALWAYS`
-variable and the local backend seen from the iOS simulator; §5 the install
+variable and the local backend seen from the iOS simulator and from the
+user's physical iPhone (its Bonjour address, the loopback refusal, the
+local network permission); §5 the install
 marker of `ReinstallGuard` (`core/security`, run by `bootstrap` before
 `SessionManager.restore`, iOS only: the first launch after an install
 clears the session the Keychain kept).
@@ -436,7 +438,7 @@ Portability rules:
 |---|---|
 | `make doctor` | Read-only. Checks every prerequisite, says how to fix it, fails on a blocker. `FULL=1` adds `flutter doctor -v`. |
 | `make install` | doctor (blockers) → `fvm install` (no-op when cached) → `pub get` → `git config core.hooksPath .githooks` (repository-local) → each `config/env/*.json` from its `.dist` if missing (`dev.json`, `dev.ios.json`; an existing file is kept) → summary. Idempotent; installs nothing system-wide. |
-| `make start` | env file (`config/env/$(ENV).json`, `config/env/$(ENV).ios.json` with `PLATFORM=ios`; missing, or an iOS one holding `10.0.2.2`: stops with the fix) → `pub get` only when a pubspec changed (stamp in `.make/`) → device selection → `BYPASS_PERMISSION_LOCATION_ALWAYS=1 fvm flutter run -d <id> --dart-define-from-file=<env file>` (the variable makes geolocator_apple compile out the « always » location permission; Android ignores it). Options `PLATFORM`, `DEVICE`, `EMULATOR`, `SIMULATOR`, `ENV`. |
+| `make start` | env file (`config/env/$(ENV).json`, `config/env/$(ENV).ios.json` with `PLATFORM=ios`; missing, or an iOS one holding `10.0.2.2`: stops with the fix) → `pub get` only when a pubspec changed (stamp in `.make/`) → device selection → on iOS, an `API_BASE_URL` on the loopback for a device `xcrun simctl list devices` does not list (a physical iPhone): stops with the `<LocalHostName>.local` fix → `BYPASS_PERMISSION_LOCATION_ALWAYS=1 fvm flutter run -d <id> --dart-define-from-file=<env file>` (the variable makes geolocator_apple compile out the « always » location permission; Android ignores it). Options `PLATFORM`, `DEVICE`, `EMULATOR`, `SIMULATOR`, `ENV`. |
 | `make devices` | Connected devices, AVDs, simulators. |
 | `make ci` | `format-check → analyze → test-architecture → test-coverage → coverage-gate → test-scripts → api-check`, each through the calling make; stops at the first failure (`make ci failed at <target>`), prints each step's duration and the total. |
 | `make format`, `format-check` | `fvm dart format` on `lib test tool` (+ `integration_test`); the check names the unformatted files and says `make format` |
@@ -466,14 +468,19 @@ Local backend: its routes are bound to the host `portal.kiveto.local`
 (port 81), which neither an Android emulator nor the iOS simulator
 resolves. `dev.json` (Android) targets `http://10.0.2.2:81`, the
 emulator's alias for its host; `dev.ios.json` (iOS) targets
-`http://127.0.0.1:81`, since the simulator shares the Mac's network (a
-physical iPhone needs the Mac's LAN address there, by hand). No fallback
-rewrites one address into the other: `make start PLATFORM=ios` refuses an
-iOS file that holds `10.0.2.2`. A dev-only interceptor sets
-`Host: portal.kiveto.local`. Clear-text HTTP is allowed in debug builds
-only on Android (`network_security_config`); dart:io sockets are not
-subject to App Transport Security, so iOS needs no exception (to confirm
-on the Mac). The backend's 302 file redirects point to
+`http://127.0.0.1:81`, since the simulator shares the Mac's network. A
+physical iPhone (the user's, free Apple account) sets the Mac's Bonjour
+name there, `http://<LocalHostName>.local:81`, which the simulator accepts
+too; `make start` refuses a loopback `API_BASE_URL` for a physical device.
+No fallback rewrites one address into the other: `make start PLATFORM=ios`
+refuses an iOS file whose `API_BASE_URL` is `10.0.2.2`. A dev-only
+interceptor sets `Host: portal.kiveto.local`. Clear-text HTTP is allowed
+in debug builds only on Android (`network_security_config`); dart:io
+sockets are not subject to App Transport Security, so iOS needs no
+exception (to confirm on the Mac). iOS asks for the local network
+permission (`NSLocalNetworkUsageDescription`, in every configuration;
+debug and profile builds publish the Dart VM service over Bonjour, so it
+comes at launch there). The backend's 302 file redirects point to
 `portal.kiveto.local` too; the dev interceptor rewrites them. The
 invitation deep link of debug builds: the `http(s)://portal.kiveto.local`
 intent filter on Android, the `kiveto-dev` URL scheme on iOS

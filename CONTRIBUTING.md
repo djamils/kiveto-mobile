@@ -218,24 +218,44 @@ Windows and macOS.
   (its `dev.json` is kept).
 - **A physical iPhone** plugged into the Mac, reaching the Mac's backend
   over Wi-Fi:
-  - Signing with a free Apple account: pick your personal team in Xcode ›
-    Runner › Signing & Capabilities. Never commit it: `DEVELOPMENT_TEAM`
-    lands in `ios/Runner.xcodeproj/project.pbxproj`, so restore that file
-    (`git checkout -- ios/Runner.xcodeproj/project.pbxproj`) before any
-    commit. On the iPhone, turn Developer Mode on and trust the developer
-    app (Settings › General › VPN & Device Management); a free-account
-    install expires after 7 days.
+  - Bundle id first: a free personal team registers `app.kiveto.portal`
+    for itself, which may hold it against the paid program; decide before
+    the first free install (deferred-work, iOS step 1).
+  - Signing with a free Apple account, without touching a tracked file:
+    add the Apple ID in Xcode › Settings › Accounts and create an « Apple
+    Development » certificate there (Manage Certificates › +). With no
+    team in the project, `make start` lets Flutter pick that identity from
+    the keychain and pass its `DEVELOPMENT_TEAM` and
+    `-allowProvisioningUpdates` to xcodebuild
+    (`fvm flutter config --ios-signing-cert` when there are several; to be
+    confirmed on the Mac). Fallback: pick the personal team in Xcode ›
+    Runner › Signing & Capabilities; `DEVELOPMENT_TEAM` then lands in
+    `ios/Runner.xcodeproj/project.pbxproj`, which must never be committed
+    with it (`test/integration/ios_project_test.dart` fails on a signing
+    team; restore it with
+    `git checkout -- ios/Runner.xcodeproj/project.pbxproj`). On the
+    iPhone, turn Developer Mode on and trust the developer app (Settings ›
+    General › VPN & Device Management); a free-account install expires
+    after 7 days.
   - The address: in your git-ignored `config/env/dev.ios.json`, set
     `API_BASE_URL` to `http://<mac-name>.local:81`, the Mac's Bonjour name
     (`scutil --get LocalHostName`), which survives DHCP changes and which
     the simulator accepts too; keep `API_HOST_HEADER` as it is. The
     backend's compose publishes `81:80` on every interface; the macOS
-    firewall may ask once, and iOS asks for the local network permission
-    at the first request (`NSLocalNetworkUsageDescription`).
-  - `make start PLATFORM=ios` refuses a loopback file (`127.0.0.1`,
-    `localhost`) for a physical iPhone, whose loopback is itself, and
-    prints the URL to use. With a simulator running too, pick the iPhone
-    with `DEVICE=<its id or name>` (`make devices`).
+    firewall may ask once. iOS asks for the local network permission
+    (`NSLocalNetworkUsageDescription`) as soon as a debug build launches,
+    because Flutter publishes the Dart VM service over Bonjour in debug
+    and profile builds: allow it, or neither the backend nor
+    `flutter attach` is reachable.
+  - `make start PLATFORM=ios` refuses an `API_BASE_URL` on the loopback
+    (`127.x.x.x`, `localhost`, `[::1]`) for a physical iPhone, whose
+    loopback is itself, and says which host to use. It tells a physical
+    device from a simulator with `xcrun simctl list devices`; when that
+    fails it cannot tell and refuses nothing. With a simulator running
+    too, pick the iPhone with `DEVICE=<its id or name>` (`make devices`).
+  - A physical Android phone is not set up: `dev.json`'s `10.0.2.2` is
+    the emulator's alias, and the debug network security config allows
+    clear-text HTTP to `10.0.2.2` only.
 - **Location permission.** `make start` exports
   `BYPASS_PERMISSION_LOCATION_ALWAYS=1` for every build it runs:
   geolocator_apple's `Package.swift` reads it when Xcode resolves the
@@ -245,11 +265,14 @@ Windows and macOS.
   default since 3.44 and the project has no `Podfile`; check it on the Mac
   with `fvm flutter config --list` (under CocoaPods the macro would need a
   `post_install` hook in a `Podfile`). Any other iOS build (Xcode,
-  `fvm flutter build ios`, a CI job) must set it too. Swift Package
-  Manager may reuse a manifest it evaluated without the variable: after a
-  build without it, reset the package caches (Xcode › File › Packages ›
-  Reset Package Caches) and run `make clean` before building again (to be
-  confirmed on the Mac).
+  `fvm flutter build ios`, a CI job) must set it too. Xcode opened from
+  the Dock does not inherit a shell's variables, and opening
+  `ios/Runner.xcworkspace` already resolves the packages: run
+  `launchctl setenv BYPASS_PERMISSION_LOCATION_ALWAYS 1` before opening
+  it. Swift Package Manager may reuse a manifest it evaluated without the
+  variable: after a build or an Xcode session without it, reset the
+  package caches (Xcode › File › Packages › Reset Package Caches) and run
+  `make clean` before building again (to be confirmed on the Mac).
 - **Invitation link.** iOS opens http(s) links in an app only through
   universal links (step 3), so debug builds register the `kiveto-dev`
   URL scheme (`KIVETO_DEV_URL_SCHEME` in `ios/Flutter/Debug.xcconfig`,

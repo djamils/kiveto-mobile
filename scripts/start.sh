@@ -35,14 +35,25 @@ if [ ! -f "$env_file" ]; then
   fi
   die "$env_file is missing for ENV=$ENV - fix: create $env_file, or use ENV=dev"
 fi
-# No silent fallback to the Android emulator's alias: an iOS file that
-# points at 10.0.2.2 would reach nothing from the simulator. The whole
-# address only: a Mac LAN address such as 10.0.2.23 is accepted.
-if [ "$PLATFORM" = ios ] && grep -E '(^|[^0-9.])10[.]0[.]2[.]2([^0-9]|$)' "$env_file" >/dev/null; then
+# mac_local_name: the Mac's Bonjour name, <LocalHostName>.local, which a
+# physical iPhone reaches over Wi-Fi; <mac-name>.local when scutil fails.
+mac_local_name() {
+  local name
+  name=$(scutil --get LocalHostName 2>/dev/null) || name=''
+  name=${name%%"$NL"*}
+  printf '%s.local\n' "${name:-<mac-name>}"
+}
+
+# No silent fallback to the Android emulator's alias: an iOS file whose
+# API_BASE_URL points at 10.0.2.2 would reach nothing from the simulator.
+# Only that host, whole: a Mac LAN address such as 10.0.2.23, or 10.0.2.2
+# in another key, is accepted.
+if [ "$PLATFORM" = ios ] &&
+  grep -iE '"API_BASE_URL"[[:space:]]*:[[:space:]]*"[a-z]+://10[.]0[.]2[.]2([/:"]|$)' "$env_file" >/dev/null; then
   if [ "$ENV" = dev ]; then
     fix="rm $env_file && make install"
   else
-    fix="point API_BASE_URL of $env_file at 127.0.0.1 (simulator) or the Mac's LAN address (iPhone)"
+    fix="point API_BASE_URL of $env_file at 127.0.0.1 (simulator) or $(mac_local_name) (iPhone)"
   fi
   die "$env_file points at 10.0.2.2, the Android emulator's alias for its host: the iOS simulator reaches the Mac at 127.0.0.1 - fix: $fix"
 fi
@@ -213,19 +224,19 @@ else
 fi
 ok "Device $DEVICE_ID"
 
-# A physical iPhone's 127.0.0.1 (or localhost) is the iPhone itself: an iOS
-# file on the loopback only serves the simulator, which shares the Mac's
-# network. A device that `xcrun simctl list devices` does not list is a
-# physical one; when simctl fails, nobody can tell, so nothing is refused.
+# A physical iPhone's loopback (127.x.x.x, localhost, [::1]) is the iPhone
+# itself: an API_BASE_URL on the loopback only serves the simulator, which
+# shares the Mac's network. A device that `xcrun simctl list devices` does
+# not list is a physical one; when simctl fails, nobody can tell, so nothing
+# is refused.
 if [ "$PLATFORM" = ios ] &&
-  grep -E '(^|[^0-9A-Za-z.-])(127[.]0[.]0[.]1|localhost)([^0-9A-Za-z.-]|$)' "$env_file" >/dev/null &&
+  grep -iE '"API_BASE_URL"[[:space:]]*:[[:space:]]*"[a-z]+://(127([.][0-9]+){3}|localhost|\[::1\])([/:"]|$)' "$env_file" >/dev/null &&
   simulators=$(xcrun simctl list devices 2>/dev/null); then
   case $simulators in
     *"($DEVICE_ID)"*) ;;
     *)
-      mac_name=$(scutil --get LocalHostName 2>/dev/null) || mac_name=''
-      mac_name=${mac_name%%"$NL"*}
-      die "$DEVICE_ID is a physical iPhone and $env_file targets the loopback (127.0.0.1 or localhost): the iPhone cannot reach the Mac at its own loopback - fix: set API_BASE_URL in $env_file to http://${mac_name:-<mac-name>}.local:81 (the Mac's Bonjour name, scutil --get LocalHostName)"
+      bonjour=$(mac_local_name)
+      die "$DEVICE_ID is a physical iPhone and the API_BASE_URL of $env_file is on the loopback (127.x.x.x, localhost or [::1]): the iPhone cannot reach the Mac at its own loopback - fix: in $env_file, replace that host with $bonjour, the Mac's Bonjour name (scutil --get LocalHostName), e.g. http://$bonjour:81 for the dev backend"
       ;;
   esac
 fi

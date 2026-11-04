@@ -44,10 +44,13 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<!-- The purpose of iOS's local network prompt, shown when a debug build
-	     on a physical iPhone reaches the Mac's backend (<mac-name>.local).
-	     In every configuration: the key asks nothing by itself, and a
-	     release build talking to a public host never shows the prompt. -->
+	<!-- The purpose of iOS's local network prompt. Debug and profile builds
+	     prompt at launch on a physical iPhone: Flutter's xcode_backend.dart
+	     publishes the Dart VM service over Bonjour in those builds and adds
+	     its own English NSLocalNetworkUsageDescription only when the app has
+	     none, so this French text replaces it; the same permission then
+	     covers the Mac's backend (<mac-name>.local). Release builds publish
+	     nothing and, talking to a public host, never prompt. -->
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Kiveto utilise le réseau local pour joindre le serveur de développement.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

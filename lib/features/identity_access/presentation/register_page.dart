@@ -164,124 +164,127 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         body: SafeArea(
           bottom: false,
           // iOS phone and number pads have no return key: a drag closes them.
-          child: CustomScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    KivetoSpace.authGutter,
-                    KivetoSpace.xl,
-                    KivetoSpace.authGutter,
-                    kivetoBottomPadding(context, 28),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: KivetoIconButton.back(onPressed: _restart),
-                          ),
-                          const SizedBox(height: KivetoSpace.xl4),
-                          KivetoTag.success(
-                            l10n.identityRegisterVerified(
-                              KivetoFormat.phone(flow.phone.e164),
+          child: KeyboardDismissOnDrag(
+            child: CustomScrollView(
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      KivetoSpace.authGutter,
+                      KivetoSpace.xl,
+                      KivetoSpace.authGutter,
+                      kivetoBottomPadding(context, 28),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: KivetoIconButton.back(onPressed: _restart),
                             ),
-                          ),
-                          const SizedBox(height: KivetoSpace.sm),
-                          Semantics(
-                            header: true,
-                            child: Text(
-                              l10n.screenRegisterTitle,
-                              style: KivetoText.pageTitle.copyWith(
-                                height: 1.15,
+                            const SizedBox(height: KivetoSpace.xl4),
+                            KivetoTag.success(
+                              l10n.identityRegisterVerified(
+                                KivetoFormat.phone(flow.phone.e164),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: KivetoSpace.xl4),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: KivetoTextField(
-                                  label: l10n.identityFirstNameLabel,
-                                  controller: _firstName,
-                                  errorText: _fieldErrors['firstName'],
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: const [
-                                    AutofillHints.givenName,
-                                  ],
-                                  onChanged: (_) => _edited('firstName'),
+                            const SizedBox(height: KivetoSpace.sm),
+                            Semantics(
+                              header: true,
+                              child: Text(
+                                l10n.screenRegisterTitle,
+                                style: KivetoText.pageTitle.copyWith(
+                                  height: 1.15,
                                 ),
                               ),
-                              const SizedBox(width: KivetoSpace.ml),
-                              Expanded(
-                                child: KivetoTextField(
-                                  label: l10n.identityLastNameLabel,
-                                  controller: _lastName,
-                                  errorText: _fieldErrors['lastName'],
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: const [
-                                    AutofillHints.familyName,
-                                  ],
-                                  onChanged: (_) => _edited('lastName'),
+                            ),
+                            const SizedBox(height: KivetoSpace.xl4),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: KivetoTextField(
+                                    label: l10n.identityFirstNameLabel,
+                                    controller: _firstName,
+                                    errorText: _fieldErrors['firstName'],
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: const [
+                                      AutofillHints.givenName,
+                                    ],
+                                    onChanged: (_) => _edited('firstName'),
+                                  ),
+                                ),
+                                const SizedBox(width: KivetoSpace.ml),
+                                Expanded(
+                                  child: KivetoTextField(
+                                    label: l10n.identityLastNameLabel,
+                                    controller: _lastName,
+                                    errorText: _fieldErrors['lastName'],
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: const [
+                                      AutofillHints.familyName,
+                                    ],
+                                    onChanged: (_) => _edited('lastName'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: KivetoSpace.xl),
+                            KivetoTextField(
+                              label: l10n.identityEmailLabel,
+                              controller: _email,
+                              helpText: l10n.identityRegisterEmailHelp,
+                              errorText: _fieldErrors['email'],
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.done,
+                              autofillHints: const [AutofillHints.email],
+                              onChanged: (_) => _edited('email'),
+                            ),
+                            const SizedBox(height: KivetoSpace.xl),
+                            TermsConsent(
+                              value: _accepted,
+                              onChanged: (value) =>
+                                  setState(() => _accepted = value),
+                            ),
+                            const SizedBox(height: KivetoSpace.xl4),
+                            Text(
+                              l10n.identityRegisterNote,
+                              style: KivetoText.bodySmall.copyWith(
+                                height: 1.45,
+                              ),
+                            ),
+                            if (error != null) ...[
+                              const SizedBox(height: KivetoSpace.xl),
+                              Semantics(
+                                liveRegion: true,
+                                child: KivetoCallout.danger(
+                                  body: error,
+                                  actionLabel: _restartable
+                                      ? l10n.identityRestart
+                                      : null,
+                                  onAction: _restartable ? _restart : null,
                                 ),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: KivetoSpace.xl),
-                          KivetoTextField(
-                            label: l10n.identityEmailLabel,
-                            controller: _email,
-                            helpText: l10n.identityRegisterEmailHelp,
-                            errorText: _fieldErrors['email'],
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.done,
-                            autofillHints: const [AutofillHints.email],
-                            onChanged: (_) => _edited('email'),
-                          ),
-                          const SizedBox(height: KivetoSpace.xl),
-                          TermsConsent(
-                            value: _accepted,
-                            onChanged: (value) =>
-                                setState(() => _accepted = value),
-                          ),
-                          const SizedBox(height: KivetoSpace.xl4),
-                          Text(
-                            l10n.identityRegisterNote,
-                            style: KivetoText.bodySmall.copyWith(height: 1.45),
-                          ),
-                          if (error != null) ...[
-                            const SizedBox(height: KivetoSpace.xl),
-                            Semantics(
-                              liveRegion: true,
-                              child: KivetoCallout.danger(
-                                body: error,
-                                actionLabel: _restartable
-                                    ? l10n.identityRestart
-                                    : null,
-                                onAction: _restartable ? _restart : null,
-                              ),
-                            ),
                           ],
-                        ],
-                      ),
-                      const SizedBox(height: KivetoSpace.xl5),
-                      KivetoButton.primary(
-                        label: l10n.identityRegisterSubmit,
-                        loading: _sending,
-                        onPressed: ready ? () => unawaited(_submit()) : null,
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: KivetoSpace.xl5),
+                        KivetoButton.primary(
+                          label: l10n.identityRegisterSubmit,
+                          loading: _sending,
+                          onPressed: ready ? () => unawaited(_submit()) : null,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
