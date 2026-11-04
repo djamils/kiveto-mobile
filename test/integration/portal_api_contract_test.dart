@@ -978,6 +978,319 @@ void main() {
     });
   });
 
+  group('the requests captures (slice 6)', () {
+    const base = '$_api/clinics/$_paris';
+    const appointment = '01a1a297-4a0a-7093-83f7-14de2798613e';
+    const questionnaire = '$base/appointments/$appointment/questionnaire';
+    const fixtures = 'clinics.paris.appointment.questionnaire';
+    const prescription = '01a19a12-8b44-7c87-b043-5d82ad91c574';
+    const renewal = '$base/prescriptions/$prescription/renewal-requests';
+    const changes = '$base/pets/$_oslo/change-requests';
+
+    /// The status of a refusal on the strict chain (a problem body without
+    /// violations does not decode as the typed 422: the app reads it as a
+    /// TonikError carrying the response).
+    int? strictStatus(TonikResult<Object?, Response<Object?>> result) =>
+        switch (result) {
+          TonikError(:final DioException error) => error.response?.statusCode,
+          _ => null,
+        };
+
+    test('the questionnaire: not started, submitted, closed with and '
+        'without answers, saved; the 404 of a cancelled appointment and the '
+        '422 of a violation are typed values, the 422 of a closed one a '
+        'refusal', () async {
+      final requests = RequestsApi(server);
+      Future<QuestionnaireView> read(String fixture) async {
+        backend.on('GET', questionnaire, PortalReply.fixture(fixture));
+        return switch (_value(
+          await requests.getQuestionnaire(
+            clinicId: _paris,
+            appointmentId: appointment,
+          ),
+        )) {
+          GetQuestionnaireResponse200(:final body) => body,
+          final other => fail('unexpected $other'),
+        };
+      }
+
+      final notStarted = await read('$fixtures.get.200.json');
+      final submitted = await read('$fixtures.submitted.get.200.json');
+      final locked = await read('$fixtures.locked.get.200.json');
+      final lockedEmpty = await read(
+        '$fixtures.locked-not-started.get.200.json',
+      );
+
+      expect(
+        notStarted.version,
+        QuestionnaireQuestionnaireViewVersionModel.one,
+      );
+      expect(
+        notStarted.status,
+        QuestionnaireQuestionnaireViewStatusModel.notStarted,
+      );
+      expect(notStarted.answers?.questionnaireAnswersView, isNull);
+      expect(notStarted.updatedAt, isNull);
+      expect(notStarted.editable, isTrue);
+      final answers = submitted.answers?.questionnaireAnswersView;
+      expect(answers?.symptoms, [
+        QuestionnaireAnswersViewSymptomsArrayModel.cough,
+        QuestionnaireAnswersViewSymptomsArrayModel.itching,
+      ]);
+      expect(answers?.ongoingTreatment.has, isTrue);
+      expect(
+        answers?.ongoingTreatment.details,
+        'Antibiotique, 1 comprimé matin et soir',
+      );
+      expect(
+        answers?.temperament,
+        QuestionnaireAnswersViewTemperamentModel.stressed,
+      );
+      expect(
+        submitted.updatedAt?.toTimeZonedIso8601String(),
+        '2026-11-04T02:00:06+01:00',
+      );
+      expect(locked.editable, isFalse);
+      expect(
+        locked.updatedAt?.toTimeZonedIso8601String(),
+        '2026-10-20T21:30:00+02:00',
+      );
+      expect(
+        locked.answers?.questionnaireAnswersView?.ongoingTreatment.details,
+        isNull,
+      );
+      expect(lockedEmpty.editable, isFalse);
+      expect(lockedEmpty.answers?.questionnaireAnswersView, isNull);
+
+      backend.on(
+        'GET',
+        questionnaire,
+        PortalReply.fixture('$fixtures.cancelled.get.404.json', status: 404),
+      );
+      expect(
+        _value(
+          await requests.getQuestionnaire(
+            clinicId: _paris,
+            appointmentId: appointment,
+          ),
+        ),
+        isA<GetQuestionnaireResponse404>(),
+      );
+
+      Future<TonikResult<SaveQuestionnaireResponse, Response<Object?>>> save(
+        RequestsApi api,
+        String fixture,
+        int status,
+      ) {
+        backend.on(
+          'PUT',
+          questionnaire,
+          PortalReply.fixture(fixture, status: status),
+        );
+        return api.saveQuestionnaire(
+          clinicId: _paris,
+          appointmentId: appointment,
+          body: const QuestionnaireUpdate(
+            version: QuestionnaireUpdateVersionModel.one,
+            symptoms: [QuestionnaireUpdateSymptomsArrayModel.none],
+            ongoingTreatment: $RawQuestionnaireUpdateOngoingTreatmentAnyOfModel(
+              ongoingTreatment: OngoingTreatment(has: false),
+            ),
+            temperament: QuestionnaireUpdateTemperamentModel.calm,
+          ),
+        );
+      }
+
+      final saved = switch (_value(
+        await save(requests, '$fixtures.put.200.json', 200),
+      )) {
+        SaveQuestionnaireResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      expect(
+        saved.status,
+        QuestionnaireUpdateQuestionnaireViewStatusModel.submitted,
+      );
+      expect(saved.answers?.questionnaireAnswersView?.notes, isNotNull);
+      expect(
+        _value(await save(requests, '$fixtures.validation.put.422.json', 422)),
+        isA<SaveQuestionnaireResponse422>(),
+      );
+      final strict = RequestsApi(
+        portalServer(backend, interceptors: [_successOnly()]),
+      );
+      expect(
+        strictStatus(await save(strict, '$fixtures.locked.put.422.json', 422)),
+        422,
+      );
+    });
+
+    test('a change request: 202; the 422 of a violation typed, the other '
+        'refusals on the strict chain', () async {
+      Future<TonikResult<RequestPetChangeResponse, Response<Object?>>> send(
+        RequestsApi api,
+        String fixture,
+        int status,
+      ) {
+        backend.on(
+          'POST',
+          changes,
+          PortalReply.fixture(fixture, status: status),
+        );
+        return api.requestPetChange(
+          clinicId: _paris,
+          petId: _oslo,
+          idempotencyKey: 'key',
+          body: PetChangeRequestCreation(
+            field: PetChangeRequestCreationFieldModel.weight,
+            proposedValue: '12,4',
+            measuredOn: Date(2026, 11, 2),
+          ),
+        );
+      }
+
+      final requests = RequestsApi(server);
+      expect(switch (_value(
+        await send(
+          requests,
+          'clinics.paris.pet.change-requests.post.202.json',
+          202,
+        ),
+      )) {
+        RequestPetChangeResponse202(:final body) => body.requestId,
+        final other => fail('unexpected $other'),
+      }, '01a1a413-c972-7eb1-b861-3e83365ac982');
+      expect(jsonDecode(utf8.decode(backend.requestsTo(changes).single.body)), {
+        'field': 'weight',
+        'proposedValue': '12,4',
+        'measuredOn': '2026-11-02',
+        'note': null,
+      });
+      expect(
+        backend.requestsTo(changes).single.headers['Idempotency-Key'],
+        'key',
+      );
+      for (final fixture in [
+        'clinics.paris.pet.change-requests.validation.post.422.json',
+        'clinics.paris.pet.change-requests.note-missing.post.422.json',
+      ]) {
+        expect(
+          _value(await send(requests, fixture, 422)),
+          isA<RequestPetChangeResponse422>(),
+          reason: fixture,
+        );
+      }
+      final strict = RequestsApi(
+        portalServer(backend, interceptors: [_successOnly()]),
+      );
+      for (final fixture in [
+        'clinics.paris.pet.change-requests.not-eligible.post.422.json',
+        'clinics.paris.pet.change-requests.key-reused.post.422.json',
+      ]) {
+        expect(
+          strictStatus(await send(strict, fixture, 422)),
+          422,
+          reason: fixture,
+        );
+      }
+    });
+
+    test('a renewal request: 202 and its status; the 422 refusal on the '
+        'strict chain', () async {
+      Future<TonikResult<RequestRenewalResponse, Response<Object?>>> send(
+        RequestsApi api,
+        String fixture,
+        int status,
+      ) {
+        backend.on(
+          'POST',
+          renewal,
+          PortalReply.fixture(fixture, status: status),
+        );
+        return api.requestRenewal(
+          clinicId: _paris,
+          prescriptionId: prescription,
+          idempotencyKey: 'key',
+          body: const RenewalRequestCreation(
+            petCondition: RenewalRequestCreationPetConditionModel.improved,
+          ),
+        );
+      }
+
+      final created = switch (_value(
+        await send(
+          RequestsApi(server),
+          'clinics.paris.prescriptions.renewal-requests.post.202.json',
+          202,
+        ),
+      )) {
+        RequestRenewalResponse202(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+      expect(created.requestId, '01a19a12-87fc-7cd1-a51e-c25f03efc697');
+      expect(
+        created.status,
+        RenewalRequestCreationRenewalRequestCreatedViewStatusModel.submitted,
+      );
+      expect(
+        strictStatus(
+          await send(
+            RequestsApi(portalServer(backend, interceptors: [_successOnly()])),
+            'clinics.paris.prescriptions.renewal-requests.'
+            'not-renewable.post.422.json',
+            422,
+          ),
+        ),
+        422,
+      );
+    });
+
+    test("Garnier's requests: both kinds, every status, the clinic's "
+        'answers', () async {
+      backend.on(
+        'GET',
+        '$base/requests',
+        PortalReply.fixture('clinics.paris.requests.garnier.get.200.json'),
+      );
+
+      final list = switch (_value(
+        await RequestsApi(server).listRequests(clinicId: _paris),
+      )) {
+        ListRequestsResponse200(:final body) => body,
+        final other => fail('unexpected $other'),
+      };
+
+      expect(list.items, hasLength(7));
+      expect(list.items.map((item) => item.kind).toSet(), {
+        PortalRequestViewKindModel.petChange,
+        PortalRequestViewKindModel.prescriptionRenewal,
+      });
+      expect(list.items.map((item) => item.status).toSet(), {
+        PortalRequestViewStatusModel.submitted,
+        PortalRequestViewStatusModel.done,
+        PortalRequestViewStatusModel.rejected,
+      });
+      expect(list.items.map((item) => item.field).take(3), [
+        PortalRequestViewFieldModel.weight,
+        PortalRequestViewFieldModel.other,
+        PortalRequestViewFieldModel.chipNumber,
+      ]);
+      final renewalDone = list.items[3];
+      expect(renewalDone.field, isNull);
+      expect(renewalDone.prescriptionId, isNotNull);
+      expect(
+        renewalDone.resultingPrescriptionId,
+        '01a19a12-8b44-7c87-b043-5d82ad91c574',
+      );
+      expect(renewalDone.resolutionMessage, startsWith('Nouvelle ordonnance'));
+      expect(
+        list.items.first.resolvedAt?.toTimeZonedIso8601String(),
+        '2026-11-02T03:24:29+01:00',
+      );
+      expect(list.nextCursor, isNull);
+    });
+  });
+
   group('PATCH /me', () {
     test('sends a merge-patch body; 422 problem+json is a typed '
         'ConstraintViolation', () async {

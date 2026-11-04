@@ -1,0 +1,1 @@
+{"status":422,"violations":[{"propertyPath":"symptoms","message":"« Aucun symptôme » ne se combine pas avec un autre symptôme.","code":"portal_rule"}],"detail":"symptoms: « Aucun symptôme » ne se combine pas avec un autre symptôme.","type":"validation_failed","title":"Données invalides."}
