@@ -241,8 +241,9 @@ Windows and macOS.
     `API_BASE_URL` to `http://<mac-name>.local:81`, the Mac's Bonjour name
     (`scutil --get LocalHostName`), which survives DHCP changes and which
     the simulator accepts too; keep `API_HOST_HEADER` as it is. The
-    backend's compose publishes `81:80` on every interface; the macOS
-    firewall may ask once. iOS asks for the local network permission
+    backend's compose binds `81` to the loopback by default: start it with
+    `KIVETO_DEV_HTTP_BIND=0.0.0.0 make start`, on a trusted network only,
+    so that the iPhone can reach it; the macOS firewall may ask once. iOS asks for the local network permission
     (`NSLocalNetworkUsageDescription`) as soon as a debug build launches,
     because Flutter publishes the Dart VM service over Bonjour in debug
     and profile builds: allow it, or neither the backend nor
