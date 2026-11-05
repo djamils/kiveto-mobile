@@ -6,7 +6,8 @@
 # geolocator_apple reads) and, for iOS, a stubbed macOS (uname answering
 # Darwin, xcrun simctl and scutil answering from files): the env file of each
 # platform, the bypass variable, the refusals that stop before any build,
-# and the loopback file refused for a physical iPhone.
+# the loopback file refused for a physical iPhone, and the window of a
+# running simulator (Simulator.app, else Xcode 27's DeviceHub; `open` stubbed).
 
 . "$(dirname "$0")/support.sh"
 
@@ -49,7 +50,11 @@ printf '#!/usr/bin/env bash\necho Darwin\n' >"$KV_T/darwin/uname"
 printf '#!/usr/bin/env bash\nif [ -f "%s/simctl.fail" ]; then exit 1; fi\ncat "%s/simctl.txt"\n' \
   "$KV_T" "$KV_T" >"$KV_T/darwin/xcrun"
 printf '#!/usr/bin/env bash\ncat "%s/scutil.txt" 2>/dev/null\n' "$KV_T" >"$KV_T/darwin/scutil"
-chmod +x "$KV_T/darwin/uname" "$KV_T/darwin/xcrun" "$KV_T/darwin/scutil"
+# `open -b <bundle id>` logs the id to open.log and fails when
+# missing-<bundle id> exists (no such app on the Mac).
+printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$2" >>"%s/open.log"\n[ ! -f "%s/missing-$2" ]\n' \
+  "$KV_T" "$KV_T" >"$KV_T/darwin/open"
+chmod +x "$KV_T/darwin/uname" "$KV_T/darwin/xcrun" "$KV_T/darwin/scutil" "$KV_T/darwin/open"
 
 # simulator <id>: simctl lists <id>, a simulator. physical: simctl lists
 # another one only, so the picked device-ios is a physical iPhone.
@@ -73,6 +78,8 @@ reset() {
   printf '%s\n' "$FLUTTER" >"$P/.make/pub-get.stamp"
   : >"$KV_T/fvm.log"
   : >"$KV_T/run.log"
+  : >"$KV_T/open.log"
+  rm -f "$KV_T"/missing-*
   # By default the picked iOS device is a simulator; the Mac is Mac-de-Djamil.
   rm -f "$KV_T/simctl.fail"
   simulator device-ios
@@ -152,6 +159,28 @@ start ios
 expect_status 0 "$RC" 'simulator + loopback file: exit 0' "$OUT"
 expect_contains "$(cat "$KV_T/run.log")" '--dart-define-from-file=config/env/dev.ios.json' 'simulator + loopback file: flutter run gets dev.ios.json'
 
+# --- iOS, the window of a simulator already running ---------------------------------
+
+reset
+start ios
+expect_eq 'com.apple.iphonesimulator' "$(cat "$KV_T/open.log")" 'running simulator: Simulator.app opened'
+expect_not_contains "$OUT" 'without a window' 'running simulator: no warning'
+
+reset
+: >"$KV_T/missing-com.apple.iphonesimulator"
+start ios
+expect_status 0 "$RC" 'running simulator, Xcode 27 (no Simulator.app): exit 0' "$OUT"
+expect_eq "$(printf 'com.apple.iphonesimulator\ncom.apple.dt.Devices')" "$(cat "$KV_T/open.log")" 'running simulator, Xcode 27: DeviceHub opened'
+expect_not_contains "$OUT" 'without a window' 'running simulator, Xcode 27: no warning'
+
+reset
+: >"$KV_T/missing-com.apple.iphonesimulator"
+: >"$KV_T/missing-com.apple.dt.Devices"
+start ios
+expect_status 0 "$RC" 'running simulator, no window app: exit 0' "$OUT"
+expect_contains "$OUT" 'Neither Simulator.app nor DeviceHub found: the simulator runs without a window' 'running simulator, no window app: warns'
+expect_contains "$(cat "$KV_T/run.log")" '--dart-define-from-file=config/env/dev.ios.json' 'running simulator, no window app: flutter run'
+
 reset
 physical
 start ios
@@ -210,6 +239,7 @@ printf '{"API_BASE_URL": "http://Mac-de-Djamil.local:81", "API_HOST_HEADER": "po
 start ios
 expect_status 0 "$RC" 'physical iPhone + Bonjour file: exit 0' "$OUT"
 expect_contains "$(cat "$KV_T/run.log")" '--dart-define-from-file=config/env/dev.ios.json' 'physical iPhone + Bonjour file: flutter run gets dev.ios.json'
+expect_eq '' "$(cat "$KV_T/open.log")" 'physical iPhone: no simulator window opened'
 
 reset
 physical
@@ -217,6 +247,7 @@ physical
 start ios
 expect_status 0 "$RC" 'xcrun simctl failing: no refusal (cannot tell), exit 0' "$OUT"
 expect_contains "$(cat "$KV_T/run.log")" '--dart-define-from-file=config/env/dev.ios.json' 'xcrun simctl failing: flutter run gets dev.ios.json'
+expect_eq '' "$(cat "$KV_T/open.log")" 'xcrun simctl failing: no window opened (cannot tell)'
 
 reset
 start ios staging

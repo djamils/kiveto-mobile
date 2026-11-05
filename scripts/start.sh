@@ -189,16 +189,26 @@ boot_simulator() {
   fi
   step "No iOS device running: booting the simulator ${SIMULATOR:-$udid}..."
   run xcrun simctl boot "$udid"
-  # The window is only for the user: the booted simulator runs without it,
-  # and some Xcode installs ship no Simulator.app (Xcode 27.2 seen without).
-  if ! open -b com.apple.iphonesimulator >/dev/null 2>&1; then
-    warn "Simulator.app not found: the simulator runs without a window"
-  fi
+  show_simulator_window
+  SIMULATOR_SHOWN=1
   wait_for_device
   ok "Simulator booted ($DEVICE_ID)"
 }
 
+# The window is only for the user: a booted simulator runs without it.
+# Xcode up to 26 shows it in Simulator.app; Xcode 27 ships no Simulator.app
+# and shows it in DeviceHub (com.apple.dt.Devices, Xcode.app/Contents/
+# Applications). Opening the app also brings an open window to the front.
+show_simulator_window() {
+  local app
+  for app in com.apple.iphonesimulator com.apple.dt.Devices; do
+    if open -b "$app" >/dev/null 2>&1; then return 0; fi
+  done
+  warn "Neither Simulator.app nor DeviceHub found: the simulator runs without a window"
+}
+
 DEVICE_ID=''
+SIMULATOR_SHOWN=0
 step "Selecting a device ($PLATFORM)..."
 if [ -n "$DEVICE" ]; then
   rc=0
@@ -224,19 +234,23 @@ else
 fi
 ok "Device $DEVICE_ID"
 
-# A physical iPhone's loopback (127.x.x.x, localhost, [::1]) is the iPhone
-# itself: an API_BASE_URL on the loopback only serves the simulator, which
-# shares the Mac's network. A device that `xcrun simctl list devices` does
-# not list is a physical one; when simctl fails, nobody can tell, so nothing
-# is refused.
-if [ "$PLATFORM" = ios ] &&
-  grep -iE '"API_BASE_URL"[[:space:]]*:[[:space:]]*"[a-z]+://(127([.][0-9]+){3}|localhost|\[::1\])([/:"]|$)' "$env_file" >/dev/null &&
-  simulators=$(xcrun simctl list devices 2>/dev/null); then
+# A device that `xcrun simctl list devices` lists is a simulator, any other
+# one a physical iPhone; when simctl fails, nobody can tell.
+# - A simulator that was already running gets its window too (boot_simulator
+#   shows it for the one it boots).
+# - A physical iPhone's loopback (127.x.x.x, localhost, [::1]) is the iPhone
+#   itself: an API_BASE_URL on the loopback only serves the simulator, which
+#   shares the Mac's network. When simctl fails, nothing is refused.
+if [ "$PLATFORM" = ios ] && simulators=$(xcrun simctl list devices 2>/dev/null); then
   case $simulators in
-    *"($DEVICE_ID)"*) ;;
+    *"($DEVICE_ID)"*)
+      if [ "$SIMULATOR_SHOWN" = 0 ]; then show_simulator_window; fi
+      ;;
     *)
-      bonjour=$(mac_local_name)
-      die "$DEVICE_ID is a physical iPhone and the API_BASE_URL of $env_file is on the loopback (127.x.x.x, localhost or [::1]): the iPhone cannot reach the Mac at its own loopback - fix: in $env_file, replace that host with $bonjour, the Mac's Bonjour name (scutil --get LocalHostName), e.g. http://$bonjour:81 for the dev backend"
+      if grep -iE '"API_BASE_URL"[[:space:]]*:[[:space:]]*"[a-z]+://(127([.][0-9]+){3}|localhost|\[::1\])([/:"]|$)' "$env_file" >/dev/null; then
+        bonjour=$(mac_local_name)
+        die "$DEVICE_ID is a physical iPhone and the API_BASE_URL of $env_file is on the loopback (127.x.x.x, localhost or [::1]): the iPhone cannot reach the Mac at its own loopback - fix: in $env_file, replace that host with $bonjour, the Mac's Bonjour name (scutil --get LocalHostName), e.g. http://$bonjour:81 for the dev backend"
+      fi
       ;;
   esac
 fi
